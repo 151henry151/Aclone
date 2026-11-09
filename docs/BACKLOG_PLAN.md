@@ -10421,3 +10421,21 @@ pairs of 500000 queries after three warmups, original-island sampling falls from
 Expanded-island sampling falls from 900.74 to 790.14 ms (12.3% less time;
 interval −129.82 to −91.38 ms). These are local terrain-query measurements, not
 whole-game FPS or evidence that the open server-heartbeat issue is resolved.
+
+0.138.1 is deployed and verified at commit
+`1d4311e9fd863e528c543cc566a8916d47f21c83` on backlog-implementation. Public
+health reports the version with five worlds; game assets and read-only game entry,
+website version and gallery checks pass with no browser errors. The service is
+active/running with zero automatic restarts. The pre-deploy database backup is
+`/var/lib/aclone/backups/pre-deploy-20261109-155815.sqlite`; the website backup is
+`/var/backups/aclone-website/site-20261109-155927.tar.gz`.
+
+The bot announcement and its 1280×800 flight-approach screenshot are verified:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569456552040079401
+
+Mark this independent performance checkpoint done. Preserve the unfinished
+terrain-pad files locally for continuation; they were excluded from both release
+commits and deployment. Stage 2 and its outstanding performance-baseline question
+remain open, as does the separate server-heartbeat investigation. No player data
+repair or grant was performed. Logs, benchmark and announcement receipt remain
+under output/terrain-performance-release/.
