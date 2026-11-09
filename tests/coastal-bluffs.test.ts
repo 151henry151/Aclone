@@ -5,7 +5,13 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer, makeBuilding, move } from '../src/shared/simulation';
 import { ensurePuddlewickLighthouses } from '../src/server/puddlewick-lighthouses';
 import { terrainHeight } from '../src/shared/terrain';
-import { bluffPoint, bluffEdge, cliffBlocks, bluffOutcrops } from '../src/shared/coastal-bluffs';
+import {
+  bluffPoint,
+  bluffEdge,
+  bluffLocal,
+  cliffBlocks,
+  bluffOutcrops,
+} from '../src/shared/coastal-bluffs';
 import { constructionSiteReason } from '../src/shared/construction-site';
 import { lighthouseRange, lighthouseFlash } from '../src/shared/lighthouse-optics';
 
@@ -66,6 +72,9 @@ test('old public lighthouse moves with its keeper, stock, ownership and job inta
 });
 test('walkers and fast tractors stop before the lip, reverse away, and never fall', () => {
   const w = createWorld('puddlewick', 'P', 'server');
+  // Test the cliff barrier itself; random scenery otherwise deflects the walker
+  // before it reaches the lip, so a fixed-duration run tests the wrong contact.
+  w.settings.solidScenery = 'off';
   ensurePuddlewickLighthouses(w);
   w.buildings = [];
   const b = w.coastalBluffs![0],
@@ -85,6 +94,11 @@ test('walkers and fast tractors stop before the lip, reverse away, and never fal
     for (let i = 0; i < 20; i++) move(w, p, { throttle: 1, steer: 0, boost: true }, 0.1);
     assert.ok(terrainHeight(w, p.x, p.z) > w.settings.seaLevel + 15);
     assert.equal(p.speed, 0);
+    const local = bluffLocal(b, p.x, p.z);
+    assert.ok(
+      Math.abs(local.v - bluffEdge(b, local.u)) < 5,
+      'reach the cliff barrier, not a distant obstacle',
+    );
     const before = { x: p.x, z: p.z };
     for (let i = 0; i < 30; i++) move(w, p, { throttle: -1, steer: 0, boost: false }, 0.1);
     assert.ok(Math.hypot(p.x - before.x, p.z - before.z) > 1);
@@ -128,5 +142,25 @@ test('headland crowns roll into inland terrain instead of forming level platform
     const a = bluffPoint(b, 0, end),
       c = bluffPoint(b, 0, end + 0.1);
     assert.ok(Math.abs(terrainHeight(w, a.x, a.z) - terrainHeight(w, c.x, c.z)) < 0.2);
+  }
+});
+
+test('default solid scenery and the cliff barrier keep a deflected walker above the drop', () => {
+  const w = createWorld('puddlewick', 'P', 'server');
+  ensurePuddlewickLighthouses(w);
+  w.buildings = [];
+  const b = w.coastalBluffs![0],
+    p = addPlayer(w, 'walking', 'Walker');
+  Object.assign(p, bluffPoint(b, 0, bluffEdge(b, 0) - 10), {
+    vehicle: 5,
+    heading: b.angle,
+    speed: 30,
+    engine: true,
+    atHome: false,
+  });
+  p.y = terrainHeight(w, p.x, p.z);
+  for (let i = 0; i < 100; i++) {
+    move(w, p, { throttle: 1, steer: 0, boost: true }, 0.1);
+    assert.ok(terrainHeight(w, p.x, p.z) > w.settings.seaLevel + 15);
   }
 });
