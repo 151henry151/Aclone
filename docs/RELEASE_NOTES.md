@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.137.1 — Save mixed farm planting choices
+
+Keep individual crop selections when switching tabs or reopening farm controls.
+Hops and coffee can now be saved together without the form generating duplicate
+crop identifiers and reporting invalid staff rules. Reload the game, select the
+crops you want and choose **Save staff rules**. Existing saved policies remain
+intact. Budgets and reserves are still entered in denarii.
+
+Verify four farm-policy tests and three business-controls/panel-memory browser
+checks, including desktop/mobile repeat saves and pausing all planting. TypeScript
+and formatting pass. No world migration or player-data repair is required.
+
 ## 0.137.0 — Manufacture highway trucks and haul full-size loads
 
 **Known performance issue:** the final populated replay records a 131.87 ms

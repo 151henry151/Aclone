@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.137.1] - 2026-11-09
+
+### Fixed
+
+- Preserve each selected farm staff crop when reopening or refreshing a panel, so combinations such as hops and coffee save without duplicate-crop validation errors.
+
 ## [0.137.0] - 2026-11-09
 
 ### Added

@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
+import { crops } from '../../src/shared/farming';
 import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation';
 
 test('owners save bulk tiers and farm staff rules through the actual building menus', async ({
@@ -48,6 +49,51 @@ test('owners save bulk tiers and farm staff rules through the actual building me
       .poll(() => b.farmPolicy)
       .toEqual({ crops: ['wheat'], dailyLimit: 2000, reserve: 10000 });
     await expect(policy.locator('[data-farm-policy-status]')).toContainText('Wheat');
+    for (const box of await policy.locator('input[name="crop"]').all()) await box.uncheck();
+    await policy.getByLabel('Hops', { exact: true }).check();
+    await policy.getByLabel('Coffee', { exact: true }).check();
+    await policy.locator('[name="dailyLimit"]').fill('1000');
+    await policy.locator('[name="reserve"]').fill('1000');
+    await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
+    await page.getByRole('button', { name: 'Main', exact: true }).click();
+    await policy.getByRole('button', { name: 'Save staff rules' }).click();
+    await expect
+      .poll(() => b.farmPolicy, { timeout: 3000 })
+      .toEqual({
+        crops: ['hops', 'coffee'],
+        dailyLimit: 100000,
+        reserve: 100000,
+      });
+    expect(
+      await policy
+        .locator('input[name="crop"]')
+        .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value)),
+    ).toEqual(Object.keys(crops));
+    expect(
+      await policy
+        .locator('input[name="crop"]:checked')
+        .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value)),
+    ).toEqual(['hops', 'coffee']);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
+    await page.getByRole('button', { name: 'Main', exact: true }).click();
+    await expect(policy.getByLabel('Hops', { exact: true })).toBeChecked();
+    await expect(policy.getByLabel('Coffee', { exact: true })).toBeChecked();
+    await policy.getByRole('button', { name: 'Save staff rules' }).click();
+    await expect(policy.locator('[data-farm-policy-status]')).toContainText('Hops, Coffee');
+    await policy.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: 'output/farm-checkbox-investigation/hops-coffee-saved.png' });
+    for (const box of await policy.locator('input[name="crop"]').all()) await box.uncheck();
+    await policy.locator('[name="dailyLimit"]').fill('');
+    await policy.locator('[name="reserve"]').fill('0');
+    await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
+    await page.getByRole('button', { name: 'Main', exact: true }).click();
+    await policy.getByRole('button', { name: 'Save staff rules' }).click();
+    await expect.poll(() => b.farmPolicy).toEqual({ crops: [], reserve: 0 });
+    await expect(policy.locator('[data-farm-policy-status]')).toContainText(
+      'Staff planting: paused',
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
     const bulk = page.locator('[data-bulk-discounts]');
     await expect(bulk.getByLabel('Level 1 quantity', { exact: true })).toBeDisabled();

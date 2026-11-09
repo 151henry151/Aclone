@@ -56,7 +56,7 @@ export class PanelMemory {
     return JSON.stringify([
       identity,
       input.id || input.name,
-      input.type === 'radio' ? input.value : '',
+      ['radio', 'checkbox'].includes(input.type) ? input.value : '',
       priceSelection,
     ]);
   }

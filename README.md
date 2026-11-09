@@ -10,6 +10,10 @@ handling. Reload after updating. See [automotive assembly](docs/PLAYING.md#autom
 and [measured haulage economics](docs/HAULAGE.md#manufactured-highway-haulage).
 The intermittent server pause remains an open performance issue.
 
+Version 0.137.1 fixes farm crop-checkbox drafts so reopening a menu preserves
+each selected crop and allows mixed planting policies, such as hops and coffee,
+to save. Reload the game before saving your staff rules.
+
 Version 0.136.4 reuses stationary ground and river transforms, removing repeated
 CPU calculations for 590 meshes in the populated test scene. Terrain rebuilding,
 water animation and flight approaches remain intact. This reduces redundant work;
@@ -57,7 +61,7 @@ zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
 Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
-player-built bridges follow in 0.136.0. The released game is 0.137.0, and remaining client frame-rate dips are still being tracked.
+player-built bridges follow in 0.136.0. The released game is 0.137.1, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly

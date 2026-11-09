@@ -10045,3 +10045,62 @@ performance issue under Henry's explicit checkpoint-release exception; its
 100 ms test has not been weakened. No player grant, main push, pull request or
 new backlog implementation is part of this release. Keep the next backlog item
 pending. Local evidence and bot receipt: output/automotive-factory/release/.
+
+### Player report — farm staff crop selections, 2026-11-09
+
+Investigate Lightmun's inability to save hops and coffee with 1000 denarii each
+for the daily budget and reserve. The screenshot's generic validation error can
+come from duplicate crop identifiers, not just invalid monetary values. Suspect
+PanelMemory: same-name checkbox drafts share one key and overwrite each other's
+values when a building panel rerenders.
+
+Before production changes, extend the actual business-controls browser test:
+save an ordinary wheat policy; select only hops and coffee, enter both amounts,
+leave Main for Building Admin and return before saving. Require every crop input
+to keep its catalogue value, only hops/coffee to remain checked, and the server
+to save exactly those crops with 100000 internal units for each amount. Reopen
+and save again, including a narrow viewport. Also save all crops unchecked with
+blank daily budget/zero reserve, and require the paused summary. Retain the
+server's rejection of duplicate/unknown crops without changing the saved policy.
+Run the failing browser before the smallest draft-key fix; then rerun panel-memory
+and business-controls browser flows, farm-policy tests, TypeScript and changed-
+file Prettier. Preserve evidence locally and do not edit any player's live farm.
+
+The browser reproduces the report before production changes: after switching
+Main → Building Admin → Main and saving hops/coffee at 1000 denarii, the old
+wheat policy remains unchanged. The trace contains the exact reported error,
+“Choose valid staff crops, a nonnegative reserve and an optional daily cash
+budget”. The shared policy tests confirm hops/coffee and both monetary values
+are valid, while duplicate crops remain correctly rejected.
+
+The fix includes a checkbox's value in its draft identity, as already done for
+radio buttons. Each named crop checkbox now restores its own value and checked
+state. No crop permission, budget limit or server validation changes. The extended
+business-controls browser passes in 23.2 seconds: mixed crops survive tab changes,
+save on desktop and at 390 px width, then all-unchecked/unlimited/zero-reserve
+saves as paused. Existing bulk trading continues to pass. Evidence:
+output/farm-checkbox-investigation/ (red log/trace and saved-policy screenshot).
+
+Final verification: all three business-controls/panel-memory browser tests pass
+(57.8 seconds total), including draft scoping and sensitive-field exclusions. All
+four farm-policy tests pass. `npx tsc --noEmit` is clean; Prettier has run on all
+seven changed files, and `git diff --check` is clean. Inspect the saved mobile
+screenshot: the summary confirms Hops, Coffee and both 1000-denarii amounts.
+This investigation and fix remain local and unreleased; live stays at 0.137.0.
+
+### Farm crop-selection release authorization — 2026-11-09
+
+Henry requested commit, push, deployment and an announcement for this fix.
+Release 0.137.1 on backlog-implementation, retaining the passing four policy and
+three browser checks. Build with the production prefix, deploy the exact pushed
+commit with the normal database backup, publish the matching website and verify
+public health/assets and browser entry. Announce the fix in #announcements with
+the verified local saved-policy screenshot; tell players to reload before saving.
+
+The prefixed 0.137.1 production build passes. Henry also authorized another
+bug-report reward for Lightmun. Read-only live receipts confirm three prior
+awards of 50000 internal units (5 sheckles) and a recorded award count of three.
+Use the existing operator-only helper with the stable receipt key
+`grant:lightmun-farm-crop-selection-bug-bounty:2026-11-09`, a stopped service, a
+fresh backup and atomic world/receipt persistence. Verify the cash delta and
+fourth award before restarting; retain inventory, property and farm settings.

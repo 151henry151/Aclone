@@ -90,3 +90,17 @@ test('staff limits survive saves, design export retains policy but does not copy
   rule(null);
   assert.equal(farmStaffBlocker(w, staff, b, fertilizerPrice, 'potatoes'), undefined);
 });
+
+test('hops and coffee are valid staff crops, while duplicate or unknown crops preserve the saved policy', () => {
+  const { b, rule } = setup();
+  const policy = { crops: ['hops', 'coffee'], dailyLimit: 100000, reserve: 100000 };
+  rule(policy);
+  assert.deepEqual(b.farmPolicy, policy);
+  for (const crops of [
+    ['coffee', 'coffee'],
+    ['hops', 'unknown'],
+  ]) {
+    assert.throws(() => rule({ ...policy, crops }), /Choose valid staff crops/);
+    assert.deepEqual(b.farmPolicy, policy);
+  }
+});
