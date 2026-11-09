@@ -1,3 +1,9 @@
+import {
+  automotiveProduction,
+  automotiveBudget,
+  automotiveOwnerRoutine,
+} from './automotive-policy';
+import { manufacturingCrew, manufacturingStaffing } from '../../shared/automotive-manufacturing';
 import { productionRecipe } from '../../shared/production-recipe';
 import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
@@ -35,6 +41,7 @@ import { operation } from './player-operations.ts';
  * a reason to close the supply chain. Proven sales increase the working buffer;
  * genuinely backed-up joint outputs stop further purchases before storage fills. */
 export function inputStockTarget(b: Building, item: string, w?: World) {
+  if (w && b.kind === 'automotiveFactory') return automotiveProduction(w, b)?.targets[item] ?? 0;
   const rules = npcBusinessRules(w?.settings);
   const recipe = productionRecipe(w, b);
   if (!recipe || b.kind === 'farm' || herdSpec(b, w?.settings) || !recipe.inputs[item])
@@ -69,6 +76,7 @@ export function inputStockTarget(b: Building, item: string, w?: World) {
 /** Supplies may be bought directly as well as through a posted bid. Include
  * livestock feed and replacement breeding animals in that shared stock limit. */
 export function procurementTarget(w: World, b: Building, item: string) {
+  if (b.kind === 'automotiveFactory') return inputStockTarget(b, item, w) ?? 0;
   const recipe = productionRecipe(w, b);
   if (!recipe) return 0;
   const herd = herdSpec(b, w.settings);
@@ -115,7 +123,10 @@ export function inputBidQuote(w: World, p: Player, b: Building, item: string, re
   const target = inputStockTarget(b, item, w);
   if (!target || (b.stock[item] ?? 0) >= target) return;
   const viable = (price: number) => {
-    const budget = productionBudget(w, { ...b, buy: { ...b.buy, [item]: price } });
+    const repriced = { ...b, buy: { ...b.buy, [item]: price } };
+    if (b.kind === 'automotiveFactory' && !automotiveProduction(w, repriced)?.targets[item])
+      return false;
+    const budget = productionBudget(w, repriced);
     return budget && budget.margin >= 0 && budget.idealMargin > 0;
   };
   const quotes = w.buildings
@@ -168,7 +179,9 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
         ...new Set([
           ...Object.keys(b.buy),
           ...Object.keys(b.pausedPrices?.buy ?? {}),
-          ...Object.keys(productionRecipe(w, b)?.inputs ?? {}),
+          ...Object.keys(
+            automotiveProduction(w, b)?.recipe.inputs ?? productionRecipe(w, b)?.inputs ?? {},
+          ),
         ]),
       ].map((item) => `${b.id}:${item}`),
     ),
@@ -178,7 +191,11 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
   for (const key of Object.keys(state.pausedInputBids.manual ?? {}))
     if (!validKeys.has(key)) delete state.pausedInputBids.manual![key];
   for (const b of owned) {
-    for (const item of Object.keys(productionRecipe(w, b)?.inputs ?? {})) {
+    for (const item of Object.keys(
+      b.kind === 'automotiveFactory'
+        ? { ...b.buy, ...b.pausedPrices?.buy, ...automotiveProduction(w, b)?.recipe.inputs }
+        : (productionRecipe(w, b)?.inputs ?? {}),
+    )) {
       const target = inputStockTarget(b, item, w);
       if (target === undefined) continue;
       const key = `${b.id}:${item}`,
@@ -245,6 +262,7 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
 /** Separate shop retail receipts from direct wholesale export. Tax is withheld
  * from shop receipts, not added to a player's posted purchase price. */
 export function productionBudget(w: World, b: Building) {
+  if (b.kind === 'automotiveFactory') return automotiveBudget(w, b);
   const recipe = productionRecipe(w, b);
   if (!recipe || b.kind === 'farm') return;
   const inputs = Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
@@ -297,6 +315,11 @@ export function productionBudget(w: World, b: Building) {
  * have independent manual tasks rather than an automatic batch-efficiency curve. */
 export function usefulShift(w: World, p: Player, b: Building) {
   if (b.kind === 'farm') return true;
+  if (b.kind === 'automotiveFactory') {
+    if (!b.manufacturing?.orders.length) return false;
+    const crew = manufacturingCrew(w, b);
+    return crew.some((q) => q.id === p.id) || crew.length < manufacturingStaffing(w, b).ideal;
+  }
   const interval = productionInterval(w, b),
     next = (Math.floor(w.time / interval) + 1) * interval;
   const staff = productionStaff(w, b, next);
@@ -344,6 +367,8 @@ export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[]
   if (p.task || p.learning) return [];
   const bids = state ? ownerBidRoutine(w, p, state) : [];
   if (bids.length) return bids;
+  const assembly = automotiveOwnerRoutine(w, p);
+  if (assembly.length) return assembly;
   const staffing = ownerStaffingRoutine(w, p);
   if (staffing.length) return staffing;
   const settlement = state ? settleBusinessProceeds(w, p, state) : [];

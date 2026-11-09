@@ -9,6 +9,7 @@ const hold = (key: string, label: string, text: string) =>
 export class MobileUI {
   active = false;
   private aircraft = false;
+  private groundBrakes = false;
   drawer: 'chat' | 'status' | '' = '';
   private holds = new Map<number, { key: string; element: HTMLButtonElement }>();
   private taps = new Map<number, { button: HTMLButtonElement; x: number; y: number }>();
@@ -165,9 +166,10 @@ export class MobileUI {
     if (value) this.reset();
     document.documentElement.classList.toggle('mobile-modal', value);
   }
-  setAircraft(value: boolean) {
-    if (this.aircraft === value) return;
+  setAircraft(value: boolean, groundBrakes = false) {
+    if (this.aircraft === value && this.groundBrakes === groundBrakes) return;
     this.aircraft = value;
+    this.groundBrakes = groundBrakes;
     document.documentElement.classList.toggle('aircraft-controls', value);
     this.reset();
     document.getElementById('mobile-bank')!.hidden = !value;
@@ -187,7 +189,11 @@ export class MobileUI {
       ['right', value ? 'Rudder right' : 'Steer right', '▶'],
       ['up', value ? 'Pitch nose up' : 'Climb', value ? 'Nose ↑' : 'Climb'],
       ['down', value ? 'Pitch nose down' : 'Descend', value ? 'Nose ↓' : 'Descend'],
-      ['boost', value ? 'Airbrake and wheel brakes' : 'Hold to boost', value ? 'Brakes' : 'Boost'],
+      [
+        'boost',
+        value ? 'Airbrake and wheel brakes' : groundBrakes ? 'Wheel brakes' : 'Hold to boost',
+        value || groundBrakes ? 'Brakes' : 'Boost',
+      ],
     ]) {
       const b = document.querySelector<HTMLButtonElement>(`[data-hold="${key}"]`)!;
       b.textContent = text;
@@ -199,7 +205,8 @@ export class MobileUI {
     return {
       throttle: +held('forward') - +held('reverse'),
       steer: +held('left') - +held('right'),
-      boost: !this.aircraft && held('boost'),
+      boost: !this.aircraft && !this.groundBrakes && held('boost'),
+      ...(this.groundBrakes ? { brake: held('boost') } : {}),
       ...(this.aircraft
         ? {
             pitch: +held('up') - +held('down'),

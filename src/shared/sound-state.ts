@@ -1,3 +1,4 @@
+import { manufacturingActivity } from './automotive-manufacturing';
 import { productionRecipe } from './production-recipe';
 import { vehicleDef } from './vehicle-config';
 import {
@@ -82,6 +83,7 @@ export function productionSupplied(
 }
 
 export function productionActivity(w: World, b: Building, crafting = new Set<string>()): number {
+  if (b.kind === 'automotiveFactory') return manufacturingActivity(w, b);
   if (b.construction || b.condition <= 0 || b.kind === 'farm') return 0;
   if (waterProductionBlocker(w, b)) return 0;
   if (crafting.has(b.id)) return 1;

@@ -46,6 +46,20 @@ Mabel Reed is a former mechanic; Toby Finch a keen baker; Rowan Field a farmer; 
 
 Interests are soft preferences, not career restrictions or guarantees of success.
 
+## Automotive businesses
+
+Residents can observe finite completed trucks and semitrailers, purchase them
+through the same paid collection actions as players, and buy actual upstream
+stock for an automotive factory. Factory owners reserve materials and payroll,
+queue profitable assembly against available external demand, and sell completed
+units through the world's shared collection quota. Existing household and
+business reserves still apply; neither inputs nor buyers are invented.
+Qualified engineers can accept ordinary factory jobs. A resident travelling in
+a fuelled highway tractor retains it, uses wider turns with a semitrailer, and
+obeys the same collisions as a human. Narrow or obstructed routes can still
+require a different route; ownership alone does not guarantee profitable freight.
+See [automotive assembly](PLAYING.md#automotive-assembly).
+
 ## Presence and survival
 
 Mabel stays online even alone unless paused or the service stops. Thinking, retries and exhausted budgets do not make active residents disappear. The other eighteen follow saved real-world schedules in `NPC_TIME_ZONE`, including DST, independently of accelerated game days or human visitors.

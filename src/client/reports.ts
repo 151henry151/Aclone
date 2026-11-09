@@ -1,3 +1,8 @@
+import {
+  automotiveConfig,
+  automotiveProducts,
+  type AutomotiveProduct,
+} from '../shared/automotive-config';
 import type { PlaytimeStatistics } from '../shared/player-statistics';
 import { economicsPanel } from './staffing-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -14,7 +19,14 @@ const esc = (s: string) =>
   );
 const goods = (stock: Stock, w: World) =>
   Object.entries(stock)
-    .map(([i, n]) => `${n} ${esc(worldItems(w)[i]?.name ?? i)}`)
+    .map(([i, n]) => {
+      const product = i.startsWith('automotive:') ? (i.slice(11) as AutomotiveProduct) : undefined;
+      const name =
+        product && automotiveProducts.includes(product)
+          ? automotiveConfig(w).products[product].name
+          : (worldItems(w)[i]?.name ?? i);
+      return `${n} ${esc(name)}`;
+    })
     .join(', ') || 'None';
 export function statementHtml(w: World, p: Player, b: Building) {
   const a = p.statements?.[b.id];
@@ -55,7 +67,7 @@ export function statementHtml(w: World, p: Player, b: Building) {
       )
       .join(
         '',
-      )}</dl><p>${a.batches} automatic batches completed.</p><ul><li>Inputs consumed: ${goods(a.consumed, w)}</li><li>Outputs made: ${goods(a.produced, w)}</li><li>Goods purchased: ${goods(a.bought, w)}</li><li>Goods sold: ${goods(a.sold, w)}</li></ul>`
+      )}</dl><p>${a.batches} ${b.kind === 'automotiveFactory' ? 'assembly orders' : 'automatic batches'} completed.</p><ul><li>Inputs consumed: ${goods(a.consumed, w)}</li><li>Outputs made: ${goods(a.produced, w)}</li><li>Goods purchased: ${goods(a.bought, w)}</li><li>Goods sold: ${goods(a.sold, w)}</li></ul>`
   );
 }
 export function journalHtml(w: World, p: Player) {

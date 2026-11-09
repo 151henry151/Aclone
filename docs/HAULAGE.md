@@ -243,3 +243,42 @@ the tank and fit the captain's personal allowance.
 The Meadow livestock wagon carries calves, lambs, piglets and chicks at half the corresponding adult pasture share by default. Age and healthy growth progress travel with them; growth resumes only under farm care. It also accepts the raw meat and optional compost returned by a butcher. Back alongside the loading ramp, stop, open the butcher and choose an adult from the wagon. Keep enough output room and cash until completion; cancel or leave without losing the animal or paying the fee. Young cannot be slaughtered.
 
 The ordinary wagon and personal inventory are unchilled: raw meat normally expires after two game days. A fish trailer or fish-policy freight hold keeps meat cold; butcher, kitchen, café, pub and inn stocks also refrigerate it. Load age survives transfers, mooring, recoverable rescues and save/reopen. A world design that includes its owner's moored freight preserves young growth and meat age on the recipient world's clock. General box holds do not accept live animals; configure a livestock hold for those deliveries. Cold storage pauses age without refreshing it. Finished meals follow the existing food-storage rules.
+
+## Manufactured highway haulage
+
+Highway tractor units cost 600s at the world default. Full-size box, refrigerated
+and stake semitrailers cost 280s, 370s and 290s respectively; actual factory asks
+may differ. They are finite manufactured units, not unlimited garage stock.
+See [manufacturing and collection](PLAYING.md#automotive-assembly)
+and the automotive rules in [World Building](WORLD_BUILDING.md).
+
+A controlled, funded replay supplies a full box trailer with **1,500 Steel**
+(3,000 weight). A staffed mill consumes **7,500 paid Ore**, pays its workers and
+takes **250 production hours**, plus **12.5 hours of handling** as the output is
+collected. The haulier then drives roughly **2.08 km**, including a steered U-turn
+and empty return, in about seven minutes under conservative resident control.
+The buyer has funds for exactly this one load and ends with no remaining till.
+At the replay's observed 220d supplier ask and 249.21d buyer bid, realized trading
+margin is **438.15s**. Provisioning replacement fuel and distance wear leaves about
+**438.00s**. The supplier's combined owner/business cash rises **813.75s** after
+its paid inputs and payroll. These are finite test trades, not live guarantees.
+The large margin takes about **262.6 real hours** including production/handling:
+roughly **1.67s per hour**, not hundreds of sheckles every seven minutes. Engines
+are off while waiting for the mill. New mines, mills, customers and working
+capital are needed to increase supply; trucks do not remove those constraints.
+
+The factory replay completes twelve units with six paid engineers, sells eleven
+and retains one unsold Stake semitrailer. Ten bounded exports and one paid local
+buyer leave **295.25s** of realized owner/business contribution after the inputs
+and payroll for all twelve units. This excludes haulage and recovery of the
+factory's **2,775.65s** default cash/material construction bill before local tax.
+Assembly uses 16.5 fully staffed hours; export quotas add waiting. Unsold vehicles
+are assets, not realized sales. No idle subsidy or automatic sale clears them.
+
+These results preserve the reason to use ordinary tractors for affordable small
+loads and poor access, and boats for coastal bulk routes. The new rig needs a
+large initial investment, a clear full-width road, turning space and funded
+customers. Tests cover its 45 mph dirt and 65 mph paved limits separately; the
+resident replay does not assume continuous top-speed travel. Replacement fuel and
+service figures are cost provisions based on actual consumption/distance, while
+all cargo purchases, wages and sales in the replays use ordinary paid actions.

@@ -1,3 +1,5 @@
+import { highwayTractor } from './highway-definitions';
+import { automotiveBuilding } from './automotive-config';
 import { canoeVehicle } from './canoe-rules';
 import { meatRecipes } from './meat-recipes';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -21,19 +23,23 @@ export const vehicles: VehicleDef[] = [
   canoeVehicle(),
   ...(freightVesselData as VehicleDef[]),
   ...(rowboatData as VehicleDef[]),
+  highwayTractor(),
 ];
-export const buildings: Record<string, BuildingDef> = Object.fromEntries(
-  Object.entries(buildingData).map(([kind, def]) => [
-    kind,
-    ['market', 'starport'].includes(kind)
-      ? {
-          ...def,
-          buy: { ...def.buy, canoe: Math.floor(items.canoe.price / 2) },
-          sell: { ...def.sell, canoe: items.canoe.price * 2 },
-        }
-      : def,
-  ]),
-);
+export const buildings: Record<string, BuildingDef> = {
+  automotiveFactory: automotiveBuilding(),
+  ...Object.fromEntries(
+    Object.entries(buildingData).map(([kind, def]) => [
+      kind,
+      ['market', 'starport'].includes(kind)
+        ? {
+            ...def,
+            buy: { ...def.buy, canoe: Math.floor(items.canoe.price / 2) },
+            sell: { ...def.sell, canoe: items.canoe.price * 2 },
+          }
+        : def,
+    ]),
+  ),
+};
 export const recipes: Record<string, Recipe> = {
   ...recipeData,
   ...meatRecipes(),

@@ -24,6 +24,27 @@ const hall = (
 });
 const p = (name: string, ...volumes: BuildingVolume[]) => ({ name, volumes });
 export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
+  automotiveFactory: [
+    p(
+      'Assembly hall and dispatch office',
+      hall(30, 24, 8, 'gable', 2.4),
+      hall(8, 6, 3.4, 'flat', 0.2, -10, 15),
+    ),
+    p(
+      'Twin production halls',
+      hall(16, 28, 8, 'gable', 2.4, -8),
+      hall(16, 28, 8, 'gable', 2.4, 8),
+      hall(8, 6, 3.4, 'flat', 0.2, 0, 17),
+    ),
+    p('Long chassis works', hall(32, 30, 8, 'barrel', 2.4), hall(10, 6, 3.4, 'flat', 0.2, -11, 18)),
+    p(
+      'Assembly shed with stores',
+      hall(30, 28, 8, 'shed', 2),
+      hall(8, 18, 5, 'flat', 0.2, 19, -5),
+      hall(8, 6, 3.4, 'flat', 0.2, -10, 17),
+    ),
+    p('Broad vehicle works', hall(36, 26, 8, 'gable', 2.4), hall(12, 6, 3.4, 'flat', 0.2, -12, 16)),
+  ],
   butcher: [
     p('Stone slaughterhouse and cold room', hall(8, 7, 3.6), hall(4, 5, 3, 'flat', 0.2, 6, -1)),
     p(

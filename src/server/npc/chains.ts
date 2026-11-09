@@ -1,3 +1,4 @@
+import { automotiveConfig } from '../../shared/automotive-config';
 import { productionRecipe } from '../../shared/production-recipe';
 import { meatRecipes, meatMenus } from '../../shared/meat-recipes';
 import { meatRules } from '../../shared/meat-rules';
@@ -99,6 +100,16 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
     });
   for (const item of Object.keys(items)) link(item);
   for (const [kind, def] of Object.entries(worldBuildings(w))) {
+    if (
+      (kind === 'automotiveFactory' ||
+        w.catalogue?.templates[kind]?.base === 'automotiveFactory') &&
+      automotiveConfig(w).enabled
+    )
+      for (const recipe of Object.values(automotiveConfig(w).products))
+        for (const item of Object.keys(recipe.inputs)) {
+          const row = link(item);
+          if (!row.consumerKinds.includes(kind)) row.consumerKinds.push(kind);
+        }
     const baseRecipe = kindRecipe(w, kind);
     const alternatives = !w.catalogue?.templates[kind]?.production
       ? Object.entries(meatRecipes(w.settings))

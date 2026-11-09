@@ -62,7 +62,7 @@ export function safeParkingPoint(
           (t.parkedWith === ignore ||
             (!t.parkedWith && t.attached && ignore.startsWith(`${t.attached}:`)))
         ) &&
-        rectanglesOverlap(vehicleFootprint(w, slot, point), trailerFootprint(t)),
+        rectanglesOverlap(vehicleFootprint(w, slot, point), trailerFootprint(t, w)),
     )
   )
     return false;

@@ -1,3 +1,4 @@
+import { HIGHWAY_TRACTOR } from '../../shared/highway-definitions';
 import { withinBuildingRange } from '../../shared/simulation';
 import {
   parkedVehicle,
@@ -31,7 +32,11 @@ function leaveDistractions(p: Player): Step[] {
 
 /** Get back on the tractor when there is fuel. An empty tank must never prevent walking to safety. */
 export function travelVehicle(p: Player) {
-  return p.fuel > 0 || (p.inventory.fuel ?? 0) > 0 ? 0 : 5;
+  return p.fuel > 0 || (p.inventory.fuel ?? 0) > 0
+    ? p.vehicle === HIGHWAY_TRACTOR
+      ? HIGHWAY_TRACTOR
+      : 0
+    : 5;
 }
 
 export function travelPrep(p: Player, w?: World, destination?: Step): Step[] {
@@ -62,7 +67,15 @@ export function travelPrep(p: Player, w?: World, destination?: Step): Step[] {
       act({ type: 'engine' }),
     ];
   }
-  const slot = travelVehicle(p) === 5 ? 5 : w && storesSpareTractors(w, p) ? returnTractor(p) : 0;
+  const preferred = travelVehicle(p);
+  const slot =
+    preferred === HIGHWAY_TRACTOR
+      ? HIGHWAY_TRACTOR
+      : preferred === 5
+        ? 5
+        : w && storesSpareTractors(w, p)
+          ? returnTractor(p)
+          : 0;
   return [
     ...leaveDistractions(p),
     ...(p.fuel <= 0 && (p.inventory.fuel ?? 0) > 0 ? [act({ type: 'use', item: 'fuel' })] : []),

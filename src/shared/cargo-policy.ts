@@ -40,8 +40,9 @@ export function cargoAccepts(
       Object.entries(t.cargo).every(([id, q]) => !q || id === item)
     );
   if (t.kind === 'fuel') return item === 'fuel';
-  if (t.kind === 'fish') return seafood.includes(item) || rawMeats.includes(item);
-  if (t.kind === 'logs') return ['logs', 'wood'].includes(item);
+  if (t.kind === 'fish' || t.kind === 'semiRefrigerated')
+    return seafood.includes(item) || rawMeats.includes(item);
+  if (t.kind === 'logs' || t.kind === 'semiStake') return ['logs', 'wood'].includes(item);
   if (t.kind === 'dump') return ['stone', 'gravel', 'sand', 'ore', 'topsoil'].includes(item);
   if (animalShare(item) !== undefined || ['water', 'milk'].includes(item) || seafood.includes(item))
     return false;

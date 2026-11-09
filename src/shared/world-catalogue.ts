@@ -1,3 +1,4 @@
+import { automotiveBuilding } from './automotive-config';
 import { productionRecipe } from './production-recipe';
 import { survivalRules } from './survival-rules';
 import { rawMeats } from './meat-recipes';
@@ -182,6 +183,7 @@ export function setCatalogue(w: World, p: Player, input: unknown) {
     trailers: w.trailers,
     boatRescues: w.boatRescues,
     creator: w.creator,
+    automotive: w.automotive,
     templates: next.templates,
   });
   for (const id of [
@@ -201,6 +203,8 @@ export function setCatalogue(w: World, p: Player, input: unknown) {
     if (t.production) {
       validateRecipe(probe, t.production);
       if (t.base === 'farm') throw Error('Farm templates use crop plots');
+      if (t.base === 'automotiveFactory')
+        throw Error('Automotive factories use reserved assembly orders');
     }
     if (t.creatorModel && !w.creator?.models.some((m) => m.id === t.creatorModel))
       throw Error('Unknown template visual');
@@ -246,18 +250,21 @@ export function productionDiagnostics(w: World, b: Building) {
 }
 
 export function worldBuildings(w: World): Record<string, BuildingDef> {
-  if (!Object.keys(w.catalogue?.templates ?? {}).length) return buildings;
+  const base = w.automotive
+    ? { ...buildings, automotiveFactory: automotiveBuilding(w) }
+    : buildings;
+  if (!Object.keys(w.catalogue?.templates ?? {}).length) return base;
   return {
-    ...buildings,
+    ...base,
     ...Object.fromEntries(
       Object.entries(w.catalogue!.templates).map(([id, t]) => [
         id,
         {
-          ...buildings[t.base],
+          ...base[t.base],
           name: t.name,
           price: t.price,
           wage: t.wage,
-          idealEmployees: t.idealEmployees ?? buildings[t.base].idealEmployees,
+          idealEmployees: t.idealEmployees ?? base[t.base].idealEmployees,
           materials: t.materials,
           buy: t.buy,
           sell: t.sell,
@@ -268,6 +275,10 @@ export function worldBuildings(w: World): Record<string, BuildingDef> {
   };
 }
 export function applyBuildingTemplate(w: World, b: Building, id: string) {
+  if (b.kind === 'automotiveFactory') {
+    const def = automotiveBuilding(w);
+    Object.assign(b, { wage: def.wage, capacity: def.capacity, buy: { ...def.buy } });
+  }
   const t = w.catalogue?.templates[id];
   if (!t) return;
   Object.assign(b, {

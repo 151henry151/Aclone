@@ -1998,3 +1998,70 @@ scene depth. The height cap includes custom model scaling. Scenery view hides
 tags; building signs retain their existing behavior. Invalid combinations are
 rejected without partially applying changes. These rules are saved with the
 world and included in exported designs; older worlds use the defaults.
+
+## Automotive industry
+
+**F10 → Automotive industry** configures the developing factory system. This is
+not part of the current live release; the complete truck and factory economy
+release remains under verification. Rules are stored in `World.automotive` with canonical defaults
+in `data/automotive.json`, and travel with reusable world designs.
+
+Factory rules cover enablement, development tier (default 2), construction cash
+(default 1,600s), construction materials, input storage (4,000 per item), input
+purchase bids, profession (engineer), ideal crew (6), gross completed-unit wage
+(264d) and ready/reserved vehicle limit (4). Product rules cover assembly inputs,
+fully staffed elapsed seconds and sale price separately for the tractor unit and
+box, refrigerated and stake semitrailers. The factory's ordinary recipe editor
+cannot bypass its reserved assembly system.
+
+Edits are atomic and validate referenced goods/professions. Limits are tier 0–10,
+crew 1–16, vehicle places 1–64, storage/material quantities 1–1,000,000, up to eight
+positive inputs per product, assembly time 10–86,400 seconds, and monetary values
+0–1,000,000 denarii. Construction materials and bids accept at most 32 entries.
+Turning manufacturing off pauses existing orders without consuming their escrow.
+
+Existing premises retain their wages, local bids and owned inventory. A new order
+reserves the current inputs, time, profession, wages and ideal crew (including a
+custom factory template's crew override); later edits do not rewrite it. Reusable
+designs carry rules and authored premises but exclude paid orders, payroll and
+completed private vehicles. Actual saved worlds retain those assets.
+
+The same tab exposes collection reach, per-player semitrailer ownership limit,
+three bodies' length/width/height/capacity, fifth-wheel/kingpin/bogie dimensions,
+dirt/off-road/reverse caps, braking/coasting/drag, full-load acceleration, turning
+radius/lateral acceleration, pickup reach/alignment and articulation. Terrain
+support defaults to at most 0.85 m rise per horizontal metre plus 0.5 m suspension
+clearance; the respective limits are 0–2 and 0–3 m. Unhitch
+existing semitrailers before changing coupled geometry; unload cargo before
+reducing capacity below its current load. Truck engine performance, tank, body
+length/width/height, wheelbase, lights and cockpit remain in Vehicles. Cab height
+accepts 3.2–10 metres, changes the roof without stretching the person, and agrees
+with collision clearance. Fifth-wheel edits refresh both active and parked trucks;
+tight reverse turns stop before the trailer enters the cab. Manufactured truck
+names and prices belong in Automotive industry; each factory's posted price remains
+independent. Highway tractors require ground or road movement modes.
+
+Refrigeration is enabled by default, with a 20-unit independent tank, consumption
+of 1 tank unit per real hour and raw-meat ageing multiplier 0.2. Capacity accepts
+0.1–1,000, consumption 0–100, and multiplier 0–1. Zero consumption allows free
+power after the initial fill; multiplier zero pauses existing raw-meat ageing
+while powered. Disabling cooling gives ordinary ageing and stops fuel burn.
+Changes settle elapsed time under the previous rules first. Tank reductions
+below remaining fuel are refused; fuel and age persist in saved games, while
+private units are excluded from reusable designs. These rules do not invent a
+new fish expiry clock or alter existing agricultural chilled storage.
+
+**External vehicle demand** controls a shared, bounded wholesale outlet at
+factories: enabled by default, one collection place, 21,600 real seconds per
+place and a price fraction of 0.8 against the canonical product price. Limits
+are 1–16 places, 3,600–604,800 seconds and a fraction of 0–1. Zero price is an
+explicit free collection; NPC owners do not choose it. Already consumed places
+keep their original expiry after edits; disabling/re-enabling exports or reloading
+a world does not reset demand. Designs carry the rules, not consumed places.
+
+Resident factory owners use actual inputs and paid escrow, pause further input
+purchases while units are queued/unsold or external demand is exhausted, and retain
+the existing NPC input/payroll reserve settings. Configured prices and costs can
+make a recipe unprofitable, in which case they do not automatically fund it.
+Manufacturing, retail buying and exports use ordinary ownership/payment actions;
+no resident or factory is given starting supplies by this feature.

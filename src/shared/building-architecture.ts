@@ -51,6 +51,7 @@ const catalogue: Record<string, [Family, string[]]> = {
   refinery: ['works', buildingRecipes.refinery.map((recipe) => recipe.name)],
   rareMine: ['yard', buildingRecipes.rareMine.map((recipe) => recipe.name)],
   factory: ['works', buildingRecipes.factory.map((recipe) => recipe.name)],
+  automotiveFactory: ['works', buildingRecipes.automotiveFactory.map((recipe) => recipe.name)],
   shipyard: ['works', buildingRecipes.shipyard.map((recipe) => recipe.name)],
   warehouse: ['works', buildingRecipes.warehouse.map((recipe) => recipe.name)],
   turret: [

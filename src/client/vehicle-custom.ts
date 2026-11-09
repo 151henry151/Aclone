@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
+import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
+import { automotiveConfig } from '../shared/automotive-config';
 import type { World, Player } from '../shared/types';
 import { createTrawlRig } from './trawl-rig';
 import { vehicleDef, isTrawler } from '../shared/vehicle-config';
@@ -7,6 +9,14 @@ import { creatorModel } from './creator-model';
 import { publicPath } from '../shared/public-path';
 import { boatLighting } from '../shared/boat-lighting';
 declare const __ACLONE_BASE__: string;
+/** Shared by active and parked models; financial edits do not change their geometry. */
+export function vehicleVisualKey(w: World, slot: number) {
+  return JSON.stringify([
+    w.creator?.models.find((m) => m.id === w.creator?.vehicleModels[slot]) ?? null,
+    w.vehicleTuning?.[slot],
+    slot === HIGHWAY_TRACTOR ? automotiveConfig(w).coupling.fifthWheelZ : null,
+  ]);
+}
 export function configureVehicleVisual(root: T.Group, w: World, slot: number) {
   const v = vehicleDef(w, slot);
   if (isTrawler(slot, w) && !root.userData.fishingBoat) {

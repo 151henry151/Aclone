@@ -16,9 +16,14 @@ Item 19 stage 4, paid player bridge construction and road integration, is releas
 as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1 and parked
 vehicle batching as 0.136.2. Distant-island culling is released as 0.136.3 and
 stationary ground/river transforms as 0.136.4. The profiled and unprofiled
-populated-world gates pass; preserve their documented limits. Resume automotive
-manufacturing with a fresh read-only economic survey and calculated construction/
-production bills. Highway trucks follow the factory in dependency order.
+populated-world checks for those earlier releases are recorded below. Automotive
+manufacturing and highway haulage are ready for the authorized 0.137.0 checkpoint.
+Gameplay/economic tests and the corrected factory-camera browser pass. The final
+populated replay still fails the 100 ms heartbeat target at 131.87 ms. On
+2026-11-09 Henry explicitly requested commit, push, deploy and announce after
+that failure was reported. Release this checkpoint with the performance issue
+open; do not relabel the failed test as passing. No new backlog item is part of
+this release request.
 
 ## Completion protocol
 
@@ -9378,3 +9383,632 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15691375945
 Evidence and receipt are under `output/static-terrain/`. Continue item 19 stage 5
 with the factory/economic survey; keep the populated responsiveness gate for every
 subsequent change and do not present these fixes as perfect performance.
+
+## Item 19 stage 5 — Automotive manufacturing survey and criteria, 2026-11-08
+
+Resume after the verified 0.136.4 performance release. No manufacturing production
+code preceded this survey. Read-only SQLite snapshot captured at
+2026-11-08T23:54:07Z: 89 buildings, four mines, three quarries and one sawmill;
+no steel mill, rare-earth mine, electronics works or shipyard. Public Steel stock
+is zero; the two public outlets together hold 16 Electronics. Existing private
+prices and inventories remain untouched. Private snapshot and replay evidence
+stay under `output/automotive-factory/`, never in Git or announcements.
+
+`npx tsx --test tests/economy-balance.test.ts tests/business-management.test.ts`
+passes all 12 existing checks. `npx tsx output/automotive-factory/supply-replay.ts`
+runs four finite loads through a paid Iron mine → Steel mill → funded buyer:
+300 Ore are delivered and consumed, 60 Steel produced and sold. A tractor drives
+15.96 km including empty returns. Production waits and 30-second handling
+allowances total 13.07 simulated hours; gross trading margin is 22.446s, replacement
+fuel provision 0.7424s and wear/service provision 0.2968s, leaving 21.4067s. The
+mill's actual till grows 27.5552s. The mine ends 0.8924s down in cash with 90 unsold
+Ore; do not count that stock as realized income. The initial fixture stopped at a
+procedural tree because it lacked a connecting road; adding the intended dirt
+corridor fixes the fixture without disabling collision. This is a controlled
+supply-chain experiment, not a claim about routes or profits in live Puddlewick.
+Future truck comparisons must include production waits and finite buyer funds.
+
+Calculated starting proposal (internal currency is 100 hundredths per denarius,
+100 denarii per sheckle): factory base cash **1,600s**, construction **400 Steel,
+600 Wood, 1,600 Gravel, 20 Electronics**. At standard local producer asks (Gravel
+at Harbour), material cost is 1,175.65s: **2,775.65s before town construction tax**.
+Six ideal staff, engineer qualification, **264d gross per completed unit per paid
+worker**, production stocked/funded/staffed only. One assembly line per premises;
+default ready-stock limit four completed units across all products. Standard
+input bids: Steel 249.21d, Wood 23.52d, Electronics 338.52d, Tools 512.41d,
+Fuel 43.12d. These reward existing suppliers; owner-edited quotes remain local.
+
+Proposed assembly recipes and sale prices, all per-world data:
+
+- Highway tractor unit: 120 Steel, 8 Electronics, 8 Tools, 20 Wood, 20 Fuel;
+  two fully staffed hours; 600s. Inputs plus six wages cost 396.2944s; at 5%
+  sales tax the conditional contribution is 173.7056s, before upkeep/haulage.
+- Enclosed box semitrailer: 60 Steel, 40 Wood, 2 Tools, 4 Fuel;
+  one fully staffed hour; 280s. Conditional contribution 79.253s.
+- Refrigerated semitrailer: 70 Steel, 8 Electronics, 3 Tools, 20 Wood, 10 Fuel;
+  90 fully staffed minutes; 370s. Conditional contribution 109.7431s.
+- Stake/log semitrailer: 60 Steel, 60 Wood, 2 Tools, 4 Fuel;
+  one fully staffed hour; 290s. Conditional contribution 84.049s.
+
+These are estimates, not proven truck earnings or guaranteed demand. A single
+existing fully staffed mill produces six Steel/hour, so a tractor unit alone
+requires 20 mill-hours; multiple upstream businesses and deliveries matter. Do
+not introduce complimentary stock, infinite imports or live subsidies to mask
+that constraint. Record any recalculation before changing defaults.
+
+**Completion criteria before production changes:**
+
+1. Construction and configuration: new automotive premises require the actual
+   quoted cash/town tax and delivered materials, begin with zero product stock,
+   and cannot operate unfinished. Canonical factory and product definitions have
+   validated world overrides for enablement, cost/materials, input bids, recipes,
+   skill, staffing, wages, production time, stock limits and product sale prices.
+   F10 editor/help and design export/import carry them. Reject invalid edits
+   atomically; never rewrite owned stock, prices or a committed work order.
+2. Manufacturing authority: test missing inputs, absent/understaffed crews, empty
+   till, full ready inventory, finite elapsed work, changed recipes, restart and
+   cancellation. Reserve an order's actual recipe; conserve materials and money;
+   never bank unstaffed/unsupplied time or complete on an unrelated global clock
+   boundary. One completed unit is one persisted manufactured inventory entry.
+   Orders and deliveries cannot duplicate units under repeated/concurrent actions.
+3. Supply and sales: use existing stockroom/trade/accounting for inputs and paid
+   wages. Completed vehicles are not ordinary pocket cargo or unlimited garage
+   catalogue purchases. Delivery needs a valid, clear receiving position and
+   permissions, checks funds before moving stock, and charges applicable tax.
+   Failed/empty/blocked orders leave cash and stock unchanged. Define bounded
+   export demand and actual paid NPC purchasing without inventing residents,
+   inputs or treasury cash; do not grant live players anything.
+4. Factory comes before detailed trucks. Keep factory work unreleased until the
+   manufacture-to-ownership/delivery flow is usable with the subsequent tractor
+   unit and all three specialized semitrailers. Do not advertise a building that
+   sells unusable vehicle promises. Truck dimensions, performance, cargo,
+   refrigeration, driving/reversing/collision, parking and persistence still
+   require the full preserved stage-5 criteria above. Refrigeration consumes a
+   separate paid Fuel store, slows configured perishables' existing age only
+   while powered and never resets age on refilling or transferring cargo.
+5. Commands: new focused `tests/automotive-manufacturing.test.ts` and
+   `tests/automotive-economy.test.ts`, plus directly affected production, staffing,
+   construction, catalogue/design, NPC procurement, trade and ownership tests.
+   Record the failing assertion before production. Long-run production and actual
+   delivery/trade replay must include finite supply, wages/tax, buyer funds, wear,
+   return fuel, handling and unsold stock. Update these estimates from results;
+   retain useful ordinary tractor/boat/producer livelihoods.
+6. Browser: construct/finish the factory, deliver inputs, hire/work, queue and
+   finish each product, buy and receive it; inspect insufficient cash/materials,
+   no staff, empty till, full inventory, empty showroom and blocked delivery.
+   Exercise F10 changed settings and portable design, desktop/mobile controls,
+   real factory rendering and populated-world performance gates. Complete relevant
+   tests, clean TypeScript, explicit-file Prettier, production build, player and
+   world-builder docs, Unreleased changelog and README review before release.
+   Commit/push, deploy exact SHA and verify the screenshot announcement only when
+   this complete player-facing boundary passes. No new Completed heading.
+
+Continuation checks: factory templates must not bypass reserved assembly with an
+ordinary automatic recipe. New orders honor template crew overrides; queued crew,
+inputs, elapsed time and wages remain fixed after rule edits. Verify with
+`npx tsx --test tests/automotive-manufacturing.test.ts tests/staffing.test.ts tests/world-catalogue.test.ts`.
+The new tests failed on six rather than four template crew and accepted automatic
+recipes, then passed after the guards and crew resolution fixes (25 checks).
+All four products also pass actual SQLite save/load and fragmented-time completion
+without duplicate units or wages. Evidence: `output/automotive-factory/resume-*.log`.
+
+Factory estate policy follows existing per-world estate rules: retaining contents
+retains reserved work, payroll and completed units with the premises. Clearing
+contents clears manufactured stock and reservations; pay earned wages from their
+escrow first and sink unused escrow with the estate's remaining investment. Include
+retained manufactured stock and reserved inputs/payroll in estate equity at world
+catalogue values, without letting local edited asking prices inflate it. Test both
+death policies and reclaiming retained work before adding vehicle delivery.
+
+### Manufacturing continuation — verified foundation and delivery criteria
+
+The local foundation passes 89 relevant tests, 51 building/model checks, the
+production build and the desktop/mobile/F10 browser flow. Subsequent order-ID
+checks pass 30 manufacturing/snapshot tests: assembly now uses a persisted
+sequence, and queuing or changing economic rules does not invalidate geometry
+caches. The new regression first failed because queuing incremented the terrain
+revision. The populated replay includes six actual assembly workers: heartbeat
+maximum 73.479 ms, ping maximum 92 ms, frame p95 50.7 ms, maximum 103.5 ms,
+minimum 27 FPS, five NPC decisions, resident arrival and completed road growth;
+no errors or disconnect. One frame exceeded 100 ms; do not claim perfect frames.
+Evidence remains under `output/automotive-factory/`. The reviewed local assembly
+video is internal progress evidence only; purchase/delivery/driving remain absent.
+
+Before delivery production changes, require these failing assertions in
+`tests/automotive-delivery.test.ts`: preserve all existing vehicle slot identities
+and append one highway tractor; a completed factory unit is removed exactly once
+by a paid purchase; owner collection also pays the posted price into the business;
+apply existing world/town sales withholding and accounts; require a stopped nearby
+buyer, completed/enabled premises, sufficient cash and a clear full-size receiving
+footprint. Empty stock, stale prices, duplicate requests, an already-owned tractor,
+wrong premises, distant buyer and blocked yard must leave money, units and fleet
+unchanged. Manufacture all three semitrailer variants into separate owned, empty,
+unhitched trailers; retain their unique unit identity through SQLite restart.
+No free fuel, generic garage purchase or world-design copying of private units.
+Use existing parking/death/ownership rules; test delivery when ordinary vehicle
+persistence is disabled as well as enabled. One tractor of this model uses the
+existing fleet slot policy; trailers use individually identified units.
+
+Delivery defaults: 18 m collection reach, 21 individually owned semitrailers
+maximum. Both become validated per-world automotive rules, with F10 and portable
+design coverage. Vehicle prices/names come only from the four existing automotive
+product definitions. Local factory prices may override those defaults; changing
+world defaults must not rewrite a factory's posted prices. Require the exact price
+shown by the buyer's request before charging. Factory owners may close a product
+for sale. No complimentary owner withdrawals.
+
+Scale/performance proposal for the upcoming driving tests: 6.4 × 2.55 m tractor,
+3.8 m wheelbase, 13.6 × 2.6 × 4 m semitrailers; box 3,000 weight, refrigerated
+2,400 and stake 4,000. These are game capacities (not kilograms), respectively
+7.5× the existing small box, 3× chilled trailer and 4.44× log wagon. Factory
+prices remain 600/280/370/290s. Empty engine tank and refrigeration store require
+purchased Fuel. Retain existing world vehicle tuning for tractor dimensions,
+engine performance, tank, lights, cockpit and operating costs; semitrailer
+geometry/capacity and coupling rules receive world overrides. Approximate
+45 mph dirt and 65 mph paved targets, loaded acceleration and full-rig surface
+classification still need their separate failing movement/economics tests.
+
+Browser delivery completion: manufacture then collect every variant, inspect
+empty showroom, insufficient cash, changed quote and blocked yard, board the
+actual delivered tractor, inspect owned semitrailers on desktop and mobile. A
+later final flow must drive/couple/load/reverse/park/refrigerate these real units;
+passing only delivery is not a release boundary.
+
+Delivery checks now pass 69 selected manufacturing, parking, trailer and vehicle
+rule tests; the real desktop/mobile browser flow passes in 21.5 seconds. Its
+first failure was the absent Buy button. Completed units leave the showroom,
+are physically placed outside, and require actual collection. No live change.
+The first capacity-override regression accepted an overloaded existing trailer;
+the server now refuses that edit atomically. The first custom-length footprint
+regression still used 13.6 m instead of 15 m; authoritative bridge/parking/trailer
+footprints now resolve world rules. A fixture initially used nonexistent shed/
+house kinds; replacing it with actual garages preserves the blocked-yard test.
+
+Before truck/semitrailer model production: `tests/highway-models.test.ts` must
+verify full-size geometry, all three distinct bodies, six independently rotating
+wheel assemblies, a fifth wheel/kingpin and cab interior with real forward view,
+mirrors and lamps. Bound each tractor to 12,000 triangles / 48 meshes and each
+semitrailer to 6,000 triangles / 32 meshes, including a full visible timber load.
+Batch stationary geometry; preserve reusable texture assets and wheel pivots.
+Dimensions must follow the same world definitions as collision. Browser inspection
+must show the real delivered rig, exterior/day/night, cab and mobile; reject an
+agricultural model stretched to approximate a highway truck. Coupling defaults
+will be shared by physics and rendering: fifth wheel 1.5 m aft of tractor origin,
+kingpin 1.2 m behind trailer front, rear bogie centre 2.6 m ahead of the back.
+These are configurable world dimensions, not second hard-coded physics copies.
+
+Driving completion criteria before production edits: use actual `move`, trailer
+hitch actions and shared collision in `tests/highway-driving.test.ts`. Empty and
+loaded rigs must reach approximately 20.1168 m/s on an adequate dry dirt road and
+29.0576 m/s on an adequate dry paved road; default off-road cap 1.4 m/s. No boost
+speed advantage, narrow pavement strip or gap between paved segments may grant
+highway speed. Sample the whole articulated footprint and movement, not just the
+cab centre. Default reverse cap 3 m/s, braking 6 m/s², coasting 0.35 m/s²,
+rolling drag 0.012 per second, full-load acceleration 45% of empty, minimum turn
+radius 9 m, lateral acceleration limit 2.5 m/s². Retain weather, grade, condition,
+fuel and wear rules. Require world overrides/import/editor for these controls.
+Default fifth-wheel pickup reach 1 m, alignment 15°, articulation limit 75°.
+Agricultural tractors cannot couple semitrailers and highway tractors cannot use
+agricultural drawbars. Signed reversing and forward travel must retain the actual
+kingpin/fifth-wheel coincidence and use the rear bogie wheelbase, with no snapping
+the load across obstacles. Entire rig sweeps must stop at buildings, solid trees,
+parked/active vehicles, props, deep water and bridge rails; respect existing world
+collision switches. Clear wide bridges must remain traversable. Refused movement
+must not gain odometer distance or fuel from a rollback. Preserve trailer cargo,
+position, coupling and ownership across parking and restart. The first tests
+must fail before the control/coupling changes.
+
+Continuation after usage reset: the saved implementation remains unreleased on
+backlog-implementation. Twenty delivery/vehicle-editor tests and TypeScript pass.
+The real F10 browser check exposed invalid number-step validation for the default
+20.1168 m/s dirt speed; retain full precision and save the actual submitted rules.
+A new physical approach test fails with the fifth wheel 2.9001 m short of the
+kingpin. Before changing collision, require reversing from disjoint bodies to
+within pickup reach, coupling through the real action and pulling away with
+coincident kingpin/fifth wheel. The cab, landing supports and broadside body must
+remain solid. Recheck the final redirected path before charging distance or moving
+the trailer. Commands: focused highway-driving tests, vehicle/config tests and
+the actual automotive browser flow. Never substitute a pre-overlapped fixture
+for this physical pickup acceptance check.
+
+Refrigeration completion criteria, before production: a refrigerated semitrailer
+starts with an empty independent 20-unit refrigeration tank. Its owner, stopped
+alongside, can explicitly refuel from carried Fuel and switch cooling on/off;
+consume the actual catalogue tank-units per can, reject insufficient room or
+inventory atomically and never transfer engine fuel. Default enabled refrigeration
+uses 1 tank unit per real hour and slows existing raw-meat ageing to 20% while
+powered; after fuel depletion, age the remaining interval at the ordinary rate.
+Keep these defaults, switch and validation in automotive world rules, expose them
+in F10 and portable designs. Reject tank reductions below remaining stored fuel.
+Preserve elapsed age/fuel across cargo transfers, toggles, rule edits and SQLite
+restart; cooling never makes old meat fresh. Charge running empty/fish-only units
+too. Existing fish items have no general freshness clock: carry them under the
+existing seafood cargo policy without inventing a new expiry system or claiming
+that cooling alters a nonexistent timer. Existing agricultural chilled trailers
+retain their shipped cold-storage behavior. Tests:
+`npx tsx --test tests/highway-refrigeration.test.ts tests/meat-cooking.test.ts tests/meat-migration.test.ts tests/trailers.test.ts`.
+Browser: empty fuel/power refusal, add one carried Fuel, start cooling, inspect
+remaining fuel and freshness guidance, switch off, edit/import world settings.
+
+### Current continuation — truck integration remains unreleased
+
+The interrupted work is intact. F10 truck performance edits no longer submit a
+conflicting manufactured price. Automotive driving/coupling forms retain decimal
+precision (the first browser save failed HTML step validation at 20.1168 m/s).
+The full desktop/mobile manufacture→buy-all-four→collect→refuel→start→drive flow
+and refrigeration empty/refill/on/off/F10 flow pass in the browser (47.6 seconds).
+Refrigeration passes its five focused checks; the initial four plus existing
+meat/trailer checks passed 25 tests. TypeScript is clean at this checkpoint.
+
+New regressions first failed on physical pickup stopping 2.9001 m short, a 17.00 m
+shared-movement prediction divergence during a long turn, gate posts/fence rails
+passing between footprint samples, and geometry edits moving a hitched load.
+The fixes retain cab/support collision while admitting the rear chassis under
+a parked nose, use the disposable predicted trailer consistently, test complete
+prop/fence footprints and reject coupled geometry edits. Thirty-six selected
+driving/delivery/vehicle-rule checks pass, including loaded real-bridge travel,
+narrow rails, reversal, SQLite parking persistence and world collision switches.
+Six model checks pass: budgets remain 12,000 triangles/48 meshes for the tractor
+and 6,000/32 for each semi; gauges are in view and no longer buried in the dash.
+
+The populated loaded-rig replay exercised five actual NPC decisions, a resident
+arrival, daily road growth and assembly workers. It stayed CONNECTED with no
+browser errors, 31 ms maximum ping, 0.1683 m maximum correction and 87.38 ms
+maximum server heartbeat. However, minimum FPS was 19, frame p95 51.1 ms and
+the maximum 204.2 ms (two frames over 100 ms). Both long frames were in the first
+0.6 seconds of measurement after adding residents/triggering daily work. Do not
+call that excellent performance or publish a completed-release announcement.
+Profile those stalls before proceeding to NPC factory trade/export and the
+long-run economics gate. Evidence: output/automotive-factory/populated-truck/;
+all output remains unstaged. The final complete player-facing item is still not
+done; no commit, version bump, deployment or Discord announcement this turn.
+
+Startup-stall completion criteria, before production: a world entered seated in a
+truck must prepare the walking-person and rain-umbrella assets before allowing
+input. Adding the first walking resident during play must not synchronously
+compile a new built-in walking/umbrella shader or draw the umbrella atlas for the
+first time. Add a real browser regression in `tests/browser/actor-warmup.spec.ts`:
+enter a flat rainy world with only a truck driver; wait for ready; add a walking
+resident in view; observe the actual model and opened umbrella and assert no new
+shader compilation or umbrella-atlas creation. Preserve the loading neutral-input
+and missing-texture behavior in `tests/browser/startup.spec.ts`. Re-run the same
+populated loaded-rig input replay without a CPU profiler; report frame intervals,
+server heartbeat, correction, errors and arrival/road-growth/assembly checks.
+Do not claim that shader warmup alone solves all steady-state rendering cost.
+
+The warmed populated replay reduced the maximum frame interval to 107.8 ms but
+failed the unchanged server-heartbeat gate at 112.21 ms. The server profile shows
+`expireMeatStock` scanning every storage location for ordinary non-meat meals,
+called repeatedly during survival processing. Before fixing that regression,
+require a focused test to prove nonperishable inventory checks do not read
+unrelated buildings/player stocks, while empty/fish-only refrigerated trailers
+still settle their own fuel use. Preserve the existing meat/refrigeration tests
+and repeat the populated input gate; do not relax the 100 ms heartbeat limit.
+
+The post-fix populated replay passes its original gates: maximum heartbeat
+79.51 ms; maximum frame interval 91.7 ms, p95 52.3 ms, no frames above 100 ms;
+minimum measured FPS 28, maximum correction 0.1091 m, maximum ping 58 ms, no
+browser errors. Actual NPC decisions, route arrival, daily road work and assembly
+complete. Three repeated seated-arrival browser tests compile no new walking/
+umbrella shaders and create no new umbrella atlas after readiness; loading-input
+and missing-texture tests also pass. Evidence remains internal under
+output/automotive-factory/populated-truck-fast-meals/ and warmup/.
+
+Truck world-edit completion criteria before further production: customized truck
+height must set the visible cab roof and collision height together, with a cab
+minimum that fits its existing seated driver; expose Height in F10. Changing the
+fifth-wheel position must refresh active and parked built-in trucks; changing only
+manufacturing prices must preserve meshes. Keep names and manufactured prices in
+Automotive industry without a second Vehicle-editor override, and offer only the
+supported ground/road modes there. Extend highway-model/delivery/config tests,
+confirm failures, then verify these edits in the real F10 browser flow.
+
+The custom-coupling reverse regression now confirms the articulated trailer can
+enter its own cab with a forward fifth wheel. Require the actual rendered cab
+shell to stay disjoint from the coupled body throughout reverse steering; stop
+before contact, without charging rolled-back travel, and preserve the default
+forward/reverse/prediction/bridge tests. This extends the existing whole-rig
+collision criteria to self-contact under valid world overrides. The geometry-edit
+browser test also needs persistent parking explicitly enabled in its private
+fixture to inspect parked model refreshes after disembarkation.
+
+Before terrain-envelope production changes: preserve the existing maximum body
+slope allowance of 0.85 metres rise per horizontal metre plus 0.5 m suspension
+allowance as world driving rules. Test a surveyed flat-to-steep heightmap with
+full-body clearance: defaults pass a moderate slope; a lower configured grade
+refuses it; increasing suspension allowance admits the same rough support. Reject
+negative/nonfinite values; include both controls in F10 and actual design import/
+export. Extend the existing custom-driving test to perform a real export/import,
+including refrigeration, coupling and truck height, rather than only naming it.
+
+Before player-input production changes: the complete browser rig flow must reverse
+from a genuinely separated kingpin, brake with B, couple through Trailer cargo,
+load carried goods, drive and steer with the load, then retain it on unhitch. B,
+the controller's existing left-shoulder brake and a labelled mobile Brakes control
+must reach the truck simulation; modal dialogs must suppress movement. Verify
+night lights and a mobile viewport with the real rendered rig. These are ordinary
+truck brake controls, not a new acceleration/boost advantage. Capture the passing
+flow, not a pre-hitched demonstration substituted for actual pickup.
+
+Resume verification: the complete actual-input rig browser flow passes (30.1 s):
+reverse pickup, keyboard/controller/touch brakes, carried Wood loading, articulated
+turning, night lights and cargo-preserving unhitch. Screenshots are in
+output/automotive-factory/rig-browser/. Height/model-refresh checks and default/
+custom cab-contact regressions pass. This is still unreleased work.
+
+Before export production: add a factory-owner-only wholesale collection action
+for one real completed unit, with a stale-quote guard and no player delivery or
+free vehicle. External demand is shared across all factories in the world:
+default one unit per rolling six real hours, paid at 80% of the canonical product
+price before ordinary sales tax. Unsold time does not accumulate demand; world
+edits and save/load must not reset consumed demand. These defaults leave positive
+conditional contributions (at six paid crew and 5% sales tax): 59.7056s tractor,
+26.053s box, 39.4431s refrigerated, 28.949s stake, before upkeep/haulage. Local
+asking-price inflation cannot change the external quote. This is an explicitly
+bounded external sale, not an input grant or a treasury top-up. Expose enablement,
+interval, unit limit and price fraction in F10 and portable designs. Test empty,
+wrong-owner, disabled, stale-price, capacity and repeated requests atomically;
+check actual unit removal, investment, tax and export accounting, restart and
+competition between factories. Show the owner a quote and remaining demand in
+the manufacturing panel; browser-test export, exhausted demand and edited rules.
+Use tests/automotive-economy.test.ts, the existing delivery/manufacturing suites,
+the manufacturing browser flow, TypeScript and explicit-file Prettier.
+
+Before NPC integration production: residents must see real factory recipes,
+reserved work, completed inventory and current purchase/export quotes. Ordinary
+manufacturing actions use the same player executor, ownership, stale-price and
+payment checks as humans; no editor actions become available. Owner routines may
+queue one profitable assembly line only against available external demand, with
+actual inputs and escrow, and sell real completed stock through that bounded
+outlet. Use the existing NPC input/payroll reserve settings, preserve household
+and investor reserves, and pause bids/procurement when assembly/ready stock is
+backed up or the outlet is disabled/unprofitable. Expose paid purchase choices
+only for real available units and affordable productive ownership, without
+forcing purchases or assuming future profits. Test plans by executing their real
+player actions, not just matching advice strings; include missing suppliers,
+funds, crew, exhausted demand and world-disabled cases. Autonomous articulated
+route planning must be assessed before claiming residents can haul with a rig;
+purchasing alone does not prove they can drive it.
+
+Remaining rig verification: sweep a full semitrailer across an actual generated
+trunk, repeat with solid scenery disabled, and test shallow versus over-limit
+water plus no fuel charge for blocked travel. The test fixture must use a genuine
+woodland region rather than assuming any arbitrary chunk contains trees. For
+suitable trailer animations, parked landing legs must support the trailer and
+retract when coupled, while wheel rotation must match the model's own tyre radius.
+Add model regressions before changing animation and inspect coupling in the real
+rig browser flow. These are completion checks for this item, not a new feature.
+
+Verification update: the hardware-accelerated manufacturing browser passes all
+assembly, purchase, bounded-export, exhausted-demand and F10 geometry/rule checks
+(50.1 s); the full actual-input rig flow passes (29.4 s). Software WebGL reached
+exports but exceeded the overall manufacturing-test timeout during later model
+edits; its ordinary flight flow passed. Mobile safety exposed a stale test:
+`flightKeyboardAuthority` defaults to 0.5, and captured touch packets correctly
+sent pitch 0.5, while the test waited for 1 until a hard landing. Preserve the
+configured-authority behavior, assert the canonical world value, and retain the
+physical pitch-change and zero-on-release checks. This corrects the test's
+outdated raw-input assumption; no production input limit is relaxed.
+
+The finite factory replay passes twelve actual paid assembly runs: eleven units
+sold (ten quota-limited exports and one paid local buyer), one Stake semitrailer
+unsold, nine supplier Steel left unsold. Paid inputs 2,858.6679s; gross crew wages
+190.08s; retail receipts 280s; export gross 3,240s; combined owner/business realized
+contribution after sales tax and all twelve units' inputs/payroll 295.2521s.
+Assembly consumes 16.5 fully staffed hours plus 2,970 seconds of handling; quota
+waits extend the sales period. This co-located supply replay excludes transport
+and construction capital, neither of which is claimed free. A seven-day idle
+advance neither sells the last unit nor adds a factory subsidy. Truck freight
+movement, return fuel, wear and capital recovery remain separate gates.
+
+The actual full-load freight replay now reaches and sells at its customer but
+fails the required empty return: the ordinary NPC navigator holds maximum steering
+through the U-turn until the full-size semi reaches its cab/articulation stop.
+Keep the physical collision and articulation limits unchanged. Before navigation
+changes, retain this failing end-to-end paid haulage regression and require a
+continuous steered return with the same rig, no teleport/heading reset, paid fuel
+and wear. A straight loaded NPC route already passes; it is insufficient evidence
+for round-trip haulage. Mobile safety now passes (33.2 s) with configured pitch
+authority, physical pitch change and zero-on-release assertions intact.
+
+Resume audit, 2026-11-08: the funded full-load round trip now passes without
+teleportation or relaxed collision limits. It purchases 7,500 ore, manufactures
+1,500 steel over 250 production hours, carries and sells the full load, and
+returns empty. The 2,078 m drive takes 413 seconds; handling and production make
+this a roughly 262.6-hour supply cycle, not repeatable seven-minute earnings.
+The net trip contribution after fuel/wear provisions is 438.0024s, excluding
+880s truck/box capital. Relevant regressions pass 249/249; TypeScript is clean.
+Repeat the populated-world gate after the latest navigation changes.
+
+Before export-countdown correction: consume three collection places at different
+times, reduce the world limit to one, and require the displayed next-place time
+to point to the third expiry, not the first. Assert no sale is permitted at the
+first expiry and one is permitted at the reported time. Use
+`npx tsx --test tests/automotive-economy.test.ts`; the existing manufacturing browser
+flow must still display exhausted demand and editable export rules correctly.
+
+Export countdown red: 21,400 seconds was shown instead of the correct 21,600
+when reducing three occupied places to one. Correct the expiry rank, retaining
+all consumed places. The economy and parked-batching suites now pass 19/19.
+Before NPC bid correction: if a proposed electronics bid makes the selected truck
+unprofitable and the planner switches to a trailer without electronics, do not
+advertise that bid using the unrelated trailer's margin. Require the re-priced
+plan still to need the item; retain a profitable low-price supplier case. Test
+with actual observed finite suppliers in automotive-economy and existing NPC
+business-policy suites before production changes.
+
+The final unprofiled populated replay passes its server gate: 79.57 ms maximum
+heartbeat, 41 ms maximum ping, 0.0794 m correction, five resident decisions,
+completed route and daily work, advancing assembly, no errors. Frame p95 is
+52.3 ms, maximum 117.8 ms (one over 100 ms), minimum FPS 28. Investigate that hitch
+with a profiled replay; do not silently discard it or claim perfect frames.
+
+NPC bid red confirmed an offered 1,080,000-hundredth electronics bid despite the
+viable plan switching to a trailer without electronics. Require the re-priced
+plan still to consume the item. Automotive economy and NPC business-policy tests
+pass 18/18, retaining the affordable supplier case.
+
+The profiled performance replay also passes its server gate (87.12 ms maximum
+heartbeat), with 87.7 ms maximum frame interval and no frame above 100 ms.
+The prior 117.8 ms frame did not reproduce; do not claim its cause was isolated.
+The profile still shows scenery-layout serialization and render submission as
+remaining client costs. Keep both measurements; neither supports a guarantee of
+perfect responsiveness on every machine.
+
+Startup browser checks pass for resident/umbrella shader preparation, neutral
+input and missing textures, and switching to performance graphics while loading.
+The actual keyboard/controller/touch rig walkthrough passes, including pickup,
+articulation, brakes, night lamps and cargo-preserving uncoupling. A new blocked
+factory-delivery browser check correctly refuses the sale without payment. Its
+retry initially inspected a stale test-world reference after the server restored
+the failed action checkpoint. Reacquire the authoritative world/player/building
+before clearing the fixture yard and retrying. Preserve every refusal assertion.
+Add a real loaded river-bridge browser drive with a narrow-gate refusal as the
+last rendering/clearance check; unit bridge passage already passes.
+
+### Item 19 — Automotive release candidate, 2026-11-08
+
+All stage 5 criteria now pass. Stage 6 is covered by 110 road/city/bridge tests
+(blocked/multiple crossings, water/terrain edits, obstructions, removal, city
+qualification/shrinkage, competing builders, restart/import/export) plus the
+manufacturing/driving/cargo suites and funded economic replays. The original
+249 relevant tests pass; follow-ups pass 19/19 for collection countdown/parked
+batching and 18/18 for the final NPC bid/economy behavior. Do not run the entire
+unrelated suite. Commands and logs remain under output/automotive-factory/.
+
+Final browser results: factory assembly/collection/configuration passes in 54.5s,
+including genuine blocked-delivery refusal and retry, exhausted export demand,
+separate refrigeration and a visible timber load; whole loaded rig crossing and
+visible narrow gate passes in 1.7 minutes; keyboard/controller/touch coupling,
+brakes, turn and night lamps pass in 33.1s. Resident warmup passes in 16.5s and
+both loading/texture flows pass in 28.3s/11.4s. The mobile flight regression passed
+33.2s with canonical pitch authority, physical pitch change and released-input
+neutrality. Review retained successful videos and screenshots before posting.
+The temporary screenshot-scroll failure is resolved with a retry across live
+panel refresh; no player-facing criterion was removed.
+
+Prepare release 0.137.0 as one usable manufacturing/haulage boundary, with a
+separate logical pedestrian-warmup commit. Keep all output files and NPC status
+reports out of staging. Push only backlog-implementation; deploy the exact SHA,
+verify public health and assets, update the website and post the reviewed local
+screenshots through the announcement bot. Mark item 19 done only after push.
+
+Release hold from video review: factory collection succeeds, but the highway
+chase camera spends roughly 21–32 seconds inside the factory shell while driving
+away. Do not publish that as successful driving. Before production correction,
+extend the actual collection browser flow to require an unobstructed target-to-
+camera segment after boarding beside the hall. The camera must remain outside
+building geometry after smoothing and preserve first-person and overhead views.
+Use cached rendered building bounds rather than triangle raycasting every frame;
+repeat the affected factory, rig and populated-performance flows. This is a
+confirmed player-visible gap in the new delivery flow, not a new backlog item.
+
+The first stationary camera assertion passed because the broad factory bounds
+include the empty corner beside its office annex. Continuous camera sampling
+then confirmed the actual fault: lens position (4.84, 28.5, -4.08) inside the
+hall while the driver target was (4.84, 21.6, 16.92). The new browser regression
+fails on those occluded driving frames. Preserve that evidence in camera-red3.log.
+Use cached structural volumes for each building wing, not one combined box that
+mistakes the open yard for an interior. Clear both desired and smoothed truck
+chase positions; leave first-person/overhead and arrival views unchanged.
+Unit checks cover near walls, roofs, retained exterior distance, immutable cached
+bounds and rotated annexes. The browser diagnostic excludes labels from solid
+mesh bounds; it still checks the complete collection drive at 100 ms intervals.
+
+### Resume verification — hold 0.137.0 for a failed performance gate
+
+The corrected factory browser passes in 56.1 seconds with no camera intersections
+during the collection drive; the full rig controls browser passes in 31.5 seconds.
+All eight camera checks pass, including rotated annexes. Preserve the successful
+new recordings separately from the previously obstructed video.
+
+The required populated replay after that fix fails the unchanged <100 ms server
+heartbeat gate: maximum 140.30 ms, with four intervals at or above 100 ms.
+Frame p95 is 66.5 ms, maximum 119.9 ms (five intervals above 100 ms), minimum FPS
+21, maximum ping 228 ms and maximum correction 0.1293 m. Actual assembly, NPC
+decisions, route arrival and daily road growth still complete with no browser
+errors. Evidence: output/automotive-factory/populated-truck-camera-final/.
+Do not replace this failure with earlier passing results or release the candidate.
+Inspect a profiled replay to identify the blocking work before any further
+production changes; retain the original threshold and all gameplay checks.
+
+The diagnostic profile passes heartbeat at 76.27 ms but retains two client frames
+over 100 ms. It does not explain away the failed unprofiled run. Its largest
+server application self-time is advanceSurvival (1.71 seconds over the replay).
+That loop spreads the entire world twice per player merely to override time.
+Before removing those copies, require explicit-time shelter/pantry lookups to
+respect room expiry on either side of the boundary, preserve the world clock,
+and require survival not to enumerate unrelated world fields. Run automatic
+provisions, offline survival, survival rules/needs, nutrition and home provisions
+regressions, then repeat the original populated gate. No survival policy changes.
+
+Video review also finds partial roof occlusion of the truck's rear from roughly
+27–33 seconds. The prior lens-inside assertion does not cover the complete truck
+body; keep this visual gap open and do not publish the interval as unobstructed.
+
+Before changing camera clearance, extend the geometry regression to require a
+clear line from each lower chassis corner to the chase lens throughout departure
+(17–36 m from the hall centre). Derive the visibility envelope from the actual
+world truck dimensions rather than a second default. Keep the original target
+and cab/overhead camera behavior. The browser must also sample real truck body
+corners against the factory roof, then receive another full video review.
+
+The two survival regressions fail before production changes: an explicit past
+time incorrectly loses a still-booked room, and the survival loop reads an
+unrelated world getter while spreading the world. Pass time directly into
+shelter/pantry queries instead. All 40 selected provisions, offline survival,
+survival rules/needs, nutrition and home-provision tests pass.
+
+The new camera-body regression fails at 24 m from the factory, reproducing the
+roof covering the chassis despite a clear look-at ray. Expand cached obstruction
+volumes by the configured truck body's half diagonal; nine camera tests now pass.
+The browser now checks actual rendered wheel-to-camera rays against each factory
+mesh as well as lens overlap, without applying that expensive test instrumentation
+to production rendering. A fresh browser/video gate is in progress.
+
+Resume result: the full-body camera browser passes in 54.6 seconds with no lens
+overlap or wheel-to-lens obstruction. Video review confirms the entire collection
+drive (about 20.5–42 seconds) stays clear; the outward-to-overhead transition is
+noticeable but keeps the cab and chassis visible. Evidence:
+output/automotive-factory/browser/factory_collection_full_body_clearance.webm.
+
+The subsequent unprofiled populated replay still FAILS: maximum server heartbeat
+131.87 ms (one interval above 100 ms). It records frame p95 57.1 ms, maximum
+92.9 ms (no frame intervals above 100 ms), minimum FPS 25, maximum ping 114 ms,
+maximum correction 0.0893 m, no browser errors, actual NPC decisions, route
+arrival, daily road growth and assembly progress. Evidence:
+output/automotive-factory/populated-truck-survival-final/verification-summary.json.
+The survival-copy change is covered by 40 passing relevant tests but has not
+removed the intermittent server pause. Do not retry merely to obtain a green
+number, weaken the threshold or start another backlog item. Further work needs
+a trace of the failing interval; the passing diagnostic profile alone cannot
+identify it. Stop and report the failed gate and attempted fixes.
+
+Restore release metadata to 0.136.4 and keep the new changelog entries under
+Unreleased. No candidate commit/push, deployment, player grant or Discord post
+has occurred. Retain all local work and diagnostics for resumption.
+
+Final housekeeping checks pass: `npx tsc --noEmit` is clean; Prettier has run on
+all 93 explicitly selected changed/new source, test and documentation files;
+`git diff --check` is clean. Nothing is staged. The 40 survival/provision and nine
+camera tests pass; the latest factory browser and video review pass. These do
+not supersede the failed populated performance criterion. Release stays blocked.
+
+### Authorized checkpoint release — 2026-11-09
+
+Henry explicitly requested: “Well let's commit, push, deploy and announce” after
+the 132 ms pause and release hold were reported. This supersedes the hold for
+this checkpoint only. Retain the 100 ms test and its failure as an open issue.
+Release 0.137.0 with distinct manufacturing, pedestrian-warmup and survival-copy
+commits, plus release metadata. Preserve all passing gameplay/browser evidence;
+run the prefixed production build and website checks. Push backlog-implementation
+only, deploy the exact verified commit, verify live health/assets and announce
+through the Discord bot with the three reviewed real-game screenshots. Do not
+change live world stock or grant vehicles. Do not begin another backlog item
+until this release and its bookkeeping are complete.
+
+The prefixed 0.137.0 production build passes, including TypeScript. The website
+check fails because the new factory lacks its catalogue gallery image. Generate
+only automotiveFactory through the existing real-model architecture renderer,
+review its contact sheet, add the WebP asset and rerun website checks. Preserve
+the failure log under output/automotive-factory/release/website-check.log.

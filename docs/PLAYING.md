@@ -968,3 +968,76 @@ Terrain, water or obstruction edits trigger a safety inspection: entry closes
 while it runs, and a failed check explains what needs restoring. The saved deck
 stays in place. All design, funding, access, wear and repair rules are in
 **F10 → Rules → Player-built bridges**; displayed live terms override defaults.
+
+## Automotive assembly
+
+This work is in development and is not available in the live release yet. The
+complete manufacturing, freight and economy release is still being verified.
+
+A new Automotive factory costs 1,600s before town construction tax and requires
+400 Steel, 600 Wood, 1,600 Gravel and 20 Electronics delivered to finish the site.
+World rules can change those costs. Factories begin empty. Supply the stockroom
+and deposit investment before opening **Vehicle assembly** in the building window.
+The owner queues one of four products; each order immediately reserves its inputs
+and the maximum crew payroll. Up to four completed or queued vehicles share the
+standard storage limit. Only one order advances at a time.
+
+Six qualified engineers complete a highway tractor unit in two real hours, a box
+or stake semitrailer in one hour, and a refrigerated semitrailer in 90 minutes.
+Half a crew takes twice as long. No qualified crew means no progress. Paid staff
+fill places first; a qualified working owner can fill a remaining place without
+pay. The standard gross wage is 264d per paid worker per completed unit, allocated
+by contribution when staff change; normal wage taxes apply. Active-shift worlds
+require valid shifts throughout the work. Only an untouched order can be
+cancelled, returning its inputs and payroll if the stockroom has enough space.
+
+Changing world rules does not reprice a reserved order. Restarting preserves
+progress and finished inventory. A factory with reserved or completed vehicles
+cannot be demolished. Estate retention keeps those assets with the premises;
+clearing an estate pays already-earned wages and clears the remaining assembly
+assets under the world's death rules.
+
+Completed units have individual Buy controls at the factory. Prices start at
+600s for the tractor, 280s for a box, 370s for a refrigerated trailer and 290s for
+a stake trailer; each factory can set its own prices or close sales. Collection
+requires cash, a stopped buyer nearby and clear full-size space outside. Empty
+stock, changed quotes and blocked delivery do not charge you. Owners also pay
+the posted price into their business. Collect the delivered empty-tank tractor
+on foot; Fuel and the engine switch work as on other powered vehicles.
+
+Only a highway tractor can use the semitrailer fifth wheel. Reverse the rear
+chassis under the kingpin, align within the world's tolerance, stop and open
+Inventory → Hitch trailer. The default pickup reach is 1 m. Unhitch leaves the
+trailer and cargo where they are; switching to walking retains a parked hitch.
+The default truck is 6.4 m long and a semitrailer 13.6 m. Allow room for the
+whole rig when reversing, turning, crossing bridges and entering gates.
+
+Default targets are about 45 mph on dirt roads and 65 mph on paved roads, only
+while the whole rig fits the road. Off-road travel is limited to 1.4 m/s.
+Reverse is limited to 3 m/s; full loads accelerate more slowly, braking slows
+the rig and tight turns are restricted at speed. Hold **B**, the controller’s
+left shoulder button, or the mobile **Brakes** pedal to stop; release the throttle
+to coast. Boost does not raise truck speed. World weather, slopes, condition, fuel and wear still apply.
+
+Box semitrailers carry 3,000 weight of dry goods, refrigerated bodies 2,400 of
+fish/raw meat, and stake trailers 4,000 of Logs/Wood. Use existing trailer stock
+transfer and trading controls; cargo remains separate from the driver's bag.
+
+The refrigerated body has its own empty 20-unit tank. Stop alongside your own
+trailer and use Inventory → Refuel refrigeration, then Start refrigeration.
+Each carried Fuel can supplies the world's usual tank units (8 by default).
+A whole can must fit. Cooling consumes 1 tank unit per real hour, including
+while parked or empty, and slows existing raw-meat ageing to 20% of normal.
+Once fuel runs out, ordinary ageing resumes. Refilling or transferring stock
+never makes it fresh again. Switch cooling off when it is not needed. Fish
+currently has no general expiry clock; this feature does not add one.
+
+Factory owners can also use **External vehicle buyers** to sell a real completed
+unit for collection. Default external demand accepts one vehicle across the
+whole world per six real hours, paying 80% of the world product price before
+sales tax into the factory's investment till. Collection removes the vehicle;
+it does not deliver a free copy to the owner. The panel shows the quote, remaining
+places and next available collection. Local retail prices do not inflate export
+quotes. Unused time does not accumulate demand. World builders may change or
+disable this outlet. Keep unsold inventory and construction capital in mind when
+judging whether a factory has made money.

@@ -1,6 +1,8 @@
+import { defaultSemitrailers } from './highway-definitions';
 // SPDX-License-Identifier: GPL-3.0-or-later
 const tankAssembly = { length: 4.7, width: 2.35, axles: 2 } as const;
 export const trailerDefs = {
+  ...defaultSemitrailers,
   hay: {
     name: 'Harvest hay wagon',
     length: 6.6,

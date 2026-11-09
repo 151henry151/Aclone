@@ -195,6 +195,9 @@ export function buildingDesignQuote(
     add('steel', shell * 0.25);
     add('concrete', shell * 0.3);
   }
+  // Assembly tooling and its heavy structure remain part of every factory finish.
+  if (kind === 'automotiveFactory')
+    for (const [item, n] of Object.entries(def.materials)) raw[item] = Math.max(raw[item] ?? 0, n);
   // Kilns, forges and kitchens retain their refractory core even with timber cladding.
   if (selected.structure !== 'bricks' && def.materials.bricks) add('bricks', def.materials.bricks);
   return {

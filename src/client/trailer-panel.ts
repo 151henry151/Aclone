@@ -1,3 +1,6 @@
+import { automotiveConfig } from '../shared/automotive-config';
+import { coolingInterval } from '../shared/highway-refrigeration';
+import { isSemitrailer } from '../shared/highway-definitions';
 import { economyRules } from '../shared/economy-rules';
 import { fuelPanel } from './fuel-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -25,6 +28,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
     html +=
       '<h3>Specialist trailers</h3><p>Bring your tractor with clear space behind it. Trailers stay where you unhitch them, with their cargo.</p><div class="directory">';
     for (const kind of Object.keys(trailerDefs) as TrailerKind[]) {
+      if (isSemitrailer(kind)) continue;
       const d = trailerDef(w, kind);
       html += `<section><h4>${d.name} · ${money(d.price, w.settings.denariiPerSheckle)}</h4><p>${d.description} ${d.capacity} weight capacity.</p><form data-action="trailer">${hidden('operation', 'buy')}${hidden('kind', kind)}${hidden('building', b.id)}<button>Buy &amp; hitch</button></form></section>`;
     }
@@ -32,7 +36,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
   }
   if (!owned.length) return html;
   html +=
-    '<h3>Your trailers</h3><p>Unhitch before changing vehicles. To reconnect, reverse your tractor up to the drawbar. Loads slow travel and increase fuel use.</p>';
+    '<h3>Your trailers</h3><p>Unhitch before changing vehicles. To reconnect, reverse the matching tractor to the drawbar or semitrailer kingpin. Loads slow travel and increase fuel use.</p>';
   const items = worldItems(w);
   for (const publicTrailer of owned) {
     const t = {
@@ -53,6 +57,24 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
         .map(([id, n]) => `${esc(items[id]?.name ?? id)}: ${n}`)
         .join(' · ') || 'Empty'
     }</p>`;
+    if (t.kind === 'semiRefrigerated') {
+      const r = automotiveConfig(w).refrigeration,
+        fuel = coolingInterval(w, t).fuel,
+        running = t.cooling?.running ?? false,
+        units = items.fuel.fuel ?? 0,
+        moving = Math.abs(p.speed) >= 0.5,
+        reason = moving
+          ? 'Stop before handling refrigeration'
+          : !r.enabled
+            ? 'Refrigeration is disabled in this world'
+            : fuel <= 0
+              ? 'Add refrigeration fuel first'
+              : '';
+      html += `<h5>Refrigeration</h5><p>${fuel.toFixed(2)} / ${r.fuelCapacity} refrigeration fuel · ${running && r.enabled && fuel > 0 ? 'Cooling' : running ? 'Waiting for fuel or enabled world rules' : 'Off'}</p>
+      <p>Separate from engine fuel. While powered, raw meat ages at ${Math.round(r.ageingMultiplier * 100)}% of its ordinary rate; cooling uses ${r.fuelPerHour} tank units per real hour. Fish has no general expiry timer. Refilling never resets cargo age.</p>
+      <form data-action="trailer">${hidden('id', t.id)}${hidden('operation', 'cooling')}${hidden('running', String(!running))}<button ${moving || (!running && reason) ? 'disabled' : ''}>${running ? 'Stop refrigeration' : 'Start refrigeration'}</button>${reason ? `<p>${esc(reason)}</p>` : ''}</form>
+      <form data-action="trailer">${hidden('id', t.id)}${hidden('operation', 'coolingRefuel')}<label>Fuel cans for refrigeration<input name="quantity" type="number" min="1" max="${Math.max(1, Math.floor((r.fuelCapacity - fuel) / Math.max(units, 1e-9)))}" value="1" required></label><button ${moving || !p.inventory.fuel || units <= 0 || fuel + units > r.fuelCapacity + 1e-9 ? 'disabled' : ''}>Refuel refrigeration</button><p>Each carried Fuel can supplies ${units} tank units; leave enough room for a whole can.</p></form>`;
+    }
     const source = b?.owner === p.id ? b.stock : p.inventory,
       storage = b?.owner === p.id ? hidden('building', b.id) : '';
     for (const [operation, stock, label] of [

@@ -15,6 +15,7 @@ export const industrialKinds = new Set([
   'workshop',
   'refinery',
   'factory',
+  'automotiveFactory',
   'shipyard',
   'warehouse',
   'composter',
@@ -37,6 +38,7 @@ export const tradeSymbols: Record<string, string> = {
   school: 'council',
   workhouse: 'tools',
   garage: 'tools',
+  automotiveFactory: 'tools',
   workshop: 'tools',
   carpenter: 'tools',
   teaHouse: 'tea',
@@ -138,5 +140,6 @@ export function roofHeightAt(v: BuildingVolume, x: number, z: number) {
 }
 
 export function loadingBayXs(kind: string, v: BuildingVolume) {
+  if (kind === 'automotiveFactory' && v.width >= 24) return [v.x, v.x + 8];
   return kind === 'garage' && v.width >= 12 ? [v.x - 4.3, v.x, v.x + 4.3] : [v.x];
 }

@@ -1,3 +1,4 @@
+import { automotiveProduction, automotivePurchaseChoices } from './automotive-policy';
 import { gatheringRate } from '../../shared/resources';
 import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
@@ -29,12 +30,16 @@ export function economyChoices(
   visit: (b: Building, steps: Step[]) => Step[],
 ) {
   const loads = npcBusinessLoadRules(w.settings);
+  automotivePurchaseChoices(w, p, buildings, add, visit);
   for (const b of buildings
-    .filter((b) => b.kind !== 'farm' && (b.production || b.recipe))
+    .filter(
+      (b) => b.kind !== 'farm' && (b.production || b.recipe || b.kind === 'automotiveFactory'),
+    )
     .slice(0, 12)) {
     const job = workplace(w, p, b)!;
-    const recipe = b.production ?? recipes[b.recipe!];
-    if (!recipe) continue;
+    const assembly =
+      b.kind === 'automotiveFactory' ? automotiveProduction(w, b)?.recipe : undefined;
+    const recipe = assembly ? { ...assembly, outputs: {} } : (b.production ?? recipes[b.recipe!]);
     if (b.owner !== p.id && job.qualified && !shiftBlocker(w, p, b)) {
       const wait = Math.max(1, Math.min(600, job.nextCycleInSeconds + 1));
       if (job.employedHere) {
@@ -64,6 +69,7 @@ export function economyChoices(
           Math.min(1200, wait + 30),
         );
     }
+    if (!recipe) continue;
     if (b.owner === p.id) {
       const budget = productionBudget(w, b);
       const capital =

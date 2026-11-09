@@ -1,3 +1,7 @@
+import { HIGHWAY_TRACTOR } from '../../shared/highway-definitions';
+import { automotiveConfig } from '../../shared/automotive-config';
+import { automotivePrice } from '../../shared/automotive-sales';
+import { automotiveExportQuote } from '../../shared/automotive-exports';
 import { bridgeRules } from '../../shared/bridge-rules';
 import { bridgeAccessReason } from '../../shared/bridge-geometry';
 import { roadRules } from '../../shared/road-rules';
@@ -311,6 +315,11 @@ export function observe(
       engine: p.engine,
       lights: p.lights,
       vehicle: p.vehicle,
+      fleet: p.fleet ?? [0, 5],
+      parkedVehicles: Object.entries(w.parkedVehicles ?? {})
+        .filter(([, v]) => v.owner === p.id)
+        .map(([id, v]) => ({ id, ...v })),
+      trailers: Object.values(w.trailers ?? {}).filter((t) => t.owner === p.id),
       vehicleCondition: vehicleCondition(p),
       requiredLicence: requiredLicence(w, p.vehicle),
       inventory: p.inventory,
@@ -380,6 +389,29 @@ export function observe(
         b.kind === 'farm'
           ? undefined
           : (b.production ?? (b.recipe ? recipes[b.recipe] : undefined)),
+      manufacturing:
+        b.kind === 'automotiveFactory'
+          ? {
+              enabled: automotiveConfig(w).enabled,
+              products: automotiveConfig(w).products,
+              readyCapacity: automotiveConfig(w).factory.readyCapacity,
+              orders: (b.manufacturing?.orders ?? []).map((o) => ({
+                id: o.id,
+                product: o.product,
+                seconds: o.seconds,
+                worked: o.worked,
+                skill: o.skill,
+                idealEmployees: o.idealEmployees,
+                payroll: o.payroll,
+              })),
+              ready: (b.manufacturing?.ready ?? []).map((u) => ({
+                ...u,
+                price: automotivePrice(w, b, u.product),
+                export: automotiveExportQuote(w, u.product),
+              })),
+              action: `Truck slot ${HIGHWAY_TRACTOR}; ordinary vehicle(slot) collects it physically. trailer(operation: hitch/unhitch/load/unload, id, optional building/item/quantity) operates owned cargo; trade with storage: trailer and trailer: ID buys/sells alongside a shop. manufacturing: owner queue(product), cancel(order, untouched only), price(product,price/open), export(unit,expectedPrice); customer buy(unit,expectedPrice). Visit the factory. Real inputs, reserved payroll and completed stock only; empty delivery fuel tank. Export demand is shared and cannot be banked.`,
+            }
+          : undefined,
       plots: b.plots,
       construction: b.construction,
     })),

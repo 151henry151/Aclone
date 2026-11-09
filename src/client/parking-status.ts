@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { parkingRules } from '../shared/parking-rules';
 import type { Player, World } from '../shared/types';
 import { fuelVehicle, isTractor } from '../shared/tractors';
 import {
@@ -11,11 +12,21 @@ import { vehicleDef } from '../shared/vehicle-config';
 
 /** Guidance always refers to the physical tank, never the walker's legacy fuel. */
 export function parkingStatus(w: World, p: Player) {
-  if (p.vehicle !== 5 || !persistentVehicles(w, p) || p.inside || p.atHome || p.task) return;
+  if (p.vehicle !== 5 || p.inside || p.atHome || p.task) return;
   const owned = Object.values(w.parkedVehicles ?? {}).filter(
-    (v) => v.owner === p.id && v.inside !== GARAGE_STORAGE,
+    (v) =>
+      v.owner === p.id &&
+      v.inside !== GARAGE_STORAGE &&
+      (persistentVehicles(w, p) || v.deliveryPending),
   );
-  const v = owned.find((v) => v.slot === fuelVehicle(p, w)) ?? owned[0];
+  const v =
+    owned.find(
+      (v) =>
+        v.deliveryPending &&
+        Math.hypot(v.x - p.x, v.z - p.z) <= parkingRules(w.settings).parkingReturnRange,
+    ) ??
+    owned.find((v) => v.slot === fuelVehicle(p, w)) ??
+    owned[0];
   if (!v) return;
   const garage = w.buildings.find((b) => b.id === v.inside);
   const point = { x: garage?.x ?? v.x, z: garage?.z ?? v.z, name: vehicleDef(w, v.slot).name };

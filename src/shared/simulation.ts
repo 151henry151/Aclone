@@ -1,3 +1,17 @@
+import { coolingInterval } from './highway-refrigeration';
+import { highwayControls, highwaySurface, clearHighwayRig } from './highway-driving';
+import { HIGHWAY_TRACTOR, isSemitrailer, semiProducts } from './highway-definitions';
+import {
+  automotiveConfig,
+  patchAutomotive,
+  validateAutomotiveReferences,
+} from './automotive-config';
+import {
+  manufacturingAction,
+  manufacturingSkill,
+  advanceManufacturing,
+  clearManufacturingEstate,
+} from './automotive-manufacturing';
 import { advanceBridgeInspections } from './bridge-inspection';
 import { bridgeGroundBlocked, updateBridgePassages } from './bridge-geometry';
 import { bridgeAction, advanceBridgeSurveys, maintainBridges } from './bridges';
@@ -839,6 +853,41 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'automotiveConfig': {
+      requireThat(w.owner === p.id, 'World owner required');
+      const next = patchAutomotive(w, a.patch);
+      validateAutomotiveReferences(next, items, skills);
+      for (const t of Object.values(w.trailers ?? {}))
+        if (isSemitrailer(t.kind))
+          requireThat(
+            stockWeight(w, t.cargo) <= next.semitrailers[semiProducts[t.kind]].capacity,
+            'Unload semitrailer cargo before reducing capacity',
+          );
+      for (const t of Object.values(w.trailers ?? {}))
+        if (t.kind === 'semiRefrigerated')
+          requireThat(
+            coolingInterval(w, t).fuel <= next.refrigeration.fuelCapacity,
+            'Use refrigeration fuel before reducing tank capacity',
+          );
+      const old = automotiveConfig(w);
+      for (const t of Object.values(w.trailers ?? {})) {
+        if (!isSemitrailer(t.kind) || !t.attached) continue;
+        const product = semiProducts[t.kind];
+        requireThat(
+          JSON.stringify(old.coupling) === JSON.stringify(next.coupling) &&
+            (['length', 'width', 'height'] as const).every(
+              (key) => old.semitrailers[product][key] === next.semitrailers[product][key],
+            ),
+          'Unhitch semitrailers before changing their geometry or coupling dimensions',
+        );
+      }
+      expireMeat(w);
+      w.automotive = next;
+      break;
+    }
+    case 'manufacturing':
+      result = manufacturingAction(w, p, a);
+      break;
     case 'tender':
       return tenderAction(w, p, a.operation);
     case 'boatHold':
@@ -1204,6 +1253,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     case 'production': {
       owner(p);
       const b = nearby(w, p, a.building);
+      requireThat(
+        b.kind !== 'automotiveFactory',
+        'Use the automotive manufacturing rules and assembly orders',
+      );
       requireThat(b.kind !== 'farm', 'Farm plots use the seasonal crop calendar');
       const readStock = (v: unknown) => {
         requireThat(v && typeof v === 'object' && !Array.isArray(v), 'Expected an item map');
@@ -1356,7 +1409,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     case 'staffing': {
       const b = nearby(w, p, a.building);
       owns(p, b);
-      requireThat(b.recipe || b.production, 'No employment at this building');
+      requireThat(
+        b.kind === 'automotiveFactory' || b.recipe || b.production,
+        'No employment at this building',
+      );
       const limit = a.limit === undefined ? undefined : num(a.limit, 0, 16, true);
       if (a.dismiss !== undefined) {
         const id = str(a.dismiss);
@@ -1401,7 +1457,11 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       );
       requireThat(!p.job || p.job === b.id, 'Quit your current job first');
       const recipe =
-        b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
+        b.kind === 'automotiveFactory'
+          ? { skill: manufacturingSkill(w, b) }
+          : b.kind === 'farm'
+            ? recipes.farm
+            : (b.production ?? (b.recipe && recipes[b.recipe]));
       requireThat(recipe || b.kind === 'lighthouse', 'No work at this building');
       requireThat(
         b.kind === 'lighthouse' || (recipe && p.skills.includes(recipe.skill)),
@@ -1449,7 +1509,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     case 'work': {
       const b = nearby(w, p, a.building);
       if (b.kind !== 'lighthouse' && w.settings.ownerOperation && b.owner === p.id) {
-        const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+        const recipe =
+          b.kind === 'automotiveFactory'
+            ? { skill: manufacturingSkill(w, b) }
+            : (b.production ?? (b.recipe && recipes[b.recipe]));
         requireThat(
           recipe && b.kind !== 'farm',
           'This business uses different production controls',
@@ -1701,6 +1764,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const beforeVehicle = { vehicle: p.vehicle, x: p.x, y: p.y, z: p.z, heading: p.heading };
       requireThat(!p.hitch, 'Leave the passenger seat at the dock before changing vehicles');
       const slot = num(a.slot, 0, vehicles.length - 1, true);
+      requireThat(
+        slot !== HIGHWAY_TRACTOR || (p.fleet ?? []).includes(slot),
+        'Buy a manufactured highway tractor from an automotive factory',
+      );
       const parkingBuilding = w.buildings.find((b) => b.id === a.building);
       if (persistentVehicles(w, p)) {
         requireThat(
@@ -1711,7 +1778,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       }
       const parkingReason = parkedReturnReason(w, p, slot, parkingBuilding);
       requireThat(!parkingReason, parkingReason ?? 'Cannot board');
-      const returningParked = persistentVehicles(w, p) && !!parkedVehicle(w, p, slot);
+      const returningParked =
+        (persistentVehicles(w, p) || !!parkedVehicle(w, p, slot)?.deliveryPending) &&
+        !!parkedVehicle(w, p, slot);
       const garageDeparture =
         persistentVehicles(w, p) &&
         tractorGarage(parkingBuilding) &&
@@ -2221,6 +2290,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         a.rotation === undefined ? undefined : num(a.rotation, -Math.PI * 2, Math.PI * 2);
       requireThat(def, 'Unknown building type');
       requireThat(
+        kind !== 'automotiveFactory' || automotiveConfig(w).enabled,
+        'Automotive manufacturing is disabled in this world',
+      );
+      requireThat(
         kind !== 'butcher' || meatRules(w.settings).butchersEnabled,
         'Butchers are disabled in this world',
       );
@@ -2378,6 +2451,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const b = nearby(w, p, a.building);
       owns(p, b);
       requireThat(!b.government, 'Government buildings cannot be demolished');
+      requireThat(
+        !b.manufacturing?.orders.length && !b.manufacturing?.ready.length,
+        'Finish or cancel assembly orders and deliver manufactured vehicles before demolition',
+      );
       requireThat(!b.lien, 'Repay the mortgage before demolishing this property');
       requireThat(
         !Object.values(w.players).some((p) =>
@@ -3349,24 +3426,37 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
     tractorSurface(surface.speed, traction) *
     (0.7 + condition * 0.003);
-  p.speed +=
-    ((powered ? throttle : 0) *
-      (rowing && p.vehicle === MOTORBOAT
-        ? rowboatRules(w.settings).motorboatRowingAcceleration
-        : v.acceleration) *
+  if (p.vehicle === HIGHWAY_TRACTOR)
+    highwayControls(
+      w,
+      p,
+      { ...input, steer: intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) },
+      dt,
+      grade,
+      condition,
+      powered,
+      prediction,
+    );
+  else {
+    p.speed +=
+      ((powered ? throttle : 0) *
+        (rowing && p.vehicle === MOTORBOAT
+          ? rowboatRules(w.settings).motorboatRowingAcceleration
+          : v.acceleration) *
+        tractorSurface(surface.grip, traction) *
+        slopeSpeed(grade * Math.sign(throttle)) -
+        p.speed * (throttle ? 0.13 : 1.8)) *
+      dt;
+    p.speed = clamp(p.speed, -cap * 0.4 * slopeSpeed(-grade), cap * slopeSpeed(grade));
+    p.heading +=
+      intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
+      v.turn *
       tractorSurface(surface.grip, traction) *
-      slopeSpeed(grade * Math.sign(throttle)) -
-      p.speed * (throttle ? 0.13 : 1.8)) *
-    dt;
-  p.speed = clamp(p.speed, -cap * 0.4 * slopeSpeed(-grade), cap * slopeSpeed(grade));
-  p.heading +=
-    intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
-    v.turn *
-    tractorSurface(surface.grip, traction) *
-    (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
-    dt *
-    ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
-    (Math.abs(p.speed) > 0.1 ? 1 : 0);
+      (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
+      dt *
+      ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
+      (Math.abs(p.speed) > 0.1 ? 1 : 0);
+  }
   if (v.mode === 2 || v.mode === 6)
     p.y = Math.max(
       ground,
@@ -3403,6 +3493,17 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const previousPosition = { x: p.x, z: p.z };
   let nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
+  if (p.vehicle === HIGHWAY_TRACTOR) {
+    const from = { ...p, ...towBefore };
+    const surfaceLimit =
+      highwaySurface(w, from, { x: nx, z: nz, heading: p.heading }, prediction).speed *
+      roadConditions(w).speed;
+    if (Math.abs(p.speed) > surfaceLimit) {
+      p.speed = Math.sign(p.speed) * surfaceLimit;
+      nx = p.x + Math.sin(p.heading) * p.speed * dt;
+      nz = p.z + Math.cos(p.heading) * p.speed * dt;
+    }
+  }
   let solidStopped = false;
   if (onSolidGround(w, p)) {
     const scenery = sceneryContact(w, p, { x: nx, z: nz });
@@ -3423,6 +3524,15 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       bridgeGroundBlocked(w, p, contact.point, towBefore.heading);
     nx = redirectedBlocked ? p.x : contact.point.x;
     nz = redirectedBlocked ? p.z : contact.point.z;
+  }
+  if (
+    p.vehicle === HIGHWAY_TRACTOR &&
+    (solidStopped ||
+      !clearHighwayRig(w, p, towBefore, { x: nx, z: nz, heading: p.heading }, prediction))
+  ) {
+    p.heading = towBefore.heading;
+    p.speed = 0;
+    return;
   }
   const gentleCanoe =
     (p.vehicle === CANOE && Math.abs(p.speed) <= canoeRules(w.settings).canoeShoreSpeed) ||
@@ -3508,6 +3618,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   } else if (
     !(
       v.mode !== 3 &&
+      p.vehicle !== HIGHWAY_TRACTOR &&
       p.y < ground + 2 &&
       trailerBlocks(
         w,
@@ -3570,7 +3681,12 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           trailerFactors(w, p).fuel *
           (activeTow(w, p.id) ? 1.6 : towingTender(w, p) ? 1.2 : 1) *
           loadFactors.fuel *
-          (input.boost && !p.carrying && !throttleBoat(p.vehicle, w) ? 2 : 1) *
+          (input.boost &&
+          p.vehicle !== HIGHWAY_TRACTOR &&
+          !p.carrying &&
+          !throttleBoat(p.vehicle, w)
+            ? 2
+            : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
@@ -3684,6 +3800,7 @@ function kill(
         }
         if (!w.settings.retainEstateContents) {
           refundStakes(w, b);
+          clearManufacturingEstate(w, b);
           b.stock = {};
           log(w, 'sink', b.investment, b.id, 'treasury', 'estate closure');
           b.investment = 0;
@@ -3699,6 +3816,8 @@ function kill(
   }
 }
 export function productionInterval(w: World, b: Building) {
+  if (b.kind === 'automotiveFactory')
+    return b.manufacturing?.orders[0]?.seconds ?? automotiveConfig(w).products.tractor.seconds;
   if (b.kind === 'lighthouse') return Math.max(60, w.settings.dayLength || 600);
   return (
     b.production?.seconds ??
@@ -3734,7 +3853,7 @@ function cycle(w: World, b: Building, at: number) {
     return;
   }
   const r = worldMeatRecipe(b, w.settings) ?? b.production ?? (b.recipe && recipes[b.recipe]);
-  if (!r || b.construction || b.kind === 'farm') return;
+  if (!r || b.construction || b.kind === 'farm' || b.kind === 'automotiveFactory') return;
   if (b.kind === 'butcher' && !meatRules(w.settings).butchersEnabled) {
     b.efficiency = 0;
     return;
@@ -3892,6 +4011,7 @@ export function advance(w: World, seconds: number) {
     for (let t = (Math.floor(start / interval) + 1) * interval; t <= end; t += interval)
       cycle(w, b, t);
   }
+  advanceManufacturing(w, start, end);
   advanceClimate(w, start, end);
   w.time = end;
   advanceBridgeInspections(w);

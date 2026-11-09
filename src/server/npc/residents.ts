@@ -1,3 +1,4 @@
+import { HIGHWAY_TRACTOR } from '../../shared/highway-definitions';
 import { setTimeout as yieldToMovement } from 'node:timers/promises';
 import { parkOnSignOff, restoreParkedSeat } from '../../shared/parked-vehicles';
 import { npcAccountRules } from '../../shared/npc-account-rules';
@@ -919,7 +920,13 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
-      if (!r.state.inSpace && !p.atHome && !p.crowBody && !p.task && ![0, 5].includes(p.vehicle)) {
+      if (
+        !r.state.inSpace &&
+        !p.atHome &&
+        !p.crowBody &&
+        !p.task &&
+        ![0, 5, HIGHWAY_TRACTOR].includes(p.vehicle)
+      ) {
         // Repair obsolete/custom transport before route backoff or another model call.
         r.nav = undefined;
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');

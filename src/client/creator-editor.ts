@@ -1,3 +1,4 @@
+import { automotiveEditor, automotiveForm } from './automotive-panel';
 import { bridgeRules, bridgeRuleFields } from '../shared/bridge-rules';
 import { nameTagFields, nameTagRules } from '../shared/name-tag-rules';
 import { roadRuleFields, roadRules } from '../shared/road-rules';
@@ -115,6 +116,7 @@ export const creatorTabs = [
   'Access rules',
   'Layout',
   'Production',
+  'Automotive industry',
   'Catalogue',
   'Building templates',
   'Vehicles',
@@ -1294,6 +1296,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
     )}<button>Save scenery</button></form><h3>Remove individual landscape edits</h3><p>Removing a zone also removes behavior rules targeting that zone.</p>${w.zones.map((z) => `<p>${esc(z.kind)} · ${z.x}, ${z.z} ${button('Remove', 'deleteZone', z.id)}</p>`).join('')}${w.terrain.map((t, i) => `<p>Brush ${i + 1}: ${t.x}, ${t.z}, height ${t.height} ${button('Undo brush', 'deleteTerrain', String(i))}</p>`).join('')}`;
   if (tab === 'Building templates') return templatesEditor(w, templateId);
   if (tab === 'Catalogue') return catalogueEditor(w, catalogueItemId, catalogueSkillId);
+  if (tab === 'Automotive industry') return automotiveEditor(w);
   if (tab === 'Production') {
     const b =
       w.buildings.find((b) => b.id === recipeId && b.kind !== 'farm') ??
@@ -1424,6 +1427,7 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
+  if (form.id.startsWith('creator-automotive-')) return automotiveForm(form);
   if (form.getAttribute('id') === 'creator-spring-form' || form.hasAttribute('data-spring-form')) {
     const d = new FormData(form);
     return {

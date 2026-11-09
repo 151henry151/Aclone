@@ -25,6 +25,8 @@ export interface ParkedVehicle {
   owner: string;
   /** Public projection for owners who are offline. */
   ownerName?: string;
+  /** Factory delivery must be collected in place even when later parking is disabled. */
+  deliveryPending?: boolean;
   slot: number;
   x: number;
   z: number;
@@ -62,8 +64,8 @@ export function parkedVehicle(w: World, p: Player, slot: number) {
   return w.parkedVehicles?.[parkedKey(p.id, slot)];
 }
 export function parkedReturnReason(w: World, p: Player, slot: number, building?: Building) {
-  if (!persistentVehicles(w, p)) return;
   const v = parkedVehicle(w, p, slot);
+  if (!persistentVehicles(w, p) && !v?.deliveryPending) return;
   if (
     isTractor(slot) &&
     ((storesSpareTractors(w, p) &&
@@ -112,8 +114,8 @@ export function switchPersistentVehicle(
   building?: Building,
   restoringSeat = false,
 ) {
-  const enabled = restoringSeat || persistentVehicles(w, p);
   const target = parkedVehicle(w, p, slot);
+  const enabled = restoringSeat || persistentVehicles(w, p) || !!target?.deliveryPending;
   if ((!enabled && !target) || slot === p.vehicle) {
     switchVehicle(p, slot, true, w);
     return;
@@ -160,7 +162,12 @@ export function parkedRefuelStatus(w: World, p: Player, owner: string, slot: num
   const reach = parkingRules(w.settings).parkingReturnRange;
   const capacity = fuelCapacity({ ...p, fuelVehicle: slot }, w);
   let reason: string | undefined;
-  if (!persistentVehicles(w, p) || !vehicle || vehicle.inside || !parkableVehicle(w, slot))
+  if (
+    (!persistentVehicles(w, p) && !vehicle?.deliveryPending) ||
+    !vehicle ||
+    vehicle.inside ||
+    !parkableVehicle(w, slot)
+  )
     reason = 'Choose an available parked vehicle';
   else if (owner !== p.id && w.settings.allowPlayerRefuelling === false)
     reason = 'Helping refuel players is disabled in this world';
@@ -400,7 +407,7 @@ export function clearParkedRig(
 }
 
 function clearParkingTrailer(w: World, t: Trailer, key: string) {
-  const rect = trailerFootprint(t),
+  const rect = trailerFootprint(t, w),
     radius = Math.hypot(rect.hx, rect.hz);
   return (
     clearTrailer(w, t, t) &&

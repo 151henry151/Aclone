@@ -36,7 +36,7 @@ const release = (root: T.Object3D) =>
     }
   });
 test('all architectural types have five distinct structural models; finishes do not change their geometry', () => {
-  assert.equal(Object.keys(buildings).length, 54);
+  assert.equal(Object.keys(buildings).length, 55);
   for (const [kind, def] of Object.entries(buildings)) {
     const models = buildingArchitectures(kind);
     if (kind === 'quay') {

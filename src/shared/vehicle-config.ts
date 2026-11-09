@@ -1,3 +1,4 @@
+import { HIGHWAY_TRACTOR, highwayTractor } from './highway-definitions';
 import { cargoAccepts } from './cargo-policy';
 import { trailerDefs } from './trailer-definitions';
 import { CANOE, canoeVehicle } from './canoe-rules';
@@ -43,6 +44,7 @@ export const vehicleTuningSchema = z
     lightRange: number(0, 500),
     collisionRadius: number(0.2, 12),
     length: number(1, 60),
+    height: number(0.5, 10),
     width: number(0.2, 30),
     beam: number(0.5, 20),
     draft: number(0.05, 20),
@@ -106,13 +108,17 @@ export const vehicleSlotSchema = z
     'Choose an editable vehicle slot',
   );
 export function vehicleDef(
-  w: (Pick<World, 'vehicleTuning'> & Partial<Pick<World, 'settings'>>) | undefined,
+  w: (Pick<World, 'vehicleTuning'> & Partial<Pick<World, 'settings' | 'automotive'>>) | undefined,
   slot: number,
 ): VehicleDef & Omit<VehicleTuning, 'mode'> {
   if (slot === CANOE) return canoeVehicle(w?.settings);
-  const base = vehicles[slot],
+  const base: VehicleDef = slot === HIGHWAY_TRACTOR ? highwayTractor(w) : vehicles[slot],
     tuning = w?.vehicleTuning?.[slot];
   const result = { ...base, ...tuning };
+  if (slot === HIGHWAY_TRACTOR) {
+    result.price = base.price;
+    result.name = base.name;
+  }
   if (result.mode === 3 && tuning?.airDraft === undefined) {
     result.airDraft =
       (base.airDraft ?? vehicles[result.trawling ? 30 : 3].airDraft!) +
@@ -131,6 +137,13 @@ export function crewBerths(slot: number, w?: Pick<World, 'vehicleTuning'>) {
 }
 export function validateVehicleTuning(w: World, slot: number, input: unknown, replace = false) {
   if (slot === CANOE) throw Error('Tune canoes in Portable canoes world rules');
+  if (
+    slot === HIGHWAY_TRACTOR &&
+    input &&
+    typeof input === 'object' &&
+    ('price' in input || 'name' in input)
+  )
+    throw Error('Set manufactured truck names and prices in Automotive industry');
   const tuning = vehicleTuningSchema.parse(input),
     v = { ...vehicles[slot], ...(replace ? {} : w.vehicleTuning?.[slot]), ...tuning };
   if (
@@ -139,6 +152,10 @@ export function validateVehicleTuning(w: World, slot: number, input: unknown, re
     tuning.mode !== vehicles[slot].mode
   )
     throw Error('Walking, creature, scout and lifeboat movement modes are reserved');
+  if (slot === HIGHWAY_TRACTOR && ![0, 1].includes(v.mode))
+    throw Error('Highway tractors require ground or road movement');
+  if (slot === HIGHWAY_TRACTOR && (v.height ?? 0) < 3.2)
+    throw Error('Truck cab height must be at least 3.2 metres to fit the seated driver');
   if (v.holdCapacity && v.mode !== 3) throw Error('Freight holds require boat movement');
   if ((v.trawling || v.crew || v.provisions || v.deathPolicy === 'recover') && v.mode !== 3)
     throw Error('Trawling, provisions, paid crew and recovery require boat movement');

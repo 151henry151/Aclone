@@ -6,7 +6,7 @@ import { label } from './labels';
 import * as T from 'three';
 import type { World } from '../shared/types';
 import { vehicleDef } from '../shared/vehicle-config';
-import { configureVehicleVisual } from './vehicle-custom';
+import { configureVehicleVisual, vehicleVisualKey } from './vehicle-custom';
 export class ParkedVehicleScene {
   readonly group = new T.Group();
   private models = new Map<string, { key: string; model: T.Group; bounds: T.Box3 }>();
@@ -24,7 +24,7 @@ export class ParkedVehicleScene {
       alive.add(id);
       const name = `${w.players[v.owner]?.name ?? v.ownerName ?? v.owner}'s ${vehicleDef(w, v.slot).name}`;
       const visual = w.creator?.models.find((m) => m.id === w.creator?.vehicleModels[v.slot]);
-      const key = JSON.stringify([v.slot, v.paint, name, w.vehicleTuning?.[v.slot], visual]);
+      const key = JSON.stringify([v.slot, v.paint, name, vehicleVisualKey(w, v.slot)]);
       let entry = this.models.get(id);
       if (!entry || entry.key !== key) {
         if (entry) this.remove(entry.model);

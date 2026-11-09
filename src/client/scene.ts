@@ -1,3 +1,6 @@
+import { BuildingCamera } from './building-camera';
+import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
+import { createHighwayTractor } from './highway-model';
 import { BridgeScene } from './bridge-scene';
 import { nameTagRules } from '../shared/name-tag-rules';
 import { withinBuildingRange } from '../shared/simulation';
@@ -35,7 +38,7 @@ import { spaceportFenceSteps } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
 declare const __ACLONE_BASE__: string;
-import { configureVehicleVisual } from './vehicle-custom';
+import { configureVehicleVisual, vehicleVisualKey } from './vehicle-custom';
 import { isTrawler } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
 import { OtherVehicleLights, updateReverseLight } from './vehicle-lights';
@@ -203,6 +206,7 @@ export class GameScene {
   localInput: () => Input = () => ({ throttle: 0, steer: 0, boost: false });
   private motionClock = new MotionClock();
   private buildingMeshes: T.Group[] = [];
+  private buildingCamera = new BuildingCamera();
   private ball: T.Mesh;
   private projectiles = new T.InstancedMesh(
     new T.SphereGeometry(1, 8, 6),
@@ -641,7 +645,7 @@ export class GameScene {
       const visual = world.creator?.models.find(
         (m) => m.id === world.creator?.vehicleModels[displayVehicle],
       );
-      const visualKey = JSON.stringify([visual ?? null, world.vehicleTuning?.[displayVehicle]]);
+      const visualKey = vehicleVisualKey(world, displayVehicle);
       if (mesh && mesh.userData.creatorKey !== visualKey) {
         this.actors.remove(mesh);
         dispose(mesh);
@@ -1008,6 +1012,15 @@ export class GameScene {
         g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
         g.rotation.y = b.rotation;
         g.userData.building = b.id;
+        g.userData.cameraVolumes = custom
+          ? [new T.Box3().setFromObject(g).applyMatrix4(g.matrix.clone().invert())]
+          : buildingPlan(b).volumes.map(
+              (v) =>
+                new T.Box3(
+                  new T.Vector3(v.x - v.width / 2, 0, v.z - v.depth / 2),
+                  new T.Vector3(v.x + v.width / 2, v.eaves + v.rise, v.z + v.depth / 2),
+                ),
+            );
         g.traverse((object) => {
           if (object instanceof T.Mesh)
             for (const material of Array.isArray(object.material)
@@ -1474,7 +1487,11 @@ export class GameScene {
       g.add(crow.group);
       g.userData.robocrow = crow;
     } else {
-      if (isTractor(slot)) fleetTractor(g, slot, tractorPaint(paint)?.color ?? v.color);
+      if (slot === HIGHWAY_TRACTOR) {
+        const truck = createHighwayTractor(this.world!, tractorPaint(paint)?.color ?? v.color);
+        g.add(...[...truck.children]);
+        Object.assign(g.userData, truck.userData);
+      } else if (isTractor(slot)) fleetTractor(g, slot, tractorPaint(paint)?.color ?? v.color);
       else tractor(g, tractorPaint(paint)?.color ?? v.color);
     }
     if (name) {
@@ -1745,6 +1762,7 @@ export class GameScene {
           mesh.userData.engineRunning,
         );
         const skipper = w.players[mesh.userData.playerId];
+        if (skipper) mesh.userData.highwayAnimate?.(skipper, turn);
         if (mesh.userData.cargoBoat && skipper)
           mesh.userData.cargoBoat.setLoad(
             skipper.boatHold
@@ -1969,8 +1987,17 @@ export class GameScene {
           ),
         );
         const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
+        const truckBody = p.vehicle === HIGHWAY_TRACTOR ? vehicleDef(w, p.vehicle) : undefined;
+        const bodyClearance = truckBody ? Math.hypot(truckBody.length!, truckBody.width!) / 2 : 0;
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, { position: cam, near: this.camera.near });
+        if (p.vehicle === HIGHWAY_TRACTOR && !arriving && this.cameraMode === 0)
+          this.buildingCamera.clear(
+            this.target,
+            { position: cam, near: this.camera.near },
+            this.buildingMeshes,
+            bodyClearance,
+          );
         if (arriving && !this.arrivalCamera) this.arrivalCamera = this.camera.position.clone();
         if (arriving && this.arrivalCamera && this.cameraMode !== 1) cam.copy(this.arrivalCamera);
         if (!arriving && this.arrivalCamera) {
@@ -1993,6 +2020,8 @@ export class GameScene {
         );
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, this.camera);
+        if (p.vehicle === HIGHWAY_TRACTOR && !arriving && this.cameraMode === 0)
+          this.buildingCamera.clear(this.target, this.camera, this.buildingMeshes, bodyClearance);
         local.userData.snapCamera = false;
         const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
         if (this.cameraMode === 1)

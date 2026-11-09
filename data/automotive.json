@@ -1,0 +1,130 @@
+{
+  "enabled": true,
+  "factory": {
+    "price": 16000000,
+    "capacity": 4000,
+    "materials": {
+      "steel": 400,
+      "wood": 600,
+      "gravel": 1600,
+      "electronics": 20
+    },
+    "buy": {
+      "steel": 24921,
+      "wood": 2352,
+      "electronics": 33852,
+      "tools": 51241,
+      "fuel": 4312
+    },
+    "idealEmployees": 6,
+    "wage": 26400,
+    "skill": "engineer",
+    "readyCapacity": 4,
+    "tier": 2
+  },
+  "products": {
+    "tractor": {
+      "name": "Highway tractor unit",
+      "inputs": {
+        "steel": 120,
+        "electronics": 8,
+        "tools": 8,
+        "wood": 20,
+        "fuel": 20
+      },
+      "seconds": 7200,
+      "price": 6000000
+    },
+    "box": {
+      "name": "Box semitrailer",
+      "inputs": {
+        "steel": 60,
+        "wood": 40,
+        "tools": 2,
+        "fuel": 4
+      },
+      "seconds": 3600,
+      "price": 2800000
+    },
+    "refrigerated": {
+      "name": "Refrigerated semitrailer",
+      "inputs": {
+        "steel": 70,
+        "electronics": 8,
+        "tools": 3,
+        "wood": 20,
+        "fuel": 10
+      },
+      "seconds": 5400,
+      "price": 3700000
+    },
+    "stake": {
+      "name": "Stake semitrailer",
+      "inputs": {
+        "steel": 60,
+        "wood": 60,
+        "tools": 2,
+        "fuel": 4
+      },
+      "seconds": 3600,
+      "price": 2900000
+    }
+  },
+  "delivery": {
+    "range": 18,
+    "maxOwnedSemitrailers": 21
+  },
+  "semitrailers": {
+    "box": {
+      "length": 13.6,
+      "width": 2.6,
+      "height": 4,
+      "capacity": 3000
+    },
+    "refrigerated": {
+      "length": 13.6,
+      "width": 2.6,
+      "height": 4,
+      "capacity": 2400
+    },
+    "stake": {
+      "length": 13.6,
+      "width": 2.6,
+      "height": 4,
+      "capacity": 4000
+    }
+  },
+  "coupling": {
+    "fifthWheelZ": -1.5,
+    "kingpinInset": 1.2,
+    "axleRearInset": 2.6
+  },
+  "driving": {
+    "dirtSpeed": 20.1168,
+    "offRoadSpeed": 1.4,
+    "reverseSpeed": 3,
+    "braking": 6,
+    "coasting": 0.35,
+    "rollingDrag": 0.012,
+    "loadedAcceleration": 0.45,
+    "minimumTurnRadius": 9,
+    "lateralAcceleration": 2.5,
+    "hitchRange": 1,
+    "hitchAlignment": 15,
+    "maximumArticulation": 75,
+    "maximumTerrainGrade": 0.85,
+    "suspensionTravel": 0.5
+  },
+  "refrigeration": {
+    "enabled": true,
+    "fuelCapacity": 20,
+    "fuelPerHour": 1,
+    "ageingMultiplier": 0.2
+  },
+  "exports": {
+    "enabled": true,
+    "interval": 21600,
+    "units": 1,
+    "priceFraction": 0.8
+  }
+}

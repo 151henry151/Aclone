@@ -1,3 +1,4 @@
+import { manufacturingReport } from './automotive-manufacturing';
 import { productionRecipe } from './production-recipe';
 import { livestockRules } from './livestock-rules';
 import { recordPlayerMoney } from './player-statistics.ts';
@@ -137,6 +138,7 @@ export function addQuantities(target: Stock, stock: Stock) {
   for (const [item, n] of Object.entries(stock)) target[item] = (target[item] ?? 0) + n;
 }
 export function productionReport(w: World, b: Building) {
+  if (b.kind === 'automotiveFactory') return manufacturingReport(w, b);
   const r = productionRecipe(w, b);
   if (b.construction) return ['Construction is unfinished'];
   if (b.kind === 'farm') return ['Seasonal plots need tending and manual harvest'];

@@ -19,7 +19,15 @@ export function buildingBays(b: Building, plan: BuildingPlan): BuildingBay[] {
   if (!industrialKinds.has(b.kind) && b.kind !== 'starport') return [];
   const motion: BayMotion = ['sawmill', 'boathouse', 'haybarn', 'shipyard'].includes(b.kind)
     ? 'slide'
-    : ['garage', 'warehouse', 'factory', 'feedmill', 'concreteWorks', 'starport'].includes(b.kind)
+    : [
+          'garage',
+          'warehouse',
+          'factory',
+          'automotiveFactory',
+          'feedmill',
+          'concreteWorks',
+          'starport',
+        ].includes(b.kind)
       ? 'roll'
       : 'hinge';
   return plan.volumes.flatMap((v, index): BuildingBay[] => {

@@ -1,3 +1,5 @@
+import { settleCooling } from './highway-refrigeration';
+import type { Trailer } from './trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Stock, World } from './types';
 import type { StockLife } from './stock-life';
@@ -14,6 +16,7 @@ interface Storage {
   stock: Stock;
   life: () => StockLife;
   cold: boolean;
+  refrigerated?: Trailer;
   existing?: StockLife;
 }
 /** Inventory and freight metadata remain private; buildings expose their counter stock. */
@@ -52,6 +55,7 @@ export function* meatStorages(w: World): Generator<Storage> {
       life: () => (t.life ??= {}),
       existing: t.life,
       cold: t.kind === 'fish',
+      refrigerated: t.kind === 'semiRefrigerated' ? t : undefined,
     };
   for (const b of Object.values(w.mooredBoats ?? {}))
     if (b.cargo)
@@ -98,6 +102,7 @@ export function normalizeMeat(stock: Stock, life: StockLife, at: number) {
   life.meat = lots;
 }
 function expireStorage(w: World, location: Storage, at: number) {
+  const cooling = location.refrigerated && settleCooling(w, location.refrigerated, at);
   if (!rawMeats.some((item) => location.stock[item] > 0)) {
     // Do not allocate metadata for empty legacy stores. Clear only existing ledgers.
     if (location.existing?.meat) location.existing.meat = [];
@@ -107,8 +112,14 @@ function expireStorage(w: World, location: Storage, at: number) {
     limit = meatRules(w.settings).rawMeatSpoilageDays;
   normalizeMeat(location.stock, life, at);
   for (const lot of life.meat!) {
-    if (!location.cold && limit > 0 && w.settings.dayLength > 0)
-      lot.agedDays += Math.max(0, at - lot.checkedAt) / w.settings.dayLength;
+    if (!location.cold && limit > 0 && w.settings.dayLength > 0) {
+      const elapsed = Math.max(0, at - lot.checkedAt),
+        chilled = cooling
+          ? Math.max(0, Math.min(at, cooling.end) - Math.max(lot.checkedAt, cooling.start))
+          : 0;
+      lot.agedDays +=
+        (elapsed - chilled * (1 - (cooling ? cooling.multiplier : 1))) / w.settings.dayLength;
+    }
     lot.checkedAt = Math.max(lot.checkedAt, at);
     if (limit > 0 && lot.agedDays + 1e-9 >= limit) {
       location.stock[lot.item] -= lot.count;
@@ -122,7 +133,17 @@ export function expireMeat(w: World, at = w.time) {
   for (const location of meatStorages(w)) expireStorage(w, location, at);
 }
 export function expireMeatStock(w: World, stock: Stock, at = w.time) {
-  if (!rawMeats.some((item) => stock[item] > 0)) return;
+  // Ordinary meals must not enumerate the whole world's storage. Empty/fish-only
+  // reefers still consume their own fuel, independently of the meat ledger.
+  if (!rawMeats.some((item) => stock[item] > 0)) {
+    for (const t of Object.values(w.trailers ?? {}))
+      if (t.kind === 'semiRefrigerated' && t.cargo === stock) {
+        settleCooling(w, t, at);
+        if (t.life?.meat) t.life.meat = [];
+        break;
+      }
+    return;
+  }
   for (const location of meatStorages(w))
     if (location.stock === stock) {
       expireStorage(w, location, at);

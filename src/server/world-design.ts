@@ -1,3 +1,9 @@
+import { applyBuildingTemplate } from '../shared/world-catalogue';
+import {
+  automotiveSchema,
+  automotiveConfig,
+  validateAutomotiveReferences,
+} from '../shared/automotive-config';
 import { bridgeDesignSchema, exportBridges } from './bridge-design';
 import { bridgeRuleFields } from '../shared/bridge-rules';
 import { bridgeReservedFootprint } from '../shared/bridge-geometry';
@@ -49,6 +55,7 @@ import {
   catalogueItemId,
   catalogueSkillId,
   worldItems,
+  worldSkills,
   validateRecipe,
   setCatalogue,
 } from '../shared/world-catalogue.ts';
@@ -368,6 +375,7 @@ const designSchema = z.object({
     )
     .max(2000)
     .default([]),
+  automotive: automotiveSchema.optional(),
   trailerTuning: trailerTuningSchema.default({}),
   vehicleTuning: z.record(vehicleSlotSchema, vehicleTuningSchema).default({}),
   creator: creatorSchema,
@@ -414,6 +422,7 @@ export function exportDesign(w: World, includeMedia = false) {
     version: 1,
     tier: w.tier,
     vehicleTuning,
+    automotive: structuredClone(automotiveConfig(w)),
     trailerTuning: structuredClone(w.trailerTuning ?? {}),
     mooredFreight: Object.values(w.mooredBoats ?? {})
       .filter((b) => b.owner === w.owner && b.cargo && b.landing)
@@ -580,7 +589,11 @@ function applyValidatedDesign(w: World, input: unknown) {
     if (b.templateId && !d.catalogue.templates[b.templateId])
       throw Error('Unknown building template');
   for (const b of d.buildings) {
-    if (b.production) validateRecipe(w, b.production);
+    if (b.production) {
+      if (b.kind === 'automotiveFactory')
+        throw Error('Automotive factories use reserved assembly orders');
+      validateRecipe(w, b.production);
+    }
     for (const id of [...Object.keys(b.buy ?? {}), ...Object.keys(b.sell ?? {})])
       if (!Object.hasOwn(worldItems(w), id)) throw Error('Unknown world item: ' + id);
   }
@@ -638,13 +651,17 @@ function applyValidatedDesign(w: World, input: unknown) {
   w.tier = d.tier;
   w.vehicleTuning = d.vehicleTuning;
   w.trailerTuning = d.trailerTuning;
+  w.automotive = d.automotive;
+  validateAutomotiveReferences(automotiveConfig(w), worldItems(w), worldSkills(w));
   w.buildings = d.buildings.map((b) =>
     (() => {
       if (b.architecture && !buildingArchitecture(b.kind, b.architecture))
         throw Error('Invalid architectural model');
       if (b.farmPlots !== undefined && b.kind !== 'farm')
         throw Error('Only farms can have purchased plots');
-      const result = Object.assign(makeBuilding(b.id, b.kind, b.x, b.z), b, { owner: w.owner });
+      const result = makeBuilding(b.id, b.kind, b.x, b.z);
+      if (b.kind === 'automotiveFactory') applyBuildingTemplate(w, result, b.templateId ?? b.kind);
+      Object.assign(result, b, { owner: w.owner });
       if (b.slaughterFees && b.kind !== 'butcher')
         throw Error('Only butchers can set slaughter fees');
       if (b.menuRecipe) {

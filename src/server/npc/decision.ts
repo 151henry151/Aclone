@@ -84,6 +84,9 @@ const action = z.discriminatedUnion('type', [
 ]);
 /** Ordinary player operations only. Editor, moderation, account and arbitrary commands are excluded. */
 export const playerOperations = [
+  'manufacturing',
+  'trailer',
+  'trade',
   'livestock',
   'listProperty',
   'unlistProperty',
@@ -150,6 +153,12 @@ const operationParameter = z
       'item',
       'side',
       'operation',
+      'op',
+      'product',
+      'unit',
+      'expectedPrice',
+      'storage',
+      'trailer',
       'rate',
       'open',
       'hours',

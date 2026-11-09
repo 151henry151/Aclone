@@ -253,6 +253,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  manufacturing?: import('./automotive-manufacturing').Manufacturing;
   legacyWaterIntake?: boolean;
   /** Fixed intake: terrain edits can stop it, but never silently move it. */
   waterSource?: { intake: { x: number; z: number }; spring?: string; river?: string };
@@ -491,6 +492,10 @@ export interface Settings
   exchangeCap: number;
 }
 export interface World {
+  manufacturingSequence?: number;
+  /** Outstanding external vehicle-purchase cooldowns, shared by every factory. */
+  automotiveExports?: number[];
+  automotive?: import('./automotive-config').AutomotiveConfig;
   bridges?: import('./bridge-types').Bridge[];
   bridgeSequence?: number;
   parkingRulesVersion?: 1;
@@ -745,6 +750,7 @@ export interface ItemDef {
   fuel?: number;
 }
 export interface VehicleDef {
+  height?: number;
   stormClass?: 'small' | 'coastal' | 'seaworthy';
   holdCapacity?: number;
   cargoKind?: import('./trailers').TrailerKind;

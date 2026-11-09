@@ -44,9 +44,9 @@ const trailer = (kind: keyof typeof trailerDefs = 'box'): Trailer => ({
   cargo: {},
   attached: 'p',
 });
-test('eight distinct trailers enforce weight, volume and cargo compatibility', () => {
+test('eight agricultural and three manufactured trailers enforce weight, volume and cargo compatibility', () => {
   const { w } = setup();
-  assert.equal(Object.keys(trailerDefs).length, 8);
+  assert.equal(Object.keys(trailerDefs).length, 11);
   for (const kind of Object.keys(trailerDefs) as (keyof typeof trailerDefs)[]) {
     const t = trailer(kind);
     assert.equal(trailerAccepts(w, t, 'not-an-item', 1), false);

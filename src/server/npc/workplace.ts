@@ -1,3 +1,9 @@
+import { automotiveConfig } from '../../shared/automotive-config';
+import {
+  manufacturingCrew,
+  manufacturingSkill,
+  manufacturingStaffing,
+} from '../../shared/automotive-manufacturing';
 import { productionRecipe } from '../../shared/production-recipe';
 import { jobVacancy } from '../../shared/staffing.ts';
 import {
@@ -24,6 +30,7 @@ import {
 /** Read-only diagnosis from the same recipe, staff and clock used by production.
  * No private details about other employees enter the model's observation. */
 export function workplace(w: World, p: Player, b: Building) {
+  if (b.kind === 'automotiveFactory') return assemblyWorkplace(w, p, b);
   const recipe = b.kind === 'farm' ? recipes.farm : productionRecipe(w, b);
   if (!recipe) return;
   const interval = productionInterval(w, b);
@@ -153,6 +160,7 @@ export function shiftBlocker(w: World, p: Player, b: Building): string | undefin
   if (b.owner === p.id) return 'Owners cannot employ themselves';
   if (b.construction) return 'Construction is unfinished';
   if (b.wage <= 0) return 'This job pays no wages';
+  if (b.kind === 'automotiveFactory' && job.blockers.length) return job.blockers[0];
   if (!usefulShift(w, p, b))
     return 'Another worker already covers this production cycle; find another useful task';
   if (job.ifYouWork.capitalShortfall) return 'Investment cannot pay the next wage bill';
@@ -167,4 +175,76 @@ export function shiftBlocker(w: World, p: Player, b: Building): string | undefin
     return;
   }
   return job.blockers.find((line) => !line.startsWith('No active employees'));
+}
+
+function assemblyWorkplace(w: World, p: Player, b: Building) {
+  const order = b.manufacturing?.orders[0],
+    skill = manufacturingSkill(w, b),
+    staffing = manufacturingStaffing(w, b),
+    people = manufacturingCrew(w, b),
+    employedHere = p.job === b.id && b.employees.includes(p.id),
+    qualified = p.skills.includes(skill),
+    workActive = employedHere && (!w.settings.activeWork || p.activeUntil > w.time),
+    active = people.some((q) => q.id === p.id),
+    wage = order?.wage ?? b.wage;
+  const jobBlockers: string[] = [];
+  if (b.owner === p.id) jobBlockers.push('Owners cannot employ themselves');
+  if (!qualified) jobBlockers.push(`Learn ${skill} at school first`);
+  if (p.job && !employedHere) jobBlockers.push('Quit your other job before taking this one');
+  if (!employedHere && !jobVacancy(w, b, p.id)) jobBlockers.push('All jobs filled');
+  const blockers: string[] = [];
+  if (!order) blockers.push('No assembly order is reserved; the owner must queue funded work');
+  if (!automotiveConfig(w).enabled) blockers.push('Automotive manufacturing is disabled');
+  if (b.construction) blockers.push('Construction is unfinished');
+  if (b.condition <= 0) blockers.push('Repair the factory first');
+  const next =
+    order && staffing.active
+      ? ((order.seconds - order.worked) * staffing.ideal) / staffing.active
+      : 0;
+  const efficiency = order ? staffing.active / staffing.ideal : 0;
+  const withYou = Math.min(staffing.ideal, staffing.active + Number(!active && qualified));
+  return {
+    summary: `Assembly inputs and maximum payroll are already reserved. Do not acquire those inputs or fund that payroll again. ${staffing.active}/${staffing.ideal} qualified crew; ${order ? Math.floor((order.worked / order.seconds) * 100) : 0}% complete. Work advances by staffed elapsed time, not global production checks. Earned contributions pay when the unit completes. ${blockers.join(' ')}`,
+    mode: 'reserved assembly',
+    recipe: {
+      skill,
+      inputs: {},
+      outputs: {},
+      seconds: order?.seconds ?? automotiveConfig(w).products.tractor.seconds,
+      tier: 0,
+    },
+    wage: {
+      grossHundredths: wage,
+      grossDenarii: wage / 100,
+      netDenarii: (wage - Math.floor(wage * w.settings.wageTax)) / 100,
+      basis: 'per worker contribution to completed assembly',
+      source: 'Reserved order terms; future orders use current premises wages',
+    },
+    inputSource: 'reserved assembly inputs',
+    outputDestination: 'manufactured vehicle inventory',
+    intervalSeconds: order?.seconds ?? automotiveConfig(w).products.tractor.seconds,
+    nextCycleInSeconds: Math.ceil(next),
+    employedHere,
+    qualified,
+    canTakeJob: !employedHere && jobBlockers.length === 0,
+    jobBlockers,
+    workActive,
+    workActiveNextCycle: active && (!w.settings.activeWork || p.activeUntil >= w.time + next),
+    renewAction:
+      employedHere && w.settings.activeWork ? { type: 'work' as const, building: b.id } : null,
+    workActiveUntil: employedHere && w.settings.activeWork ? p.activeUntil : null,
+    activeEmployeesNextCycle: people.filter((q) => q.id !== b.owner).length,
+    idealEmployees: staffing.ideal,
+    efficiencyNextCycle: efficiency,
+    efficiencyIfYouWork: order ? withYou / staffing.ideal : 0,
+    fractionalProgress: order ? order.worked / order.seconds : 0,
+    blockers,
+    notes: ['Completion estimate assumes the current qualified crew stays active.'],
+    ifYouWork: { wagesRequired: 0, capitalShortfall: 0 },
+    nextStep: !order
+      ? 'The owner must queue an assembly order'
+      : employedHere
+        ? 'Keep a useful active shift and wait for assembly completion'
+        : 'Take a vacant qualified job nearby',
+  };
 }

@@ -162,7 +162,7 @@ export function updateBridgePassages(w: World, p: Player) {
     if (inside && !passes?.[b.id]?.entered) change()[b.id] = { entered: true };
     if (!inside && passes?.[b.id]?.entered) {
       const trailer = Object.values(w.trailers ?? {}).find((t) => t.attached === p.id);
-      if (trailer && rectanglesOverlap(footprint, trailerFootprint(trailer))) continue;
+      if (trailer && rectanglesOverlap(footprint, trailerFootprint(trailer, w))) continue;
       delete change()[b.id];
     }
   }
@@ -229,7 +229,7 @@ export function bridgeSiteVehicleBlocked(w: World, plan: BridgePlan) {
   return (
     parkedFootprintBlocked(w, footprint) ||
     Object.values(w.trailers ?? {}).some(
-      (t) => !t.attached && rectanglesOverlap(footprint, trailerFootprint(t)),
+      (t) => !t.attached && rectanglesOverlap(footprint, trailerFootprint(t, w)),
     ) ||
     Object.values(w.mooredBoats ?? {}).some((b) =>
       rectanglesOverlap(footprint, vehicleFootprint(w, b.slot, b)),

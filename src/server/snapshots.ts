@@ -1,3 +1,4 @@
+import { manufacturingStaffing, manufacturingActivity } from '../shared/automotive-manufacturing';
 import { publicParkedVehicles } from '../shared/parked-vehicles';
 import { buildingDoorActivity } from '../shared/building-doors';
 import { storedBoatDisplay } from '../shared/stored-boats';
@@ -43,18 +44,22 @@ export function publicBuildings(w: World) {
       ...(building.kind === 'boathouse' ? { storedBoats: storedBoatDisplay(w, building) } : {}),
       productionStatus: productionReport(w, building),
       staffing:
-        building.kind !== 'farm' && (building.production || building.recipe)
-          ? productionStaffing(w, building)
-          : undefined,
+        building.kind === 'automotiveFactory'
+          ? manufacturingStaffing(w, building)
+          : building.kind !== 'farm' && (building.production || building.recipe)
+            ? productionStaffing(w, building)
+            : undefined,
       employeeNames: Object.fromEntries(
         building.employees.map((id) => [id, w.players[id]?.name ?? id]),
       ),
       ownerName: building.owner ? w.players[building.owner]?.name : undefined,
       operating: productionActivity(w, building, crafting),
       efficiency:
-        building.kind !== 'farm' && (building.production || building.recipe)
-          ? productionEfficiency(w, building)
-          : building.efficiency,
+        building.kind === 'automotiveFactory'
+          ? manufacturingActivity(w, building)
+          : building.kind !== 'farm' && (building.production || building.recipe)
+            ? productionEfficiency(w, building)
+            : building.efficiency,
     };
     return b.lodging
       ? {

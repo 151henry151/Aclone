@@ -1,11 +1,14 @@
+import { isSemitrailer } from '../shared/highway-definitions';
+import { createSemitrailer } from './highway-model';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { trailerDefs, type TrailerKind } from '../shared/trailers';
 import { detailTexture } from './detail-textures';
 import { batch } from './tractor';
 import { animalModel } from './animal-model';
-import type { Stock } from '../shared/types';
-export function createTrailer(kind: TrailerKind, cargo: Stock = {}) {
+import type { Stock, World } from '../shared/types';
+export function createTrailer(kind: TrailerKind, cargo: Stock = {}, world?: World) {
+  if (isSemitrailer(kind)) return createSemitrailer(kind, cargo, world);
   const def = trailerDefs[kind],
     group = new T.Group(),
     fixed = new T.Group(),

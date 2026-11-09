@@ -99,6 +99,10 @@ export function buildingPlan(b: {
     trim = '#526d60';
   let volumes: BuildingVolume[];
   switch (b.kind) {
+    case 'automotiveFactory':
+      volumes = [volume(30, 24, 8, 2.4), volume(8, 6, 3.4, 0.2, 'flat', -10, 15)];
+      wall = '#697e83';
+      break;
     case 'lighthouse':
       volumes = [volume(6, 6, 19, 0.2, 'flat'), volume(7, 5, 3, 1.5, 'gable', 7, 0)];
       break;
@@ -337,6 +341,7 @@ export function buildingPlan(b: {
     volumes[0].roof = chosen.roof as BuildingVolume['roof'];
   }
   const plan: BuildingPlan = { style, volumes, wall, trim, siding, doorHeight: 2.1 };
+  if (b.kind === 'automotiveFactory' && !b.style) plan.finish = 'metal';
   if (b.kind === 'starport') {
     plan.apron = {
       ...spaceportApron,

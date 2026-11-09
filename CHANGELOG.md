@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Build automotive factories and manufacture finite vehicles from supplied materials, reserved payroll and qualified engineering work; retain orders, completed inventory and estate value across restarts.
+- Collect paid highway tractor units and full-size box, refrigerated and timber semitrailers; reverse into the fifth wheel, carry specialised cargo and drive the complete articulated rig through roads, gates and bridges.
+- Add cab interiors, steering and wheel animations, retracting trailer supports, night lamps and keyboard, controller and touch brakes; use a separate fuel tank to slow raw-meat spoilage in refrigerated trailers.
+- Sell completed units to limited external buyers shared across the world; give residents paid supply, assembly, employment and vehicle-purchase choices through ordinary player permissions.
+- Configure factory investment, recipes, prices, external demand, truck performance, coupling, trailer dimensions, cargo capacities and refrigeration in World Builder and portable designs.
+
+### Fixed
+
+- Avoid world-wide freshness scans for ordinary meals while preserving refrigerated-trailer fuel use.
+- Keep the highway chase camera outside nearby building walls and roofs when collecting and driving a truck.
+- Keep highway-truck resident travel in its owned vehicle and use wider semitrailer turns without relaxing collisions or articulation limits.
+
 ## [0.136.4] - 2026-11-08
 
 ### Fixed

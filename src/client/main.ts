@@ -1,3 +1,6 @@
+import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
+import { manufacturingPanel, refreshManufacturing } from './automotive-panel';
+import { automotiveConfig } from '../shared/automotive-config';
 import { bridgePanel, mountBridgePanel, type BridgeDraft } from './bridge-panel';
 import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { parkingStatus, tractorWaypoint } from './parking-status';
@@ -826,7 +829,7 @@ function updateHud() {
             : 'Pilot status';
   $('mobile-vitals').textContent = urgent;
   $('mobile-status').classList.toggle('needs-attention', urgent !== 'Pilot status');
-  mobile.setAircraft(vehicleDef(world, me.vehicle).mode === 2);
+  mobile.setAircraft(vehicleDef(world, me.vehicle).mode === 2, me.vehicle === HIGHWAY_TRACTOR);
   $('mobile-flight').hidden = ![2, 6].includes(vehicleDef(world, me.vehicle).mode);
   $('mobile-combat').hidden = !world.settings.fighting;
   mobile.messages(world.id, JSON.stringify(world.messages.at(-1)) ?? '');
@@ -1034,6 +1037,8 @@ function updateHud() {
     if (buildingAccessSignature !== buildingAccessKey(shown)) buildingWindow(shown);
     for (const summary of app.querySelectorAll('[data-farm-policy-status]'))
       summary.textContent = farmPolicySummary(world, shown);
+    const assemblyPanel = app.querySelector<HTMLElement>('[data-manufacturing-panel]');
+    if (assemblyPanel) refreshManufacturing(assemblyPanel, world, me, shown);
     const shift = workShift(world, me, shown);
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
@@ -2365,6 +2370,8 @@ function buildingWindow(b: Building) {
     return;
   }
   if (tab === 'Main') {
+    if (b.kind === 'automotiveFactory')
+      html += `<section data-manufacturing-panel>${manufacturingPanel(world, me, b)}</section>`;
     if (b.id === 'parish-government-stores')
       html +=
         '<p class="notice">Food, drinking water and fuel are imported on demand, even when stored stock is zero. These premium prices keep supplies available during shortages; local producers and ordinary pumps are usually cheaper.</p>';
@@ -2649,13 +2656,17 @@ function buildingWindow(b: Building) {
     if (
       selfOwned &&
       world.settings.ownerOperation &&
-      (b.recipe || b.production) &&
+      (b.kind === 'automotiveFactory' || b.recipe || b.production) &&
       b.kind !== 'farm'
     )
       html += shift
         ? button(shift.button, 'work', workAttributes)
-        : `<p class="note">Learn ${esc(productionRecipe(world, b)!.skill)} to operate your business without wages.</p>`;
-    if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
+        : `<p class="note">Learn ${esc(b.kind === 'automotiveFactory' ? (b.manufacturing?.orders[0]?.skill ?? automotiveConfig(world).factory.skill) : productionRecipe(world, b)!.skill)} to operate your business without wages.</p>`;
+    if (
+      !selfOwned &&
+      world.settings.jobsEnabled !== false &&
+      (b.kind === 'automotiveFactory' || b.recipe || b.production)
+    )
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/${hiringLimit(world, b)} paid places</span>${button(me.job === b.id ? shift!.button : !jobVacancy(world, b, me.id) ? 'Hiring closed' : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near || !jobVacancy(world, b, me.id) ? 'disabled' : ''}`)}</div>`;
     if (shift)
       html += `<p class="note" data-work-status>${esc(`${shift.label}. ${shift.detail}`)}</p>`;
@@ -2750,7 +2761,11 @@ function buildingWindow(b: Building) {
     !b.auction
   )
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>${b.forSale ? 'Update asking price' : 'List property for sale'}</button></form>${b.forSale ? `<form data-action="unlistProperty">${hidden('building', b.id)}<p>Currently listed for ${money(b.price)}.</p><button>Remove from sale</button></form>` : ''}`;
-  if (tab === 'Building Admin' && owned && (b.recipe || b.production))
+  if (
+    tab === 'Building Admin' &&
+    owned &&
+    (b.kind === 'automotiveFactory' || b.recipe || b.production)
+  )
     html += staffingPanel(world, b) + economicsPanel(world, b);
   if (tab === 'Main' || tab === 'Building Admin') html += contractPanel(world, me, b);
   if (tab === 'Statement')
@@ -3993,6 +4008,10 @@ function drivingInput() {
               Number(held('ArrowRight', 'd', 'D')),
           ),
         ),
+    brake:
+      me?.vehicle === HIGHWAY_TRACTOR &&
+      !typing &&
+      (!!touch.brake || !!controller.flight.brake || held('b', 'B')),
     boost: !typing && (touch.boost || controller.input.boost || held('Shift')),
     lift: typing
       ? 0

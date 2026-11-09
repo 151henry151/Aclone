@@ -1,0 +1,24 @@
+{
+  "mode": 0,
+  "speed": 29.0576,
+  "acceleration": 1.4,
+  "turn": 0.8,
+  "fuel": 0.018,
+  "capacity": 60,
+  "armour": 180,
+  "color": "#416b83",
+  "hitch": 1,
+  "tank": 320,
+  "headlight": 210,
+  "lightRange": 140,
+  "collisionRadius": 1.275,
+  "length": 6.4,
+  "width": 2.55,
+  "wheelbase": 3.8,
+  "cockpit": {
+    "x": 0.65,
+    "y": 2.9,
+    "z": 1.2
+  },
+  "height": 3.75
+}

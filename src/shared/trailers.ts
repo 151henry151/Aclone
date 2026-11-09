@@ -1,3 +1,15 @@
+import { coolingInterval, type RefrigerationState } from './highway-refrigeration';
+import { expireMeatStock } from './meat-freshness';
+import { automotiveConfig } from './automotive-config';
+import {
+  fifthWheel,
+  kingpin,
+  semitrailerPose,
+  clearHighwayBody,
+  angleDifference,
+  highwayCabRect,
+} from './highway-geometry';
+import { HIGHWAY_TRACTOR, isSemitrailer, semitrailerDefinition } from './highway-definitions';
 import { obstacleRules } from './obstacle-rules';
 import { bridgeRectBlocked, bridgeReservedFootprint } from './bridge-geometry';
 import { trailerFootprint, rectanglesOverlap } from './vehicle-footprint';
@@ -30,7 +42,11 @@ export const fuelTrailerTuningSchema = z
   .strict();
 export const trailerTuningSchema = z.object({ fuel: fuelTrailerTuningSchema.optional() }).strict();
 export type TrailerTuning = z.infer<typeof trailerTuningSchema>;
-export function trailerDef(w: Pick<World, 'trailerTuning'>, kind: TrailerKind) {
+export function trailerDef(
+  w: Pick<World, 'trailerTuning'> & Partial<Pick<World, 'automotive'>>,
+  kind: TrailerKind,
+) {
+  if (isSemitrailer(kind)) return semitrailerDefinition(kind, w);
   return { ...trailerDefs[kind], ...(kind === 'fuel' ? w.trailerTuning?.fuel : {}) };
 }
 export function tuneTrailer(w: World, input: unknown) {
@@ -57,6 +73,7 @@ export interface Trailer {
   heading: number;
   cargo: Stock;
   life?: StockLife;
+  cooling?: RefrigerationState;
   attached?: string;
   /** Vehicle key while its driver is walking or signed off; the hitch stays connected. */
   parkedWith?: string;
@@ -67,6 +84,18 @@ export interface Trailer {
 }
 export const attachedTrailer = (w: World, p: Pick<Player, 'id'>) =>
   Object.values(w.trailers ?? {}).find((t) => t.attached === p.id && !t.parkedWith);
+/** Keep prediction's articulated state beside its disposable player, never in the snapshot. */
+export function movementTrailer(w: World, p: Player, prediction = false) {
+  const attached = attachedTrailer(w, p);
+  if (!attached || !prediction) return attached;
+  const scratch = p as Player & { predictedTrailer?: Trailer };
+  if (scratch.predictedTrailer?.id !== attached.id)
+    scratch.predictedTrailer = {
+      ...attached,
+      cargo: { ...(p.trailerCargo?.[attached.id] ?? attached.cargo) },
+    };
+  return scratch.predictedTrailer;
+}
 export const trailerHandlingReach = (w: World, t: Trailer) => trailerDef(w, t.kind).length / 2 + 9;
 /** A parked hitch remains available to its owner beside a shop, but never follows the walker. */
 export function tradingTrailer(w: World, p: Player, id?: string) {
@@ -112,9 +141,14 @@ export function detachTrailer(w: World, p: Player, loseCargo = false) {
   }
 }
 export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; heading: number }) {
-  const d = trailerDefs[t.kind],
+  if (isSemitrailer(t.kind)) {
+    const d = semitrailerDefinition(t.kind, w);
+    return clearHighwayBody(w, t, to, d.length, d.width, d.height, t.owner, t.id);
+  }
+  const d = trailerDef(w, t.kind),
     radius = d.width / 2;
-  if (bridgeRectBlocked(w, trailerFootprint(t), trailerFootprint({ ...t, ...to }))) return false;
+  if (bridgeRectBlocked(w, trailerFootprint(t, w), trailerFootprint({ ...t, ...to }, w)))
+    return false;
   const distance = Math.hypot(to.x - t.x, to.z - t.z),
     turn = Math.atan2(Math.sin(to.heading - t.heading), Math.cos(to.heading - t.heading));
   const steps = Math.max(
@@ -172,6 +206,7 @@ export function trailerAction(w: World, p: Player, a: Action) {
   if (a.operation === 'buy') {
     const kind = String(a.kind) as TrailerKind;
     need(Object.hasOwn(trailerDefs, kind), 'Unknown trailer');
+    need(!isSemitrailer(kind), 'Buy manufactured semitrailers from an automotive factory');
     const def = trailerDef(w, kind);
     const garage = w.buildings.find((b) => b.id === a.building);
     need(
@@ -217,11 +252,50 @@ export function trailerAction(w: World, p: Player, a: Action) {
     Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t),
     'Move alongside your trailer',
   );
+  if (a.operation === 'cooling' || a.operation === 'coolingRefuel') {
+    need(t.kind === 'semiRefrigerated', 'Choose a refrigerated semitrailer');
+    const r = automotiveConfig(w).refrigeration,
+      interval = coolingInterval(w, t);
+    if (a.operation === 'cooling') {
+      need(
+        a.running === true || a.running === false || a.running === 'true' || a.running === 'false',
+        'Choose cooling on or off',
+      );
+      const running = a.running === true || a.running === 'true';
+      need(!running || r.enabled, 'Refrigeration is disabled in this world');
+      need(!running || interval.fuel > 0, 'Add refrigeration fuel first');
+      expireMeatStock(w, t.cargo);
+      t.cooling = { ...t.cooling!, fuel: interval.fuel, checkedAt: w.time, running };
+      return running ? 'Refrigeration switched on.' : 'Refrigeration switched off.';
+    }
+    const quantity = Number(a.quantity),
+      units = worldItems(w).fuel.fuel ?? 0;
+    need(
+      Number.isSafeInteger(quantity) && quantity > 0 && units > 0,
+      'Choose a positive whole Fuel quantity',
+    );
+    need((p.inventory.fuel ?? 0) >= quantity, 'Not enough carried Fuel');
+    need(
+      interval.fuel + quantity * units <= r.fuelCapacity + 1e-9,
+      'Not enough room in the refrigeration fuel tank',
+    );
+    expireMeatStock(w, t.cargo);
+    p.inventory.fuel -= quantity;
+    if (!p.inventory.fuel) delete p.inventory.fuel;
+    t.cooling = {
+      fuel: interval.fuel + quantity * units,
+      checkedAt: w.time,
+      running: t.cooling?.running ?? false,
+    };
+    return 'Refrigeration tank refuelled; engine fuel is separate.';
+  }
   if (a.operation === 'unhitch') {
     need(t.attached === p.id, 'This trailer is not hitched');
     need(
       !obstacleRules(w.settings).clearRouteParking ||
-        !w.bridges?.some((b) => rectanglesOverlap(bridgeReservedFootprint(b), trailerFootprint(t))),
+        !w.bridges?.some((b) =>
+          rectanglesOverlap(bridgeReservedFootprint(b), trailerFootprint(t, w)),
+        ),
       'Keep the bridge passage and approaches clear of parked trailers',
     );
     delete t.attached;
@@ -230,11 +304,39 @@ export function trailerAction(w: World, p: Player, a: Action) {
   }
   if (a.operation === 'hitch') {
     need(!t.attached, 'Unhitch this trailer from its current tractor first');
-    need(isTractor(p.vehicle) && !attachedTrailer(w, p), 'Bring a tractor with a free hitch');
+    if (isSemitrailer(t.kind)) {
+      need(
+        p.vehicle === HIGHWAY_TRACTOR && !attachedTrailer(w, p),
+        'Bring a compatible highway tractor with a free fifth wheel',
+      );
+      const rear = fifthWheel(w, p),
+        nose = kingpin(w, t),
+        r = automotiveConfig(w).driving;
+      need(
+        Math.hypot(rear.x - nose.x, rear.z - nose.z) <= r.hitchRange,
+        'Reverse the fifth wheel under the trailer kingpin',
+      );
+      need(
+        Math.abs(angleDifference(p.heading, t.heading)) <= (r.hitchAlignment * Math.PI) / 180,
+        'Align the highway tractor with the semitrailer',
+      );
+      const next = semitrailerPose(w, t, p, p);
+      need(
+        !rectanglesOverlap(highwayCabRect(w, p), trailerFootprint({ ...t, ...next }, w)) &&
+          clearTrailer(w, t, next),
+        'Clear the cab and semitrailer before coupling',
+      );
+      Object.assign(t, next, { attached: p.id });
+      return 'Semitrailer coupled to the fifth wheel.';
+    }
+    need(
+      isTractor(p.vehicle) && !attachedTrailer(w, p),
+      'Bring a compatible agricultural tractor with a free hitch',
+    );
     const rear = { x: p.x - Math.sin(p.heading) * 2.7, z: p.z - Math.cos(p.heading) * 2.7 };
     const nose = {
-      x: t.x + Math.sin(t.heading) * (trailerDefs[t.kind].length / 2 + 1.4),
-      z: t.z + Math.cos(t.heading) * (trailerDefs[t.kind].length / 2 + 1.4),
+      x: t.x + Math.sin(t.heading) * (trailerDef(w, t.kind).length / 2 + 1.4),
+      z: t.z + Math.cos(t.heading) * (trailerDef(w, t.kind).length / 2 + 1.4),
     };
     need(
       Math.hypot(rear.x - nose.x, rear.z - nose.z) < 2,
@@ -280,16 +382,23 @@ export function moveTrailer(
   dt: number,
   prediction = false,
 ) {
-  const attached = attachedTrailer(w, p);
-  if (!attached) return;
-  const scratch = p as Player & { predictedTrailer?: Trailer };
-  const t = prediction
-    ? (scratch.predictedTrailer ??= {
-        ...attached,
-        cargo: { ...(p.trailerCargo?.[attached.id] ?? attached.cargo) },
-      })
-    : attached;
-  const d = trailerDefs[t.kind],
+  const t = movementTrailer(w, p, prediction);
+  if (!t) return;
+  if (isSemitrailer(t.kind)) {
+    const next = semitrailerPose(w, t, before, p);
+    if (
+      Math.abs(angleDifference(next.heading, p.heading)) >
+        (automotiveConfig(w).driving.maximumArticulation * Math.PI) / 180 ||
+      !clearTrailer(w, t, next)
+    ) {
+      Object.assign(p, before);
+      p.speed = 0;
+      return;
+    }
+    Object.assign(t, next);
+    return;
+  }
+  const d = trailerDef(w, t.kind),
     drawbar = d.length / 2 + 1.4;
   const oldH = {
     x: before.x - Math.sin(before.heading) * 2.7,
@@ -322,7 +431,7 @@ export function trailerBlocks(
 ) {
   return Object.values(w.trailers ?? {}).some((t) => {
     if (t.id === except || (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside)) return false;
-    const d = trailerDefs[t.kind],
+    const d = trailerDef(w, t.kind),
       n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 0.5));
     const clearance = (i: number) => {
       const x = from.x + ((to.x - from.x) * i) / n - t.x,

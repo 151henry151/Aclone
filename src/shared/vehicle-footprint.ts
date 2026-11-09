@@ -1,3 +1,4 @@
+import { isSemitrailer, semitrailerDefinition } from './highway-definitions';
 import { trailerDefs, type TrailerKind } from './trailer-definitions';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
@@ -44,13 +45,16 @@ export function parkedFootprintBlocked(w: World, rect: GroundRect, except?: stri
   );
 }
 
-export function trailerFootprint(t: {
-  x: number;
-  z: number;
-  heading: number;
-  kind: TrailerKind;
-}): GroundRect {
-  const d = trailerDefs[t.kind];
+export function trailerFootprint(
+  t: {
+    x: number;
+    z: number;
+    heading: number;
+    kind: TrailerKind;
+  },
+  w?: Pick<World, 'automotive'>,
+): GroundRect {
+  const d = isSemitrailer(t.kind) ? semitrailerDefinition(t.kind, w) : trailerDefs[t.kind];
   return {
     x: t.x,
     z: t.z,

@@ -1,3 +1,4 @@
+import { automotiveConfig } from './automotive-config';
 import { worldItems, worldBuildings } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recordLife } from './reports.ts';
@@ -7,11 +8,27 @@ import type { Building, World } from './types.ts';
 export const PROPERTY_YEAR = calendarYearSeconds();
 /** Catalogue valuation cannot be inflated by editing the building's own shop quotes. */
 export function propertyQuote(w: World, b: Building) {
-  const goods = Object.entries(b.stock).reduce(
+  const stockValue = Object.entries(b.stock).reduce(
     (n, [item, count]) => n + Math.max(0, count) * (worldItems(w)[item]?.price ?? 0),
     0,
   );
-  const equity = goods + Math.max(0, b.investment);
+  const assembly = b.manufacturing;
+  const reservedGoods = (assembly?.orders ?? []).reduce(
+    (sum, o) =>
+      sum +
+      Object.entries(o.inputs).reduce(
+        (n, [item, count]) => n + count * (worldItems(w)[item]?.price ?? 0),
+        0,
+      ),
+    0,
+  );
+  const readyValue = (assembly?.ready ?? []).reduce(
+    (sum, u) => sum + automotiveConfig(w).products[u.product].price,
+    0,
+  );
+  const escrow = (assembly?.orders ?? []).reduce((sum, o) => sum + o.payroll, 0);
+  const goods = stockValue + reservedGoods + readyValue;
+  const equity = goods + Math.max(0, b.investment) + escrow;
   const years =
     b.estate && !b.owner
       ? Math.floor(Math.max(0, w.time - b.estate.since) / calendarYearSeconds(w.settings))

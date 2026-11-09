@@ -1,3 +1,4 @@
+import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 import { CARGO_BOAT } from '../shared/boats';
 import { stormClass } from '../shared/storm-capsizing';
 import { trawlParameters } from '../shared/commercial-fishing';
@@ -54,6 +55,7 @@ export function vehicleEditor(w: World, slot: number) {
   const numberFields = (keys: string) =>
     keys
       .split(' ')
+      .filter((key) => key !== 'price' || slot !== HIGHWAY_TRACTOR)
       .map((key) => input(key, values[key as keyof typeof values]))
       .join('');
   const bool = (key: string, value: boolean) =>
@@ -77,26 +79,31 @@ export function vehicleEditor(w: World, slot: number) {
   ];
   const group = (title: string, body: string) =>
     `<details><summary>${title}</summary><div class="settings-grid">${body}</div></details>`;
-  return `<p>Configure each vehicle independently for this world. Custom slots 9–24 are available for your own designs. Upload GLB/OBJ models and images in Assets, then assemble named components in Workshop. Lengths use metres; speed uses m/s; fuel uses tank units per real second; price uses hundredths of a denarius (10,000 = 1s).</p><form data-vehicle-editor>${select(
+  return `<p>Configure each vehicle independently for this world. Custom slots 9–24 are available for your own designs. Upload GLB/OBJ models and images in Assets, then assemble named components in Workshop. Lengths use metres; speed uses m/s; fuel uses tank units per real second; price uses hundredths of a denarius (10,000 = 1s).</p>${slot === HIGHWAY_TRACTOR ? '<p>Set manufactured vehicle names and prices in Automotive industry. Each factory may post its own asking price.</p>' : ''}<form data-vehicle-editor>${select(
     'slot',
     vehicles.flatMap((_, i) =>
       i === CANOE ? [] : [[String(i), `${i + 1}: ${vehicleDef(w, i).name}`]],
     ),
     slot,
-  )}${input('name', v.name, 'text')}${select(
+  )}${slot === HIGHWAY_TRACTOR ? '' : input('name', v.name, 'text')}${select(
     'mode',
-    [
-      ['0', 'Ground vehicle'],
-      ['1', 'Road vehicle'],
-      ['2', 'Fixed-wing aircraft'],
-      ['3', 'Boat'],
-      ['4', 'Ground utility craft'],
-      ['5', 'Amphibious hovercraft'],
-      ['6', 'Vertical-flight craft'],
-      ['8', 'Walking'],
-    ],
+    (slot === HIGHWAY_TRACTOR
+      ? [
+          ['0', 'Ground vehicle'],
+          ['1', 'Road vehicle'],
+        ]
+      : [
+          ['0', 'Ground vehicle'],
+          ['1', 'Road vehicle'],
+          ['2', 'Fixed-wing aircraft'],
+          ['3', 'Boat'],
+          ['4', 'Ground utility craft'],
+          ['5', 'Amphibious hovercraft'],
+          ['6', 'Vertical-flight craft'],
+          ['8', 'Walking'],
+        ]) as [string, string][],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (v.mode === 3 ? numberFields('draft airDraft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (slot === HIGHWAY_TRACTOR ? numberFields('height') : '') + (v.mode === 3 ? numberFields('draft airDraft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
     v.mode === 3
       ? group(
           'Freight hold',
@@ -161,6 +168,7 @@ export function vehicleForm(form: HTMLFormElement) {
   const d = new FormData(form),
     values: Record<string, unknown> = {};
   for (const key of Object.keys(vehicleTuningSchema.shape)) {
+    if (['price', 'name'].includes(key) && Number(d.get('slot')) === HIGHWAY_TRACTOR) continue;
     const value = d.get(key);
     if (value === null || value === '') continue;
     values[key] = [

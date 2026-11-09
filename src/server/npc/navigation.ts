@@ -1,3 +1,10 @@
+import { automotiveConfig } from '../../shared/automotive-config';
+import { vehicleDef } from '../../shared/vehicle-config';
+import {
+  HIGHWAY_TRACTOR,
+  isSemitrailer,
+  semitrailerDefinition,
+} from '../../shared/highway-definitions';
 import { roadGeometryStamp } from '../../shared/road-work';
 import { trailerBlocks } from '../../shared/trailers';
 import { sceneryBlocksSegment } from '../../shared/ground-contacts';
@@ -503,15 +510,19 @@ export class Navigator {
       return {
         input: {
           ...idle,
+          ...(p.vehicle === HIGHWAY_TRACTOR ? { brake: true } : {}),
           throttle:
             Math.abs(p.speed) > 0.15 ? -Math.sign(p.speed) * Math.min(1, Math.abs(p.speed)) : 0,
         },
         arrived: Math.abs(p.speed) < 0.2,
       };
     }
-    if (p.vehicle !== 0 && p.vehicle !== 5)
-      return { input: idle, error: 'Ground navigation requires tractor or walking' };
-    if (p.vehicle === 0 && (!p.engine || p.fuel <= 0))
+    if (![0, 5, HIGHWAY_TRACTOR].includes(p.vehicle))
+      return {
+        input: idle,
+        error: 'Ground navigation requires a tractor, highway truck or walking',
+      };
+    if (p.vehicle !== 5 && (!p.engine || p.fuel <= 0))
       return { input: idle, error: 'Start the engine and refuel before driving' };
     if (this.sample >= 2) {
       this.stuck = distance(this.last, p) < 0.6 ? this.stuck + this.sample : 0;
@@ -520,7 +531,29 @@ export class Navigator {
     }
     if (this.stuck > 8) return { input: idle, error: 'Route obstructed; stopped safely' };
     if (this.stuck >= 2) return { input: { throttle: -0.35, steer: 0.5, boost: false } };
-    while (this.next < this.path.length - 1 && distance(p, this.path[this.next]) < 3) this.next++;
+    // A semitrailer cannot follow a farm tractor's full-lock U-turn. Use the
+    // configured full rig length as a conservative turn radius; shared physics
+    // still checks every swept body and the actual articulation/cab limits.
+    const semi =
+      p.vehicle === HIGHWAY_TRACTOR
+        ? Object.values(w.trailers ?? {}).find(
+            (t) => t.attached === p.id && !t.parkedWith && isSemitrailer(t.kind),
+          )
+        : undefined;
+    const steeringLimit =
+      semi && isSemitrailer(semi.kind)
+        ? Math.min(
+            1,
+            automotiveConfig(w).driving.minimumTurnRadius /
+              (semitrailerDefinition(semi.kind, w).length + vehicleDef(w, p.vehicle).length!),
+          )
+        : 1;
+    const lookahead =
+      semi && isSemitrailer(semi.kind)
+        ? semitrailerDefinition(semi.kind, w).length + vehicleDef(w, p.vehicle).length!
+        : 3;
+    while (this.next < this.path.length - 1 && distance(p, this.path[this.next]) < lookahead)
+      this.next++;
     const waypoint = this.path[this.next] ?? this.target;
     const angle = Math.atan2(waypoint.x - p.x, waypoint.z - p.z) - p.heading;
     const error = Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -533,7 +566,7 @@ export class Navigator {
     return {
       input: {
         throttle: Math.max(-0.8, Math.min(1, (speed - p.speed) * 0.7)),
-        steer: Math.max(-1, Math.min(1, error * 1.8)),
+        steer: Math.max(-steeringLimit, Math.min(steeringLimit, error * 1.8)),
         boost: false,
       },
     };

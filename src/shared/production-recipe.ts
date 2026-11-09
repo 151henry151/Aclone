@@ -4,5 +4,6 @@ import { recipes } from './catalog';
 import { worldMeatRecipe } from './meat-recipes';
 /** Explicit premises recipes override the world-scaled standard menus. */
 export function productionRecipe(w: Pick<World, 'settings'> | undefined, b: Building) {
+  if (b.kind === 'automotiveFactory') return undefined;
   return b.production ?? worldMeatRecipe(b, w?.settings ?? {}) ?? recipes[b.recipe ?? ''];
 }

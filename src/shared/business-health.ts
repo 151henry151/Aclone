@@ -1,3 +1,5 @@
+import { propertyQuote } from './property';
+import { manufacturingStaffing } from './automotive-manufacturing';
 import { productionRecipe } from './production-recipe';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog';
@@ -12,7 +14,9 @@ import type { Building, World } from './types';
 export function businessHealth(w: World, b: Building) {
   const catalogue = worldItems(w);
   const recipe = productionRecipe(w, b);
-  const crew = b.staffing ?? productionStaffing(w, b);
+  const crew =
+    b.staffing ??
+    (b.kind === 'automotiveFactory' ? manufacturingStaffing(w, b) : productionStaffing(w, b));
   const payroll = Math.max(0, crew.active - Number(crew.ownerOperating)) * b.wage;
   const inputs = Object.entries(recipe ? livestockSupplyInputs(w, b, recipe.inputs) : {});
   const outputs = Object.entries(recipe?.outputs ?? {});
@@ -34,10 +38,10 @@ export function businessHealth(w: World, b: Building) {
   const elapsed = a ? Math.max(0, w.time - a.since) : 0;
   const flow = a ? cashFlow(a) : null;
   const sales = Object.values(a?.sold ?? {}).reduce((sum, n) => sum + n, 0);
-  const stockReferenceValue = Object.entries(b.stock).reduce(
-    (sum, [id, n]) => sum + n * (catalogue[id]?.price ?? 0),
-    0,
-  );
+  const stockReferenceValue =
+    b.kind === 'automotiveFactory'
+      ? propertyQuote(w, b).goods
+      : Object.entries(b.stock).reduce((sum, [id, n]) => sum + n * (catalogue[id]?.price ?? 0), 0);
   const messages = [...(b.productionStatus ?? productionReport(w, b))];
   if (
     a &&
@@ -60,7 +64,7 @@ export function businessHealth(w: World, b: Building) {
     outputRoom,
     replacementInputs,
     fundedReplacementBatches:
-      replacementInputs + payroll > 0
+      b.kind !== 'automotiveFactory' && replacementInputs + payroll > 0
         ? Math.floor(b.investment / (replacementInputs + payroll))
         : null,
     operatingCashFlow: flow,

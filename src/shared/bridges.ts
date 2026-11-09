@@ -67,7 +67,7 @@ export function bridgeOccupied(w: World, b: Bridge) {
     Object.values(w.parkedVehicles ?? {}).some(
       (p) => !p.inside && rectanglesOverlap(rect, vehicleFootprint(w, p.slot, p)),
     ) ||
-    Object.values(w.trailers ?? {}).some((t) => rectanglesOverlap(rect, trailerFootprint(t))) ||
+    Object.values(w.trailers ?? {}).some((t) => rectanglesOverlap(rect, trailerFootprint(t, w))) ||
     Object.values(w.mooredBoats ?? {}).some((p) =>
       rectanglesOverlap(rect, vehicleFootprint(w, p.slot, p)),
     )

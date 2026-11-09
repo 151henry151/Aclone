@@ -1,3 +1,4 @@
+import { automotiveConfig } from '../shared/automotive-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from '../shared/catalog';
 import type { World, Player, Building } from '../shared/types';
@@ -7,7 +8,10 @@ const duration = (n: number) => `${Math.floor(n / 60)}m ${n % 60}s`;
 /** Presentation of the saved shift; starting a shift is not a completed batch. */
 export function workShift(w: World, p: Player, b: Building) {
   if (b.construction) return;
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const assembly = b.kind === 'automotiveFactory';
+  const recipe = assembly
+    ? { skill: b.manufacturing?.orders[0]?.skill ?? automotiveConfig(w).factory.skill }
+    : (b.production ?? recipes[b.recipe ?? '']);
   const owner =
     b.owner === p.id &&
     w.settings.ownerOperation &&
@@ -18,7 +22,8 @@ export function workShift(w: World, p: Player, b: Building) {
     (b.kind === 'lighthouse' || b.owner !== p.id) &&
     p.job === b.id &&
     w.settings.jobsEnabled !== false;
-  if (!(b.recipe || b.production || b.kind === 'lighthouse') || (!owner && !employee)) return;
+  if (!(assembly || b.recipe || b.production || b.kind === 'lighthouse') || (!owner && !employee))
+    return;
   const interval = productionInterval(w, b);
   const until = owner ? (b.ownerActiveUntil ?? 0) : p.activeUntil;
   const remaining = Math.max(0, Math.ceil(until - w.time));
@@ -36,8 +41,9 @@ export function workShift(w: World, p: Player, b: Building) {
     : active
       ? `Shift active · ${duration(remaining)} left`
       : 'Shift ended · Renew to work again';
-  const detail =
-    b.kind === 'lighthouse'
+  const detail = assembly
+    ? 'Assembly advances only with a qualified crew. Wages are paid from reserved payroll when the unit finishes, in proportion to the assembly work you contributed. Inputs and funding were reserved when the order was queued.'
+    : b.kind === 'lighthouse'
       ? `Next keeper payment in ${duration(nextIn)}. The navigation service funds this wage; your private quarters remain available while employed.`
       : b.kind === 'farm'
         ? 'Farm pay comes from completing funded harvest tasks, not automatic production checks.'

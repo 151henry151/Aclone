@@ -1,3 +1,4 @@
+import { flightRules } from '../../src/shared/flight-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
 import { flightState } from '../../src/shared/flight.ts';
@@ -110,7 +111,8 @@ test('touch input releases safely, aircraft and weapons work, and tablet/desktop
     await expect(page.locator('#mobile-flight')).toBeVisible();
     const pitch = p.flight!.pitch;
     await hold('[data-hold=up]');
-    await expect.poll(() => input()?.pitch).toBe(1);
+    // Touch and keyboard use this world's configured control authority.
+    await expect.poll(() => input()?.pitch).toBe(flightRules(w.settings).flightKeyboardAuthority);
     await expect.poll(() => p.flight?.pitch).toBeGreaterThan(pitch + 0.05);
     await release();
     await expect.poll(() => input()?.pitch).toBe(0);
