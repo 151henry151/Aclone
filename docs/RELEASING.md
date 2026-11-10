@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.143.1
+
+Deploy the approved backlog-implementation SHA with the normal backup, build
+and restart, publish the matching website, then verify public health and SHA.
+Ask players to reload for the shoreline/intake construction preview and fine
+rotation. No data migration or manual world/player changes are required.
+
 ## Upgrade 0.143.0
 
 Deploy the approved backlog-implementation SHA with the normal SQLite backup,

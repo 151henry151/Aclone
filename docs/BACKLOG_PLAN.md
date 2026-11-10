@@ -11469,3 +11469,43 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15695682046
 Excluded release receipts and images: output/earthworks/guidance/release/.
 Other pending backlog work remains in its recorded order; piloted spaceflight
 remains excluded.
+
+### Shoreline construction feedback — 2026-11-10
+
+Investigate Lightmun's report of difficult boathouse/pump-house placement. A local
+Puddlewick terrain audit (buildings/zones/scenery removed to isolate siting) finds
+216 accepted boathouse positions on the original coast and 3,980 accepted northern
+river pump positions. This does not establish whether the reported occupied site
+is valid; its location and refusal remain unknown. Preserve all water, slope,
+occupancy and payment checks. Confirmed UI gap: the site plan draws neither water
+nor the required waterfront/intake, and rotation only offers 15-degree increments.
+
+Completion criteria before production changes:
+
+- Add a failing browser regression in `tests/browser/shoreline-placement.spec.ts`:
+  Build → boathouse on a known valid natural coast shows a shoreline and the
+  entire jetty/berth outline, explains which side faces water, rejects the wrong
+  rotation and places the correctly rotated foundation through the server.
+- At that coast, Pump-house explicitly explains fresh water versus desalination
+  and remains refused. At an unused spring, show the actual snapped intake and
+  accept/construct the pump. An inland boathouse remains refused without payment.
+- Allow a precise one-degree bearing as well as the existing quick-turn buttons.
+  Verify desktop and phone plan/help remain readable; inspect screenshots.
+- Run the relevant boating, fresh-water, shoreline/construction tests and browser
+  designer flows, then `npx tsc --noEmit`, Prettier and the production build.
+  Keep new guidance derived from existing world rules and building geometry.
+- Update player instructions, README and Unreleased changelog. Release only after
+  these criteria pass; do not claim this reproduces Lightmun's unknown location.
+
+Shoreline preview verification: the initial browser test fails because waterfront
+help is absent. After implementation, the first follow-up catches a test setup
+mistake: a page reload resets the client draft to Home. Explicitly select the
+inland Boathouse before testing its refusal; retain the refusal assertion.
+All 40 relevant tests and three browser flows then pass, including coastal and
+spring construction, wrong-facing/coastal-pump/inland-boathouse refusals, precise
+bearing and both existing desktop/phone designers. Inspect the full waterfront
+and phone intake screenshots under excluded output/shoreline-audit/. Unit checks
+cover all 360 bearings fitting the plan and help using custom world rules.
+TypeScript exits 0. Prepare patch 0.143.1; final formatting/build, push/deployment
+and announcement verification remain pending. The exact reported site remains
+unidentified; do not describe this as a confirmed placement-rule repair.

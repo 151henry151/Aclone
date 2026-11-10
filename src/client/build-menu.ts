@@ -1,3 +1,4 @@
+import { waterfrontPreview } from './waterfront-preview';
 import { slopeAssessment, slopeBypass } from '../shared/construction-slope';
 import { pumpHouseSite, freshWaterReason } from '../shared/fresh-water';
 import {
@@ -44,9 +45,9 @@ export function buildMenuHtml(settings: Partial<ConstructionRules> = {}) {
     <label><span data-finish-label>Surface finish</span><select data-design="style" aria-label="Surface finish"></select></label>
     <label>Building size<select data-design="size" aria-label="Building size"></select></label>
     <p data-design-description></p>
-    <label>Rotation <output data-bearing></output><input data-design="rotation" aria-label="Building rotation" type="range" min="0" max="345" step="15"></label>
+    <label>Rotation <output data-bearing></output><input data-design="rotation" aria-label="Building rotation" type="range" min="0" max="359" step="1"></label>
     <div class="button-row"><button type="button" data-turn="-15">↶ Rotate left</button><button type="button" data-turn="15">Rotate right ↷</button></div>
-    <p class="note">0° faces south; 90° east; 180° north; 270° west. Rotation turns the building, not the camera.</p></div>
+    <p class="note">0° faces south; 90° east; 180° north; 270° west. Rotation turns the building, not the camera. Use the slider for fine adjustment or the buttons for 15° turns.</p><p class="note" data-waterfront-help hidden></p></div>
     <div><div class="build-preview" data-build-preview></div><canvas class="build-site" data-build-site width="440" height="190" aria-label="Site plan, north up, cut and fill survey"></canvas><p class="note" data-slope-legend></p></div>
     <div class="build-estimate" data-build-estimate aria-live="polite"></div>
     <button type="button" class="primary" data-place-design>Place foundation</button>
@@ -213,12 +214,17 @@ export function mountBuildMenu(
       ...(shell ? { style: draft.style, size: draft.size, architecture: draft.architecture } : {}),
     };
     if (rebuild) preview?.show(b, w);
+    const waterfront = waterfrontPreview(w, b, p);
+    const waterHelp = host.querySelector<HTMLElement>('[data-waterfront-help]')!;
+    waterHelp.hidden = !waterfront;
+    waterHelp.textContent = waterfront?.help ?? '';
     const canvas = host.querySelector<HTMLCanvasElement>('[data-build-site]')!,
       ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#253c35';
     ctx.fillRect(0, 0, 440, 190);
     const range = Math.max(18, Math.max(bounds.width, bounds.depth) * 1.3),
-      scale = 150 / range;
+      scale = waterfront?.scale ?? 150 / range;
+    waterfront?.background(ctx);
     const draw = (o: typeof b, color: string) => {
       ctx.save();
       ctx.translate(220 + (o.x - p.x) * scale, 95 + (o.z - p.z) * scale);
@@ -286,6 +292,7 @@ export function mountBuildMenu(
     }
     host.querySelector('[data-slope-legend]')!.textContent =
       `Cut (orange) · Fill (blue) · Level (green). Survey target ${slope.target.toFixed(2)} m; strongest colour marks the largest change (±${(foundation.rise / 2).toFixed(2)} m).`;
+    waterfront?.overlay(ctx);
     ctx.strokeStyle = '#fff0ad';
     ctx.lineWidth = 2;
     ctx.beginPath();

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.143.1] - 2026-11-10
+
+### Fixed
+
+- Show shorelines, the full boathouse jetty and pump intake directions in construction previews; explain fresh versus sea water, display the world's intake requirements and allow precise one-degree rotation.
+
 ## [0.143.0] - 2026-11-09
 
 ### Added

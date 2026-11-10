@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.143.1 makes shoreline construction clearer. The site plan shows the shoreline, boathouse waterfront and pump
+intake, with direction guidance and fine rotation. Choose fresh water for a
+pump-house and the sea coast for a desalination plant. See [water supplies](docs/PLAYING.md).
+
 Version 0.143.0 makes surveying and grading easier to follow: choose
 an area, check and confirm it, then follow private work outlines and instructions
 from your backhoe or bulldozer. Work-speed assist keeps active passes slow enough

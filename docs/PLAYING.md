@@ -197,6 +197,15 @@ Build a **Desalination plant** on a dry ocean shore, with its submerged intake b
 
 Natural springs appear as mossy wet hollows with reeds, stones and a downhill trickle. Most are in the northern uplands; every river starts at a headwater spring. The parish map shows droplet-ring symbols at 50% zoom or closer. Stand on foot within **3 m**, open **Inventory**, and choose **Drink from the spring**. It quenches like one Water, with the same repeated-drink rules and a **20-second cooldown**. It does not create an item.
 
+The **Build** site plan shows nearby water in blue, the boathouse jetty/berth as a
+dashed outline, and a pump's intake line. Keep the workshop and equipment yard on
+dry land while the far end of the jetty reaches deep water. The intake/jetty is
+at the **rear**, opposite the land entrance: at 0° it points north, at 90° west,
+at 180° south and at 270° east. The guidance names its current direction and uses
+your world's intake rules. Adjust the slider by one degree (arrow keys work when
+focused), or use the 15° turn buttons. Blue water alone does not guarantee enough
+depth or clearance; read the placement refusal before moving or rotating again.
+
 A **Pump-house** makes bottled Water from a spring, river or pond. Its standard foundation costs **900d**, plus **6 wood, 6 blocks, 1 steel and 4 gravel**; finishes and sizes alter the quoted bill. Choose one of five architectural models in Build. Rotate the intake toward fresh water. Near a spring, the preview snaps the building so the intake touches the saved source; move close to that final foundation before placing it. Each spring supports one pump. River/pond intakes reach **6–10 m** behind a dry foundation, need **0.4 m** water depth, and keep the foundation **0.3 m** above local water. Pumps on the same river need **60 m** between them. Their intakes do not reserve a river reach, so ordinary docks and fords remain available.
 
 Train **pump operator**, deliver the materials, fund wages and stock Fuel. A normal pump batch uses **1 Fuel → 20 Water**, with two ideal employees and the usual stockroom, ownership and staffing rules. World builders may enable gravity-fed spring pumps (**no Fuel → 8 Water**) and scale spring output by flow. Headwaters have the strongest default flow. Coastline sites require a desalination plant instead; it remains **1 Fuel → 12 Water**. A removed or moved spring, dry intake or flooded foundation pauses pumping and explains why in the building panel. Existing pumps never silently switch to another source.

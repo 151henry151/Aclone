@@ -2,6 +2,21 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.143.1 — See where waterfront buildings fit
+
+Show water at high tide, the complete boathouse waterfront and pump intake lines
+in the construction plan. Explain the rear-facing water direction and the world's
+intake requirements; distinguish fresh-water pumps from coastal desalination.
+Allow one-degree rotation while retaining quick 15-degree turns. Keep existing
+placement, occupancy, slope and payment validation unchanged.
+
+Verify 40 focused tests plus desktop/phone designer flows and a new browser flow
+that refuses incorrect siting and constructs both a coastal boathouse and a
+spring pump. Check every one-degree boathouse bearing fits the plan, and that
+custom intake rules appear in help. TypeScript, formatting and production build
+must pass. Lightmun's precise site remains unknown: this fixes confirmed preview
+usability, without claiming a reproduced placement-rule failure there.
+
 ## 0.143.0 — Follow earthworks from survey to finished ground
 
 Guide players through choosing an area, checking cut/fill and confirming a survey.
