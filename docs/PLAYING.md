@@ -173,6 +173,16 @@ Roads shed snow and stay visible, with wet-road speed/grip rather than deep-snow
 
 Tractors tilt with the terrain under their tyres, including when parked on a hillside. Uphill travel and acceleration slow motor vehicles; downhill travel gains up to 30% over the current surface speed. Reverse follows the actual travel direction. Tractors leave fading tyre prints in mud and off-road snow. Snow tracks show compressed channels with lit shoulders and tread impressions; their shading follows the snow depth and softens as the pack melts. Snow lifts the existing terrain mesh; batched detail adds physical roof caps, roadside banks and drifts at walls, tree trunks and fences. These layers follow the reported depth and fade with the surrounding snow as it thaws; ordinary snowfall produces centimetres of buildup, not metre-high banks. Tracks and contact shadows follow the raised surfaces, while road lanes remain exposed. Deciduous trees tint in autumn, while evergreens stay green. Snowpack and wetness persist through reconnects and server restarts. On upgrading, old natural snowpacks above 12 cm are reduced to 12 cm once; future storms are not capped. Creator-forced snow and snowstorms retain their continuous snowfall rates and can deliberately produce much deeper packs.
 
+**Camera: Manual / Auto follow** (beside **View** on desktop, or in phone
+**Actions**) controls third-person following. Manual is the default. Auto follow
+selects third-person and gently returns the camera behind you at a comfortable
+angle when you walk or drive, including reversing. Drag the scenery to look
+around: the camera waits while you hold the mouse or your finger, then follows
+again while you move. While stopped, your chosen angle stays put. Wheel/pinch
+zoom stays as you set it. Your choice is remembered on this browser. **C / View**
+still cycles third-person, first-person and overhead; Auto follow leaves the
+first-person and overhead controls alone.
+
 Stars move nightly/seasonally. Two nearby moons (one about half-size) share a 28-day phase cycle (4h 40m), with a five-day mutual orbit; neither resets at year boundaries. First-person and chase camera drag look up and down. The calendar follows supplied historical information; climate, crop durations and balance are original tuning.
 
 ## Alternate road routes

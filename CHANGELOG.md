@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.0] - 2026-11-10
+
+### Added
+
+- Add a saved Manual / Auto follow camera toggle on desktop and phone; smoothly return behind the player while moving, preserve stopped and held-drag views, and retain zoom, first-person and overhead controls.
+
 ## [0.145.0] - 2026-11-10
 
 ### Added

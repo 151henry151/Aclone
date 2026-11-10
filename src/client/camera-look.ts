@@ -50,3 +50,9 @@ export function cabView(attitude: Quaternion, yaw: number, pitch: number) {
 export function cameraSurfaceFloor(ground: number, seaLevel: number, clearance: number) {
   return Math.max(ground, seaLevel) + clearance;
 }
+
+/** Ease a manual offset back behind the player, taking the shortest angular path. */
+export function followCameraAngle(angle: number, dt: number) {
+  if (dt <= 0) return angle;
+  return Math.atan2(Math.sin(angle), Math.cos(angle)) * Math.exp(-3 * dt);
+}

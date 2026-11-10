@@ -11742,3 +11742,45 @@ Verify bot post and actual screenshot embed:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569782631631949964
 Receipts remain excluded in `output/tool-imports/release/`. No player supplies
 were directly granted. Next: Henry's requested automatic-follow camera.
+
+### Automatic follow camera — completion criteria before production
+
+Add a visible **Camera: Manual / Camera: Auto follow** toggle beside View and
+in phone Actions. Preserve the current manual behavior by default; persist the
+choice locally. Enabling Auto follow selects third-person. Drag/orbit and zoom
+remain available. While moving forward or backward, smoothly return orbit and
+vertical look to the existing comfortable third-person offsets (walking 6 m/3 m,
+ordinary vehicles 21 m/8.5 m, retaining hull scaling and zoom). Follow the shortest
+angular path, with frame-rate-independent easing. Active pointer/touch dragging,
+stopped movement, arrival animations, first-person and overhead views must not
+be recentered. Releasing a drag while moving resumes follow. Reversing keeps the
+camera behind the character's facing, without a 180-degree flip. No extra scene,
+geometry or world/network state; these are client preferences and easing values.
+
+First write a browser test asserting the missing toggle and run it red, then
+unit tests for smooth shortest-angle settling at different frame rates. Run
+`node --import tsx --test tests/camera-look.test.ts` and `TEST_GPU=1 npm run
+test:e2e -- tests/browser/camera-follow.spec.ts tests/browser/camera-zoom.spec.ts
+tests/browser/boat-camera.spec.ts`. Browser tests use actual mouse/touch orbit,
+walk/drive/turn/reverse input, stopping, explicit manual mode, first-person/
+overhead, reload persistence and phone Actions; capture before/after and phone
+controls. Verify finite camera coordinates and no console errors. Finish with
+TypeScript, Prettier and prefixed build; update PLAYING, README, CHANGELOG and
+release/announce the tested slice before resuming snow ploughing.
+
+Camera verification: the first desktop browser regression fails on the missing
+Manual/Auto follow toggle. The new easing unit tests initially fail because the
+helper is absent, then all seven camera tests pass after implementation. Add
+local preference/UI controls and reuse the existing chase camera; no new world
+state or render objects. Exercise held mouse/touch look while moving, stopped
+look, manual mode, turning, tractor reverse, first-person/overhead and reload;
+phone also uses its actual touch throttle. The first browser run reports all
+four cases passed but exits with a terminated wrapper, so rerun for a clean
+process result before release. Inspect desktop following and phone controls/
+following screenshots; wait for the temporary toast to fade in the phone image.
+
+Final camera validation: all seven focused unit tests and all four browser flows
+pass; the final browser runner exits 0. TypeScript exits 0. Changed-file Prettier
+and diff checks are clean. Capture and inspect the actual desktop following view
+and unobscured phone Actions toggle under `output/camera-follow/`. Prepare release
+0.146.0; commit/deploy only after the prefixed production build passes.

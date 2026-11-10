@@ -124,7 +124,13 @@ import {
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind, wheelPrints, platePrintTexture } from './ground-tracks';
 import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
-import { cabView, chaseOffset, lookPitchFromDrag, cameraSurfaceFloor } from './camera-look';
+import {
+  cabView,
+  chaseOffset,
+  lookPitchFromDrag,
+  cameraSurfaceFloor,
+  followCameraAngle,
+} from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { batchStaticScenerySteps, freezeScenery } from './static-scene';
@@ -312,6 +318,8 @@ export class GameScene {
     this.zoom = Math.min(maximum, Math.max(0.55, zoom));
   }
   cameraMode = 0;
+  autoFollow = localStorage.getItem('aclone.cameraFollow') === 'on';
+  private cameraDragging = false;
   private arrivalCamera?: T.Vector3;
   private mounts = new VehicleMountScene();
   orbit = 0;
@@ -466,10 +474,14 @@ export class GameScene {
       if (e.button !== 0 || this.paused) return;
       if (!pointers.size) moved = 0;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      this.cameraDragging = true;
       this.renderer.domElement.setPointerCapture(e.pointerId);
       if (pointers.size > 1) moved = 100; // A pinch never selects a building.
     });
-    const release = (e: PointerEvent) => pointers.delete(e.pointerId);
+    const release = (e: PointerEvent) => {
+      pointers.delete(e.pointerId);
+      this.cameraDragging = pointers.size > 0;
+    };
     this.renderer.domElement.addEventListener('pointerup', release);
     this.renderer.domElement.addEventListener('pointercancel', (e) => {
       moved = 100;
@@ -478,6 +490,7 @@ export class GameScene {
     this.renderer.domElement.addEventListener('lostpointercapture', release);
     window.addEventListener('blur', () => {
       pointers.clear();
+      this.cameraDragging = false;
       moved = 100;
     });
     this.renderer.domElement.addEventListener('pointermove', (e) => {
@@ -2040,6 +2053,17 @@ export class GameScene {
         diff = Math.atan2(Math.sin(diff), Math.cos(diff));
         this.chase += diff * (1 - Math.exp(-dt * 3));
         if (local.userData.snapCamera) this.chase = facing;
+        const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
+        if (
+          this.autoFollow &&
+          this.cameraMode === 0 &&
+          !this.cameraDragging &&
+          !arriving &&
+          Math.abs(predicted?.speed ?? p.speed) > 0.05
+        ) {
+          this.orbit = followCameraAngle(this.orbit, dt);
+          this.lookPitch = followCameraAngle(this.lookPitch, dt);
+        }
         const heading = this.chase + this.orbit;
         const chase = chaseOffset(
           heading,
@@ -2068,7 +2092,6 @@ export class GameScene {
             walking || tractorView ? 0.6 : 3,
           ),
         );
-        const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
         const truckBody =
           p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)
             ? vehicleDef(w, p.vehicle)

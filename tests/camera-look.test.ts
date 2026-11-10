@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { vehicleGround } from '../src/client/vehicle-ground';
 import {
+  followCameraAngle,
   cabView,
   chaseOffset,
   lookPitchFromDrag,
@@ -102,4 +103,28 @@ test('large hull chase camera stays outside the stern at ordinary zoom', () => {
   const offset = chaseOffset(0, 1, false, 0, 60);
   assert.ok(-offset.z > 30, '60m hull must not enclose the chase camera');
   assert.ok(offset.y > 10, 'large hull needs a view over its deck');
+});
+
+test('automatic follow recenters smoothly at the same rate across frame rates', () => {
+  const step = followCameraAngle(1.4, 1 / 60);
+  assert.ok(step > 0 && step < 1.4);
+  const run = (fps: number) => {
+    let angle = 1.4;
+    for (let i = 0; i < fps * 2; i++) angle = followCameraAngle(angle, 1 / fps);
+    return angle;
+  };
+  assert.ok(Math.abs(run(20) - run(60)) < 1e-12);
+  assert.ok(run(60) < 0.01);
+  assert.equal(followCameraAngle(1.4, 0), 1.4);
+  assert.equal(followCameraAngle(0, 1), 0);
+});
+
+test('automatic follow takes the shortest route after a full manual orbit', () => {
+  const a = followCameraAngle(Math.PI * 2 - 0.4, 0.1);
+  assert.ok(a < 0 && a > -0.4);
+  const b = followCameraAngle(-Math.PI * 2 + 0.4, 0.1);
+  assert.ok(b > 0 && b < 0.4);
+  assert.ok(Math.abs(a + b) < 1e-12);
+  assert.ok(followCameraAngle(Math.PI - 0.01, 0.1) > 0);
+  assert.ok(followCameraAngle(-Math.PI + 0.01, 0.1) < 0);
 });

@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.146.0 adds **Camera: Auto follow**, which gently returns the third-person camera
+behind you as you walk or drive. Drag to look around; it waits while you hold
+and keeps your angle when stopped. Toggle it beside View, or in phone Actions.
+The choice is saved on this browser; Manual remains the default.
+
 Version 0.145.0 lets public Harbour stores receive occasional **scarce-tool shipments** when local
 shelves are nearly empty. These are limited stocks bought with shop funds, not
 on-demand refills. World builders control the eligible tools, timing, scarcity
