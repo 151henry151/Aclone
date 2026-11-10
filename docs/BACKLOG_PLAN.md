@@ -11609,3 +11609,14 @@ cancellation, design persistence, phone controls and actual boathouse/spring-pum
 construction. Inspect valid desktop/phone and occupied-site images under excluded
 output/construction-ghost/. Final TypeScript, formatting/build and release checks
 remain pending for 0.144.0.
+
+Construction ghost done: push and deploy `c60355ba` as 0.144.0. Verify public
+health, matching SHA, active service and matching website. Thirty-eight relevant
+tests and five browser flows pass. The first TypeScript process is interrupted
+(exit 143, no diagnostics); the rerun exits 0. Prettier, diff checks and prefixed
+production build pass. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261110-105058.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261110-105222.tar.gz`.
+Verify both screenshot embeds in the bot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569741715160440982
+Excluded receipts: output/construction-ghost/release/.
