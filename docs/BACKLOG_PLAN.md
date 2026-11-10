@@ -11190,3 +11190,13 @@ for CPU; rerun unchanged after TypeScript exits and pass. Keep the timeout and
 all gameplay assertions unchanged. Inspect quiet-inventory and near-spring
 screenshots under excluded output/inventory-context/. No CB voice implementation
 is included in this release; that correction remains the next feature task.
+
+Contextual Inventory done: release 0.140.4, committed/pushed/deployed 2658639f.
+Verify healthy public 0.140.4, matching server SHA, anonymous game login and the
+matching published website. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261109-204456.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261109-204619.tar.gz`. Verify the bot announcement
+and both attached screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569528728751571046
+Recheck Hank's 28/28 skills after deployment; the normal world limit remains 3.
+Microphone CB remains pending; do not describe it as shipped voice chat.
