@@ -2174,3 +2174,22 @@ budget plus the fee and tax. Planning bounds the expensive surveys; residents do
 not operate machinery automatically. Completed owned pads are considered first
 for subsequent building placement. World saves retain escrow and contributions;
 portable designs carry terrain and settings without copying paid agreements.
+
+## Vehicle garage storage rules
+
+Under parking rules, configure `garageStorageEnabled` (true by default),
+`garageStorageRange` (30 m; 1–100 m), and `garageStorageLimit` (0 means unlimited;
+otherwise a whole number up to 10,000 units per player per garage). The range applies
+between player and garage, vehicle and garage, and player and vehicle. Each stored
+vehicle and each attached or independent trailer counts as a unit. Reducing a limit
+or disabling new storage does not prevent retrieval. Existing kerb-parking safety
+rules determine where retrieval can place a vehicle or complete rig.
+
+The `vehicleStorage` building catalogue entry is a storage-only private garage,
+with five scalable industrial shed models. The base model is 24 × 18 m, with tall
+vehicle bays. Its base foundation price is 120,000 internal currency units and its
+materials are 20 Wood, 20 Blocks and 10 Steel; customise these through the building
+catalogue and construction tuning. Goods capacity is separate from vehicle slots.
+Owners may deposit; prior depositors retain retrieval rights after a sale. Public
+tractor garages accept every player's own vehicles. Occupied garages cannot be
+demolished or decay away. Cargo spoilage and refrigeration rules remain in effect.

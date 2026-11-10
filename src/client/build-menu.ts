@@ -202,6 +202,7 @@ export function mountBuildMenu(
           `<li><b>${n}</b> ${esc(worldItems(w)[item]?.name ?? item)} <small>(${p.inventory[item] ?? 0} carried)</small></li>`,
       )
       .join('')}</ul>
+    ${b.kind === 'vehicleStorage' ? '<p>Vehicle and trailer storage is unlimited by default; world rules can set a limit. Goods capacity and building size do not set vehicle slots.</p>' : ''}
     <p class="note">Larger premises increase storage${roomCount(b) ? ' and guest rooms' : ''}; recipes and production speed stay the same. Farm fields are expanded separately. Doors and windows remain human-sized. Preview scale stays fixed for this building type across models, finishes and sizes.</p>
     <p role="status" class="${refusal ? 'build-refusal' : ''}">${esc(refusal || 'Site clear. Ready to place this design.')}</p>`;
     button.disabled = !!refusal;

@@ -2,6 +2,12 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.140.0 adds **garage storage for land vehicles and trailers**. Park outside
+when you want, or visit Spanner & Sons and choose Store in garage. Build your own
+vehicle-storage garage for a private fleet: five large shed designs, unlimited
+vehicle space by default. Retrieve vehicles outside with their fuel and cargo
+intact. World Builder controls storage rules. See [garage storage](docs/PLAYING.md#garage-storage).
+
 Version 0.139.0 adds **bulldozers, backhoes and working earthworks**. Manufacture
 machines at automotive factories, learn plant operation, then survey and grade
 hillsides into level building pads. Move cut into fill, deliver any shortfall,

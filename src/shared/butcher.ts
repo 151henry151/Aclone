@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building, Action, Stock } from './types';
 import { meatAnimals, slaughterOutputs, rawMeats } from './meat-recipes';
@@ -94,6 +95,7 @@ export function butcherAction(
   if (a.storage === 'trailer')
     need(
       trailer &&
+        !trailerStorage(w, trailer) &&
         trailer.owner === p.id &&
         trailer.kind === 'livestock' &&
         (!trailer.attached || trailer.attached === p.id) &&

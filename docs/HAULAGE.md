@@ -282,3 +282,13 @@ customers. Tests cover its 45 mph dirt and 65 mph paved limits separately; the
 resident replay does not assume continuous top-speed travel. Replacement fuel and
 service figures are cost provisions based on actual consumption/distance, while
 all cargo purchases, wages and sales in the replays use ordinary paid actions.
+
+## Garage storage for haulage fleets
+
+Store trucks, tractors, earthmovers, trailers and complete rigs at Spanner & Sons
+or your own buildable vehicle-storage garage. Stop, park and step out, then use
+Vehicle storage in the garage menu. Default storage is unlimited; world rules can
+set a unit limit. Retrieval places an unoccupied vehicle/rig in safe clear space
+outside. Cargo, refrigeration and hitches persist, but cargo cannot be used at its
+old outdoor position while stored. Food still ages normally. See
+[garage storage](PLAYING.md#garage-storage) for permissions and handling range.

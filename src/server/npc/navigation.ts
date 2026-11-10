@@ -1,3 +1,4 @@
+import { trailerStorage } from '../../shared/stored-trailers';
 import { automotiveConfig } from '../../shared/automotive-config';
 import { vehicleDef } from '../../shared/vehicle-config';
 import {
@@ -87,8 +88,7 @@ const cache = new WeakMap<World, Map<string, Grid>>();
  * Moving hitched rigs keep their existing collision handling. */
 function parkedTrailers(w: World) {
   return Object.entries(w.trailers ?? {}).filter(
-    ([, t]) =>
-      (!t.attached || t.parkedWith) && !(t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside),
+    ([, t]) => (!t.attached || t.parkedWith) && !trailerStorage(w, t),
   );
 }
 function parkedTraffic(w: World) {

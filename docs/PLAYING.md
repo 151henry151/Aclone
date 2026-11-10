@@ -1140,3 +1140,31 @@ confirmation before reserving land or changing ground. The owner sees its exact
 location, dimensions, level and shoulder in the contracts panel, and can decline
 the request; the client can withdraw it. Buildings,
 yards, fields, roads and protected geography remain excluded even with consent.
+
+## Garage storage
+
+Park land vehicles and trailers outside wherever you leave them, or bring them to
+Spanner & Sons (a tractor garage) and use **Vehicle storage → Store in garage**.
+Stop and step out first. By default, you and the vehicle must be within 30 metres
+of the garage and each other. An attached trailer stays with its complete parked
+rig; unhitch it first to store it separately. Boats and aircraft use their own
+facilities.
+
+Choose **Retrieve outside** at the garage where you stored it, then walk over to
+board or hitch it. Retrieval needs safe, clear space outside; a blocked exit leaves
+your property safely stored. Fuel, condition, paint, cargo and refrigeration state
+stay with it. Stored cargo still follows normal spoilage and refrigeration rules.
+Stored vehicles and trailers do not appear outside or obstruct movement. You cannot
+trade, pump, slaughter or deliver cargo directly from storage; retrieve it first.
+
+Build a **Vehicle storage garage** through Build: choose from five large shed
+designs, pay for a foundation and supply its construction materials. It is a private
+storage building, with no repair shop or vehicle sales. Only its owner can make new
+deposits. Stored vehicles remain their original owner's property after a garage sale,
+and that owner can still retrieve them. Empty the garage before demolishing it;
+it cannot decay away with property inside.
+
+Vehicle and trailer capacity is unlimited by default, independently of the shed's
+size or goods-storage capacity. World builders can disable new deposits, change the
+handling range or set a per-player, per-garage unit limit. Each vehicle and each
+trailer in a rig counts once. Rule changes never prevent retrieving existing storage.

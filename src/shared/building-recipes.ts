@@ -24,6 +24,13 @@ const hall = (
 });
 const p = (name: string, ...volumes: BuildingVolume[]) => ({ name, volumes });
 export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
+  vehicleStorage: [
+    p('Three-bay vehicle shed', hall(24, 18, 5.2, 'gable', 1.8)),
+    p('Wide machinery garage', hall(28, 18, 5.2, 'shed', 1.4)),
+    p('Deep trailer store', hall(24, 24, 5.6, 'barrel', 2.4)),
+    p('Fleet storage hall', hall(32, 18, 5.2, 'flat', 0.2)),
+    p('Estate vehicle barn', hall(24, 22, 5.2, 'gambrel', 2.4)),
+  ],
   automotiveFactory: [
     p(
       'Assembly hall and dispatch office',

@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from './types';
 import type { Trailer } from './trailers';
@@ -24,6 +25,7 @@ export function fuelShopPrice(w: World) {
 function access(w: World, p: Player, t?: Trailer, publicSnapshot = false): asserts t is Trailer {
   const rules = fuelRules(w.settings);
   need(t?.kind === 'fuel', 'Choose a fuel tanker');
+  need(!trailerStorage(w, t), 'Retrieve the fuel tanker from garage storage first');
   need(
     p.online && !p.atHome && !p.crowBody && !p.hitch && !p.game && !p.task,
     'Finish activities and stop outside to use a fuel tanker',

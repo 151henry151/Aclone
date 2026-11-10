@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../shared/types';
 import { constructionRules } from '../shared/construction-rules';
@@ -210,7 +211,7 @@ export function mountEarthworksPanel(
                 (pad.owner === p.id || work.operators.includes(p.id)) &&
                 earthworkOperatorAllowed(pad, p.id);
             const trailers = Object.values(w.trailers ?? {}).filter(
-              (t) => t.kind === 'dump' && t.owner === p.id,
+              (t) => !trailerStorage(w, t) && t.kind === 'dump' && t.owner === p.id,
             );
             const store = `<label>Transfer with<select name="trailer"><option value="">Carried inventory / site heap</option>${trailers.map((t) => `<option value="${esc(t.id)}">Tipping trailer ${esc(t.id)}</option>`).join('')}</select></label>`;
             return `<article data-earthwork-site data-id="${id}"><h3>Pad at ${number(pad.x)}, ${number(pad.z)} — ${Math.floor(pad.progress * 100)}%</h3>${contractPanel(w, p, pad)}<p>${work.pendingApproval ? 'Awaiting permission' : pad.progress === 1 ? 'Complete — ready to build' : work.active ? 'Reserved — drive slowly inside with the implement down' : 'Abandoned — the partial ground remains'}. Cut ${number(work.cut)} m³; fill ${number(work.fill)} m³. <b>${remaining > 0 ? `Deliver ${number(remaining)} m³ more fill` : 'Fill supplied'}</b>.<br>Site spoil: ${

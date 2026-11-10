@@ -6,6 +6,7 @@ export const buildingMapIcons: Readonly<Record<string, string>> = {
   school: 'M2 8 12 3l10 5-10 5zM6 11v6q6 5 12 0v-6M22 8v10',
   home: 'M2 10 12 2 22 10M5 9v13h14V9M10 22v-8h4v8',
   pub: 'M4 5h12v14q-6 4-12 0zM16 7h3q5 5-3 8M8 8v8M12 8v8',
+  vehicleStorage: 'M2 9 12 2 22 9v13H2zM4 22V12h4v10M10 22V12h4v10M16 22V12h4v10',
   garage: 'M14 3a6 6 0 0 0-7 8L2 18l4 4 7-7a6 6 0 0 0 8-7l-5 4-4-4z',
   starport: 'M12 2Q5 7 8 16h8q3-9-4-14zM8 11l-5 7h5M16 11l5 7h-5M10 19l2 4 2-4M10 8h4',
   bank: 'M2 7 12 2 22 7zM4 10v8M8 10v8M16 10v8M20 10v8M2 22h20M2 19h20',

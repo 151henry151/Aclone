@@ -74,6 +74,7 @@ export function buildingFinish(kind: string, plan: BuildingPlan): BuildingFinish
   if (
     [
       'garage',
+      'vehicleStorage',
       'workshop',
       'factory',
       'warehouse',

@@ -2,6 +2,18 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.140.0
+
+Deploy client and server together from the approved backlog-implementation SHA,
+using the normal SQLite backup, build and restart. Publish the matching website
+and reload clients. No mass parking migration or player grant is part of startup.
+Missing storage settings use defaults; explicit parked-vehicle storage and independent
+trailer locations are additive save fields. Keep the backup for rollback.
+
+Verify health/client/website version, the deployed SHA, and local Store/Retrieve,
+blocked-exit, empty/private garage and construction browser evidence. Any separately
+authorised live-player storage transfer must be backed up, scoped and audited.
+
 ## Upgrade 0.130.0
 
 Deploy the approved backlog-implementation SHA with the normal online SQLite

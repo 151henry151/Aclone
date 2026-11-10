@@ -185,3 +185,11 @@ test('an inaccessible destination fails safely without moving or relocating obst
   assert.deepEqual(w.trailers, before);
   assert.deepEqual([p.x, p.z], [0, -25]);
 });
+
+test('garage-stored trailers do not divert a resident route', () => {
+  const { w, p, target } = setup();
+  w.trailers!.box.storedAt = 'garage';
+  const stored = new Navigator(w, p, target, 2).waypoints();
+  w.trailers = {};
+  assert.deepEqual(stored, new Navigator(w, p, target, 2).waypoints());
+});

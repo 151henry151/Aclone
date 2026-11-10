@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 import { isSemitrailer } from '../shared/highway-definitions';
 import { automotiveConfig } from '../shared/automotive-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -21,7 +22,7 @@ export class TrailerScene {
   ) {
     const alive = new Set<string>();
     for (const t of Object.values(w.trailers ?? {})) {
-      if (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside) continue;
+      if (trailerStorage(w, t)) continue;
       alive.add(t.id);
       const def = trailerDef(w, t.kind);
       const key =

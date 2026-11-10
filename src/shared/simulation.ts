@@ -27,6 +27,8 @@ import { kerbParking } from './parking-site';
 import { approachBuilding, exitBuilding, finishArrival, animatedArrival } from './arrival';
 import { towExpiredParking } from './parking-tow';
 import { parkedFootprintBlocked, vehicleFootprint } from './vehicle-footprint';
+import { garageStorageAction } from './garage-storage';
+import { garageOccupied } from './stored-trailers';
 import { parkingFields, parkingRules } from './parking-rules';
 import {
   migrateParkedVehicles,
@@ -847,6 +849,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     !beingTowed(w, p) || ['tow', 'lights', 'boatLights', 'chat', 'use'].includes(type),
     'Release the towline before changing your vessel or activity',
   );
+  if (type === 'garageStorage') return garageStorageAction(w, p, a);
   if (type === 'townCharter') return charterAction(w, p, a);
   if (type === 'quest') return questAction(w, p, a);
   if (
@@ -2470,6 +2473,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const b = nearby(w, p, a.building);
       owns(p, b);
       requireThat(!b.government, 'Government buildings cannot be demolished');
+      requireThat(
+        !garageOccupied(w, b.id),
+        'Retrieve stored vehicles and trailers before demolishing this garage',
+      );
       requireThat(
         !b.manufacturing?.orders.length && !b.manufacturing?.ready.length,
         'Finish or cancel assembly orders and deliver manufactured vehicles before demolition',
@@ -4311,7 +4318,7 @@ export function advance(w: World, seconds: number) {
       const skill = b.recipe && recipes[b.recipe].skill;
       const factor = !owner ? 100 : skill && !owner.skills.includes(skill) ? 10 : 1;
       b.condition = Math.max(
-        b.lodging ? 1 : 0,
+        b.lodging || garageOccupied(w, b.id) ? 1 : 0,
         b.condition - (seconds * 100 * factor) / (160 * calendarYearSeconds(w.settings)),
       );
     }

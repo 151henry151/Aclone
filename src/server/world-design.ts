@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 import { earthworkDesignSchema, exportEarthworks, importEarthworks } from './earthworks-design';
 import { applyBuildingTemplate } from '../shared/world-catalogue';
 import {
@@ -453,7 +454,7 @@ export function exportDesign(w: World, includeMedia = false) {
           : undefined,
       })),
     parkedFuelTankers: Object.values(w.trailers ?? {})
-      .filter((t) => t.kind === 'fuel' && !t.attached)
+      .filter((t) => !trailerStorage(w, t) && t.kind === 'fuel' && !t.attached)
       .map((t) => ({
         id: t.id,
         x: t.x,

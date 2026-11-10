@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.140.0] - 2026-11-09
+
+### Added
+
+- Store land vehicles, independent trailers and complete rigs at Spanner & Sons, or build a private vehicle-storage garage with five large shed designs and unlimited default vehicle space.
+- Retrieve stored vehicles into a clear outside space while preserving fuel, paint, condition, cargo and hitches; configure storage availability, handling range and capacity in World Builder.
+
+### Fixed
+
+- Keep stored trailers out of outdoor rendering, collisions and cargo services, and protect occupied garages from demolition or decay that would strand stored property.
+
 ## [0.139.0] - 2026-11-09
 
 ### Added

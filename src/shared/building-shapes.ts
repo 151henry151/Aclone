@@ -199,6 +199,11 @@ export function buildingPlan(b: {
       volumes = [volume(7.6, 5.6, 2.9, 1.3, 'hip')];
       trim = '#5a7078';
       break;
+    case 'vehicleStorage':
+      volumes = [volume(24, 18, 5.2, 1.8)];
+      wall = '#93a5a0';
+      trim = '#445b55';
+      break;
     case 'garage':
       volumes = [volume(11.4, 7.2, 3.7, 0.75, 'shed')];
       wall = '#b9b5a4';

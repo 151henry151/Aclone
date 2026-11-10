@@ -38,6 +38,8 @@ export interface ParkedVehicle {
   parkedAt: number;
   /** Building ID, or GARAGE_STORAGE for the shared spare-tractor store. */
   inside?: string;
+  /** Explicit deposit, distinct from automatic spare-tractor storage. */
+  garageStored?: boolean;
 }
 export const GARAGE_STORAGE = '@tractor-garage';
 export const tractorGarage = (b?: Building) =>
@@ -65,6 +67,7 @@ export function parkedVehicle(w: World, p: Player, slot: number) {
 }
 export function parkedReturnReason(w: World, p: Player, slot: number, building?: Building) {
   const v = parkedVehicle(w, p, slot);
+  if (v?.garageStored) return 'Retrieve this vehicle from garage storage first';
   if (!persistentVehicles(w, p) && !v?.deliveryPending) return;
   if (
     isTractor(slot) &&
@@ -204,6 +207,7 @@ export function storeSpareTractors(w: World, p: Player) {
   const current = isTractor(p.vehicle) ? p.vehicle : returnTractor(p);
   for (const v of Object.values(w.parkedVehicles ?? {})) {
     if (v.owner !== p.id || !isTractor(v.slot) || v.slot === current) continue;
+    if (v.garageStored) continue;
     if (v.inside !== GARAGE_STORAGE) {
       v.inside = GARAGE_STORAGE;
       changed = true;

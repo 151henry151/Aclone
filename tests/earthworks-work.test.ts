@@ -468,3 +468,34 @@ test('spoil berms preserve the surveyed maximum shoulder grade on deep cuts', as
     'spoil must not steepen a valid shoulder beyond its limit',
   );
 });
+
+test('stored tipping-trailer cargo cannot supply earthwork fill from its previous position', () => {
+  const f = setup(11),
+    pad = confirm(f);
+  f.w.trailers = {
+    tip: {
+      id: 'tip',
+      kind: 'dump',
+      owner: f.p.id,
+      x: 82,
+      z: 80,
+      heading: 0,
+      cargo: { gravel: 2 },
+      storedAt: 'garage',
+    },
+  };
+  const before = JSON.stringify(f.w);
+  assert.throws(
+    () =>
+      act(f.w, f.p.id, {
+        type: 'earthwork',
+        operation: 'deliver',
+        id: pad.id,
+        item: 'gravel',
+        quantity: 2,
+        trailer: 'tip',
+      }),
+    /Move alongside your own tipping trailer/,
+  );
+  assert.equal(JSON.stringify(f.w), before);
+});

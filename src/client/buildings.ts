@@ -438,6 +438,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
 
   const shed = [
     'garage',
+    'vehicleStorage',
     'farm',
     'haybarn',
     'sawmill',

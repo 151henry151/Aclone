@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { BridgePlan } from './bridge-types';
 import type { GroundRect } from './vehicle-footprint';
@@ -229,7 +230,10 @@ export function bridgeSiteVehicleBlocked(w: World, plan: BridgePlan) {
   return (
     parkedFootprintBlocked(w, footprint) ||
     Object.values(w.trailers ?? {}).some(
-      (t) => !t.attached && rectanglesOverlap(footprint, trailerFootprint(t, w)),
+      (t) =>
+        !trailerStorage(w, t) &&
+        !t.attached &&
+        rectanglesOverlap(footprint, trailerFootprint(t, w)),
     ) ||
     Object.values(w.mooredBoats ?? {}).some((b) =>
       rectanglesOverlap(footprint, vehicleFootprint(w, b.slot, b)),

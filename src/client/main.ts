@@ -1,3 +1,4 @@
+import { garageStoragePanel } from './garage-storage-panel';
 import { earthworksPanel, mountEarthworksPanel } from './earthworks-panel';
 import { isEarthmover } from '../shared/earthmoving-definitions';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
@@ -1335,6 +1336,19 @@ function buildingAccessKey(b: Building) {
     me?.authority,
     me?.job,
     caretakerBuilding,
+    (b.kind === 'garage' || b.kind === 'vehicleStorage') && world && me
+      ? [
+          Object.values(world.parkedVehicles ?? {})
+            .filter((v) => v.owner === me!.id)
+            .map((v) => [v.slot, v.inside, v.x, v.z]),
+          Object.values(world.trailers ?? {})
+            .filter((t) => t.owner === me!.id)
+            .map((t) => [t.id, t.storedAt, t.parkedWith, t.attached, t.x, t.z]),
+          world.settings.garageStorageEnabled,
+          world.settings.garageStorageLimit,
+          world.settings.garageStorageRange,
+        ]
+      : undefined,
     b.kind === 'farm' && world ? calendar(world).season : undefined,
     b.kind === 'farm' && world && me && b.owner !== me.id
       ? Object.entries(crops).map(([id, c]) => !farmStaffBlocker(world!, me!, b, c.seed, id))
@@ -1688,7 +1702,13 @@ function refreshTradingPrices() {
       me.task?.kind === 'freight' ? Math.floor(world.time * 2) : null,
       world.settings.freightTransferRate,
       world.settings.freightShopRange,
-      Object.values(world.trailers ?? {}).map((t) => [t.id, t.kind, t.attached]),
+      Object.values(world.trailers ?? {}).map((t) => [
+        t.id,
+        t.kind,
+        t.attached,
+        t.storedAt,
+        t.parkedWith,
+      ]),
       me.vehicle,
       me.atHome,
       me.task?.kind,
@@ -2455,7 +2475,7 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>A small log jetty on a navigable river reach. Owned vessels that fit the world’s river limits board here and remain moored in view. Freight holds use the same transfer rules as coastal docks. Nearby shops or fuel tankers can supply fuel; carry cans aboard and use Refuel. Recover stranded upriver boats at their saved position using the lifeboat, motorboat or towing controls.</p>';
-    html += canoePanel(world, me) + trailerPanel(world, me, b);
+    html += garageStoragePanel(world, me, b) + canoePanel(world, me) + trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
       html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;

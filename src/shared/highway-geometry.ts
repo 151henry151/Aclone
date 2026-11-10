@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types';
 import type { Trailer } from './trailers';
@@ -191,9 +192,7 @@ export function clearHighwayBody(
             .map(([, v]) => vehicleFootprint(w, v.slot, v)),
         ];
   const otherTrailers = Object.values(w.trailers ?? {})
-    .filter(
-      (t) => t.id !== exceptTrailer && !(t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside),
-    )
+    .filter((t) => t.id !== exceptTrailer && !trailerStorage(w, t))
     .map((t) => ({ trailer: t, rect: trailerFootprint(t, w) }));
   const buildings = w.buildings
     .filter((site) => Math.hypot(site.x - from.x, site.z - from.z) < radius + distance + 100)

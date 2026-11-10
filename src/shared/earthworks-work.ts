@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 import { maximumHealth } from './nutrition';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action, Stock } from './types';
@@ -188,7 +189,10 @@ function accessibleStock(w: World, p: Player, a: Action): Stock {
   if (!a.trailer) return p.inventory;
   const t = w.trailers?.[String(a.trailer)];
   need(
-    t && t.owner === p.id && Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t),
+    t &&
+      !trailerStorage(w, t) &&
+      t.owner === p.id &&
+      Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t),
     'Move alongside your own tipping trailer',
   );
   need(t!.kind === 'dump', 'Use a quarry tipping trailer for earthwork material');

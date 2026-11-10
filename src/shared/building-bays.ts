@@ -21,6 +21,7 @@ export function buildingBays(b: Building, plan: BuildingPlan): BuildingBay[] {
     ? 'slide'
     : [
           'garage',
+          'vehicleStorage',
           'warehouse',
           'factory',
           'automotiveFactory',
@@ -35,13 +36,24 @@ export function buildingBays(b: Building, plan: BuildingPlan): BuildingBay[] {
       return [];
     if (b.kind === 'starport' && (index === 0 || v.width < 18 || v.eaves < 10)) return [];
     const front = v.z + v.depth / 2;
+    if (b.kind === 'vehicleStorage')
+      return [-7, 0, 7].map((x) => ({
+        x: v.x + x,
+        z: front,
+        width: 4.8,
+        height: 4.6,
+        motion: 'roll' as const,
+        volume: v,
+      }));
     if (!exposedFacade(plan.volumes, v, v.x, 1, front + 0.07, 0.2)) return [];
     const port = b.kind === 'starport';
     const xs =
       !b.architecture && port
         ? [v.x - 7, v.x + 7]
         : !b.architecture &&
-            ['garage', 'warehouse', 'factory', 'shipyard', 'haybarn'].includes(b.kind) &&
+            ['garage', 'vehicleStorage', 'warehouse', 'factory', 'shipyard', 'haybarn'].includes(
+              b.kind,
+            ) &&
             v.width >= 10
           ? [v.x - 2.7, v.x + 2.7]
           : loadingBayXs(b.kind, v);

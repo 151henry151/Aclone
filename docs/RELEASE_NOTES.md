@@ -2,6 +2,19 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.140.0 — Store your fleet and build a private garage
+
+Store land vehicles, trailers or complete rigs at Spanner & Sons, with fuel,
+condition, paint and cargo preserved. Retrieve outside where there is safe clear
+space. Build a private vehicle-storage garage with one of five large shed designs;
+vehicle storage is unlimited by default. World Builder controls the new storage
+switch, range and unit limit. Parked vehicles remain outside until explicitly stored.
+
+Reload clients after deployment. Existing automatic spare-tractor storage remains
+valid. New optional storage locations persist in world saves. Stored trailers do
+not obstruct traffic or act as remote cargo sources. Keep the database backup for
+rollback because older clients/servers do not understand independent trailer storage.
+
 ## 0.139.0 — Grade hillsides and hire earthmoving operators
 
 Manufacture bulldozers and backhoes at automotive factories, qualify as a plant

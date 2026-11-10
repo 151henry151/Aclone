@@ -709,5 +709,8 @@
   "earthworksContracts": true,
   "earthworksNpcContracts": true,
   "earthworksNpcFeePerVolume": 100,
-  "earthworksNpcMaximumContracts": 1
+  "earthworksNpcMaximumContracts": 1,
+  "garageStorageEnabled": true,
+  "garageStorageRange": 30,
+  "garageStorageLimit": 0
 }

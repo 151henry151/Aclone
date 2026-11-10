@@ -806,7 +806,7 @@ export function settingsFields(settings: Settings = defaults) {
     })
     .join(
       '',
-    )}<p>Persistent vehicles stay where you leave them. Return and carry fuel to the actual machine. Road parking grace uses calendar game days, including catch-up. Stored vehicles and your own property are protected. Other worlds keep instant switching until enabled. Full arrivals walk through the doorway; quick and off shorten that sequence.</p></fieldset>`;
+    )}<p>Garage storage accepts land vehicles and trailers; zero limit means unlimited per player per garage. The handling reach applies to both player and vehicle. Disabling new storage or lowering a limit never prevents retrieval. Storage garages are private to their owner; repair garages serve everyone. Cargo remains subject to ordinary spoilage and refrigeration. Persistent vehicles stay where you leave them. Return and carry fuel to the actual machine. Road parking grace uses calendar game days, including catch-up. Stored vehicles and your own property are protected. Other worlds keep instant switching until enabled. Full arrivals walk through the doorway; quick and off shorten that sequence.</p></fieldset>`;
   const doors = buildingDoorRules(settings);
   const doorFields = `<fieldset><legend>Building doors</legend>${Object.entries(buildingDoorFields)
     .map(([key, spec]) => {

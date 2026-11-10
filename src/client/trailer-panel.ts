@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 import { automotiveConfig } from '../shared/automotive-config';
 import { coolingInterval } from '../shared/highway-refrigeration';
 import { isSemitrailer } from '../shared/highway-definitions';
@@ -45,6 +46,11 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       },
       d = trailerDef(w, t.kind),
       distance = Math.hypot(t.x - p.x, t.z - p.z);
+    const stored = trailerStorage(w, t);
+    if (stored) {
+      html += `<section class="notice"><h4>${esc(d.name)}</h4><p>Stored in ${esc(w.buildings.find((b) => b.id === stored)?.name ?? 'tractor garage storage')} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight. Retrieve at the garage before hitching or handling cargo.</p></section>`;
+      continue;
+    }
     html += `<section class="notice"><h4>${d.name}</h4><p>${Math.round(distance)}m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
     if (distance > trailerHandlingReach(w, t)) {
       html += '</section>';

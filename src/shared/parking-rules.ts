@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const parkingFields = {
+  garageStorageEnabled: { label: 'Allow new garage storage' },
+  garageStorageRange: {
+    label: 'Garage storage handling reach (metres)',
+    min: 1,
+    max: 100,
+    step: 1,
+  },
+  garageStorageLimit: {
+    label: 'Stored vehicles and trailers per player per garage (0 = unlimited)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   vehiclesPersist: { label: 'Vehicles persist in the world' },
   parkingNpcs: { label: 'Residents must return to parked vehicles' },
   garageStoresSpareTractors: { label: 'Store spare tractors in garages' },

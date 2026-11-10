@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 import { rectanglesOverlap, vehicleFootprint, trailerFootprint } from './vehicle-footprint';
 import { buildingBays } from './building-bays';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -56,7 +57,7 @@ export function safeParkingPoint(
   if (
     Object.values(w.trailers ?? {}).some(
       (t) =>
-        !(t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside) &&
+        !trailerStorage(w, t) &&
         !(
           ignore &&
           (t.parkedWith === ignore ||

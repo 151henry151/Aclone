@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import { fuelRules } from '../shared/fuel-rules';
@@ -13,7 +14,10 @@ const hidden = (key: string, value: string | number) =>
 export function fuelPanel(w: World, p: Player) {
   const rules = fuelRules(w.settings),
     near = Object.values(w.trailers ?? {}).filter(
-      (t) => t.kind === 'fuel' && Math.hypot(t.x - p.x, t.z - p.z) < rules.refuelRange,
+      (t) =>
+        !trailerStorage(w, t) &&
+        t.kind === 'fuel' &&
+        Math.hypot(t.x - p.x, t.z - p.z) < rules.refuelRange,
     );
   if (!near.length) return '<div class="fuel-services"></div>';
   return `<div class="fuel-services"><h3>Roadside fuel</h3>${near

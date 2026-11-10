@@ -1,3 +1,4 @@
+import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building, Stock } from '../shared/types';
 import {
@@ -110,6 +111,7 @@ export function butcherPanel(w: World, p: Player, b: Building) {
     ...Object.values(w.trailers ?? {})
       .filter(
         (t) =>
+          !trailerStorage(w, t) &&
           t.owner === p.id &&
           t.kind === 'livestock' &&
           Math.hypot(t.x - ramp.x, t.z - ramp.z) <= r.slaughterRange,

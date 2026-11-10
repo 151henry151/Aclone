@@ -1,3 +1,4 @@
+import { trailerStorage } from './stored-trailers';
 import { coolingInterval, type RefrigerationState } from './highway-refrigeration';
 import { expireMeatStock } from './meat-freshness';
 import { automotiveConfig } from './automotive-config';
@@ -77,13 +78,17 @@ export interface Trailer {
   attached?: string;
   /** Vehicle key while its driver is walking or signed off; the hitch stays connected. */
   parkedWith?: string;
+  /** Independent garage storage; cargo and ownership remain on this trailer. */
+  storedAt?: string;
   /** Whole internal currency units per Fuel. Zero or absent closes public sales. */
   sellPrice?: number;
   /** Snapshot-only service facts; never trusted by authoritative transactions. */
   fuelService?: { ownerName: string; ownerOnline: boolean; stopped: boolean };
 }
 export const attachedTrailer = (w: World, p: Pick<Player, 'id'>) =>
-  Object.values(w.trailers ?? {}).find((t) => t.attached === p.id && !t.parkedWith);
+  Object.values(w.trailers ?? {}).find(
+    (t) => t.attached === p.id && !t.parkedWith && !trailerStorage(w, t),
+  );
 /** Keep prediction's articulated state beside its disposable player, never in the snapshot. */
 export function movementTrailer(w: World, p: Player, prediction = false) {
   const attached = attachedTrailer(w, p);
@@ -248,6 +253,7 @@ export function trailerAction(w: World, p: Player, a: Action) {
     return 'Trailer purchased and hitched. Load it through Trailer cargo.';
   }
   need(t && t.owner === p.id, 'Choose your own trailer');
+  need(!trailerStorage(w, t), 'Retrieve the trailer from garage storage first');
   need(
     Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t),
     'Move alongside your trailer',
@@ -430,7 +436,7 @@ export function trailerBlocks(
   allowEscape = false,
 ) {
   return Object.values(w.trailers ?? {}).some((t) => {
-    if (t.id === except || (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside)) return false;
+    if (t.id === except || trailerStorage(w, t)) return false;
     const d = trailerDef(w, t.kind),
       n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 0.5));
     const clearance = (i: number) => {

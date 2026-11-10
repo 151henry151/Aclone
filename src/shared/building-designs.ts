@@ -107,6 +107,7 @@ const scalable = new Set([
   'lighthouse',
   'factory',
   'garage',
+  'vehicleStorage',
   'kitchen',
   'teaHouse',
   'roastery',

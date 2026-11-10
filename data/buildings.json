@@ -1114,7 +1114,7 @@
     "idealEmployees": 2
   },
   "winery": {
-    "name": "Vintner’s press",
+    "name": "Vintner\u2019s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
@@ -1445,7 +1445,7 @@
     "idealEmployees": 2
   },
   "dairyKitchen": {
-    "name": "Country café",
+    "name": "Country caf\u00e9",
     "price": 120000,
     "capacity": 500,
     "buy": {
@@ -1732,5 +1732,22 @@
     "tier": 0,
     "color": "#d0c3b0",
     "idealEmployees": 1
+  },
+  "vehicleStorage": {
+    "name": "Vehicle storage garage",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 0,
+    "materials": {
+      "wood": 20,
+      "blocks": 20,
+      "steel": 10
+    },
+    "tier": 0,
+    "color": "#93a5a0"
   }
 }

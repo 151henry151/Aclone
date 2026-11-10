@@ -10920,3 +10920,96 @@ player grants or terrain edits were made. The intermittent server-pause issue
 remains open; terrain benchmark acceptance is against Henry's selected 0.138.1
 baseline and does not claim overall FPS improvement. No later backlog item was
 started during this earthmoving release.
+
+## Requested priority — General garage storage and buildable vehicle garages (2026-11-09)
+
+Henry requests explicit garage storage for all land vehicles and trailers, at
+Spanner & Sons and a new buildable storage-only garage. Outdoor parking remains
+available. This interrupts the remaining backlog; piloted spaceflight is excluded.
+
+Completion criteria, before production changes:
+
+- `npx tsx --test tests/garage-storage.test.ts`: store/retrieve owned tractors,
+  trucks, earthmovers, cars, hovercraft and trailers (including complete hitched
+  rigs), preserving fuel, paint, condition, cargo, refrigeration and ownership.
+  Storage must not teleport distant vehicles or allow another player's property,
+  boats/aircraft, unfinished garages or busy/moving players. Blocked delivery
+  refuses without mutation. Explicit private storage survives legacy spare-tractor
+  normalization. Ordinary parking still works.
+- The same tests cover unlimited default storage, configurable enable/reach/limit
+  rules, safe retrieval after rules change, save/reload and portable rules. A new
+  buildable `vehicleStorage` catalogue entry has editable costs/materials, a large
+  shed footprint and vehicle doors, no repair shop or manufacturing service.
+  Owners may store there; prior depositors can retrieve after ownership changes.
+  Refuse demolition/removal while vehicles or trailers remain stored.
+- Stored trailers disappear from rendering, collision/navigation and public fuel
+  supply. Cargo loading, slaughter and earthwork material transfers cannot use
+  their old outdoor coordinates. Regression tests cover these access paths.
+- `TEST_GPU=1 npm run test:e2e -- tests/browser/garage-storage.spec.ts`: use actual
+  garage Store/Retrieve controls, inspect empty and stored states, rejected remote
+  storage/blocked retrieval/private access, ordinary outdoor parking, and the new
+  building in Build. Inspect desktop/mobile layout and real shed screenshots.
+- Run affected parking/trailer/vehicle/construction/snapshot tests, then clean
+  `npx tsc --noEmit` and changed-file Prettier. Update playing, haulage, world-builder
+  and release docs. Commit/push/deploy under standing authorization only after
+  acceptance passes, then announce with verified screenshots.
+- After deployment, move only Hank's newly granted five land vehicles and eleven
+  trailers from the prior grant into Spanner & Sons storage, backed up and audited;
+  preserve boats, canoe, existing tractors, all cargo and fuel. Verify after restart.
+
+Defaults for the new rules: storage enabled; 30 m handling reach measured from
+building and vehicle; zero stored-unit limit means unlimited per player per garage.
+Disabling storage or reducing a limit prevents new deposits only. Retrieval remains
+possible. Private garages accept their owner only; public repair garages serve all
+players, and stored property never transfers with a garage sale. Model: a 24 × 18 m
+shed with tall vehicle bays. Catalogue base construction cost 120,000 internal
+currency units, 20 Wood, 20 Blocks and 10 Steel, editable through existing catalogue
+and construction tuning. Building size never caps the default vehicle capacity.
+
+Status: implementation verified; release pending. Initial tests failed on unknown
+garageStorage action and unknown vehicleStorage building, before production changes.
+Keep the legacy shared spare-tractor store distinct from explicit storage with a
+saved flag; this resolved three existing parking regressions without weakening them.
+Fix test fixtures to use the authoritative rollback world after a refused action,
+and a sufficiently near-zero condition for the one-second decay boundary.
+
+Verification: 203 relevant tests pass across garage/parking/trailer, navigation,
+construction/catalogue, fuel, butcher, bridge and earthwork paths. TypeScript is
+clean. Run Prettier on all changed files. The browser flow passes with real storage
+buttons, blocked exit and remote/private refusals, trailer mesh removal/reappearance,
+foundation placement and material supply, five architectural choices, and desktop
+and mobile screenshots inspected under output/garage-storage/. No full-suite run
+is claimed. The browser's server state uses a disposable local world.
+
+## Requested priority — Contextual labels and obvious vehicle boarding (2026-11-09)
+
+Henry's low-camera screenshot shows distant parked-vehicle names overlapping across
+the horizon. His next screenshot shows a stored-tractor panel while he stands next
+to a backhoe, with no obvious way to get into that machine. Address after the garage
+storage slice, before resuming the remaining backlog. These are a separate fix.
+
+Completion criteria, before production changes:
+
+- Write failing focused tests for label visibility: names of people, buildings and
+  parked vehicles appear for a nearby subject in the viewing direction; distant,
+  behind-camera and overlapping names disappear. Cap their pixel size and fade
+  without changing authored checkpoint/course signs. Suppress labels in scenery
+  view. Avoid full-world mesh raycasts every frame. World Builder owns the enabled
+  switches, ranges, focus area, maximum labels and size/opacity controls.
+- Write failing boarding tests: a nearby owned tractor or earthmover takes priority
+  over a stored/remote last-used vehicle. Measure access at the vehicle body so a
+  player standing alongside a large machine can board. Stored, foreign, busy and
+  out-of-reach vehicles remain unavailable with a reason; preserve server-side
+  ownership/qualification checks and the configurable boarding reach.
+- In a real browser, reproduce a crowded low-angle street, look toward/away from
+  people/buildings/parked vehicles, verify no overlapping visible names, test
+  distance/scenery mode and custom rules, and inspect screenshots.
+- In that browser, approach a tractor and an earthmover; use a clear Get in button,
+  click a visible vehicle, and find boarding in Inventory. Test no nearby vehicle,
+  a foreign/stored vehicle and unavailable qualification states. Dragging to orbit
+  must not board. Check desktop/mobile layout and no browser errors.
+- Run relevant tests, clean TypeScript and changed-file Prettier. Update guides and
+  release notes, commit/push/deploy and announce with verified screenshots under
+  standing authorization. No changes to piloted spaceflight.
+
+Status: criteria recorded; implementation pending garage release.

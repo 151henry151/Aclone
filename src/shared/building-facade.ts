@@ -23,6 +23,7 @@ export const industrialKinds = new Set([
   'concreteWorks',
   'carpenter',
   'garage',
+  'vehicleStorage',
   'boathouse',
   'dairy',
   'sheepfold',
