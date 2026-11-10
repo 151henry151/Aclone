@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.140.1 makes nearby vehicles easier to board: use **Get in** on the HUD
+or in Inventory, or click your parked machine. Small, nearby names follow your
+viewing direction and avoid overlap. World Builder controls label visibility and
+boarding reach. Reload to receive the updated controls.
+
 Version 0.140.0 adds **garage storage for land vehicles and trailers**. Park outside
 when you want, or visit Spanner & Sons and choose Store in garage. Build your own
 vehicle-storage garage for a private fleet: five large shed designs, unlimited

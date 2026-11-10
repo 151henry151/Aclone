@@ -11012,7 +11012,11 @@ Completion criteria, before production changes:
   release notes, commit/push/deploy and announce with verified screenshots under
   standing authorization. No changes to piloted spaceflight.
 
-Status: criteria recorded; implementation pending garage release.
+Status: implement and verify 85 focused tests, clean TypeScript and the real
+crowded-street desktop/mobile browser flow. Fix the test fixture's stale Close
+dialog action after Switch to walking (that action already closes the dialog).
+Retain generated Inventory HTML signatures to avoid replacing unchanged controls.
+Release 0.140.1 after final formatting/build checks; publication pending.
 
 ### Garage release and requested town cleanup
 
@@ -11050,3 +11054,25 @@ Post and verify the bot announcement with two inspected screenshots:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569513711801081866
 Proceed to contextual boarding/labels; broader intermittent performance work
 remains open.
+
+## Requested priority — Collapsible fleet menus and hangar parking (2026-11-09)
+
+After contextual boarding/labels, address Henry's two follow-ups as separate fixes.
+
+1. Collapse long owned-trailer, garage-storage and vehicle catalogue lists by
+   default, with accessible labelled summaries and item counts. Keep nearby Get in
+   controls visible. Preserve each disclosure's state across live rerenders in the
+   same menu; do not inherit it into another building. Before production, add and
+   run failing tests for collapsed markup and state retention. In the browser,
+   visit Spanner & Sons and an aircraft hangar with a large fleet, open/close the
+   lists by pointer and keyboard, perform a storage action without losing the open
+   state, and check empty lists plus phone layout. Run relevant panel/garage/trailer
+   tests, TypeScript and Prettier; update player docs and release with screenshots.
+2. Enter an aircraft hangar in a land vehicle: store it at that hangar instead of
+   leaving it on the apron. Preserve the whole rig, fuel, condition and cargo;
+   expose retrieval at the same hangar after flying. Add failing authoritative
+   tests first for entry, boarding an owned aircraft, later retrieval, foreign
+   ownership and blocked exits, persistence and applicable world-rule switches.
+   Use the existing storage/parking rules rather than duplicate limits. Verify the
+   real browser drive-in → enter → board plane → return → retrieve flow and empty/
+   failure states, then relevant tests, TypeScript, formatting, docs and release.

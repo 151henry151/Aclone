@@ -1168,3 +1168,24 @@ Vehicle and trailer capacity is unlimited by default, independently of the shed'
 size or goods-storage capacity. World builders can disable new deposits, change the
 handling range or set a per-player, per-garage unit limit. Each vehicle and each
 trailer in a rig counts once. Rule changes never prevent retrieving existing storage.
+
+## Nearby vehicle boarding and names
+
+Walk alongside your parked tractor, backhoe, bulldozer or other land vehicle. The
+HUD now prioritises the vehicle beside you and offers **Get in [vehicle]**. You can
+also click the vehicle itself, or press **I → Nearby vehicles** and choose it there.
+Dragging the scene still turns the camera. The Inventory list explains when no
+owned vehicle is nearby or a qualification/activity prevents boarding. Stored
+vehicles must be retrieved at their garage first; another player's vehicle cannot
+be boarded this way.
+
+The default boarding reach is 3 m from the vehicle body, including world-tuned
+length, width and rotation. You must be on the same ground level (default 3 m
+height tolerance). This makes the sides of large machines reachable without
+walking into their centre. World Builder controls both distances.
+
+Floating names favour what you are looking towards. Nearby people, buildings and
+parked vehicles receive small labels; names fade with distance and yield when
+labels would overlap. Buildings obscure names behind them. Scenery view (H) hides
+these labels. Course/checkpoint signs keep their existing role. World builders can
+adjust ranges, opacity, size, viewing focus and the number of names displayed.

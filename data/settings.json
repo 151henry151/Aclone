@@ -712,5 +712,15 @@
   "earthworksNpcMaximumContracts": 1,
   "garageStorageEnabled": true,
   "garageStorageRange": 30,
-  "garageStorageLimit": 0
+  "garageStorageLimit": 0,
+  "parkingBoardHeight": 3,
+  "worldNameTags": true,
+  "worldNameTagRange": 60,
+  "worldNameTagFadeStart": 30,
+  "worldNameTagMaxPixels": 18,
+  "worldNameTagOpacity": 0.75,
+  "focusNameTags": true,
+  "nameTagFocusRadius": 0.55,
+  "nameTagMaxVisible": 4,
+  "nameTagOverlapPadding": 4
 }

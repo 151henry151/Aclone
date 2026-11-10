@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.140.1
+
+Deploy the approved backlog-implementation SHA with the normal SQLite backup,
+prefixed client build and service restart. Publish the matching website and verify
+health/version and the deployed SHA. Reload clients for boarding and name labels.
+Missing rules receive catalogue defaults; no migration or live player edit runs.
+
 ## Upgrade 0.140.0
 
 Deploy client and server together from the approved backlog-implementation SHA,

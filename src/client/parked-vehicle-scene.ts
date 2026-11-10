@@ -1,7 +1,7 @@
 import { batchParkedBody } from './parked-batching';
 import { creatorModel, disposeCreator } from './creator-model';
 import { vehicleGround } from './vehicle-ground';
-import { label } from './labels';
+import { pilotLabel } from './labels';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -30,7 +30,8 @@ export class ParkedVehicleScene {
         if (entry) this.remove(entry.model);
         const model = visual ? creatorModel(visual, w) : this.build(v.slot, name, v.paint);
         if (visual && typeof document !== 'undefined') {
-          const tag = label(name);
+          const tag = pilotLabel(name);
+          model.userData.pilotLabel = tag;
           tag.position.y = new T.Box3().setFromObject(model).max.y + 1;
           model.add(tag);
         }
@@ -43,8 +44,7 @@ export class ParkedVehicleScene {
           if (o instanceof T.Light) o.visible = false;
           if (o instanceof T.Sprite) {
             o.material = o.material.clone();
-            o.material.sizeAttenuation = false;
-            o.scale.multiplyScalar(0.035);
+            o.material.sizeAttenuation = true;
           }
           if (o instanceof T.Mesh) {
             const dark = (m: T.Material) => {

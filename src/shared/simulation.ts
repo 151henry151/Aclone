@@ -2786,6 +2786,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       }
       const tags = nameTagRules({ ...w.settings, ...clean });
       requireThat(
+        tags.worldNameTagFadeStart <= tags.worldNameTagRange,
+        'Building/vehicle name fade start must not exceed range',
+      );
+      requireThat(
         tags.pilotNameTagFadeStart <= tags.pilotNameTagRange,
         'Fade start must not exceed name-tag visibility range',
       );

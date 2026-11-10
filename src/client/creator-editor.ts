@@ -744,7 +744,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Human and AI names fade with distance from your character. Fade start must not exceed visibility range. Screen height caps keep nearby names compact; scenery view hides them. Building signs keep their own visibility.</p></fieldset>`;
+    )}<p>Human, AI, building and parked-vehicle names follow proximity, viewing direction and overlap limits. Both fade starts must not exceed their ranges. Context height caps keep names compact; scenery view hides them. Course/checkpoint signs are unchanged. Turn off viewing-direction focus to show nearby names across the view.</p></fieldset>`;
   const bridges = bridgeRules(settings);
   const bridgeFields = `<fieldset><legend>Player-built bridges</legend>${Object.entries(
     bridgeRuleFields,

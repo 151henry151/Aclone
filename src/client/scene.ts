@@ -80,7 +80,14 @@ import { fadeSceneryIntoFog } from './scenery-fog';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
-import { label, pilotLabel, capWorldLabel, updatePilotLabel } from './labels';
+import {
+  label,
+  pilotLabel,
+  capWorldLabel,
+  updateContextLabels,
+  LabelOcclusion,
+  type ContextLabel,
+} from './labels';
 import { saleTag, saleTagText } from './sale-tag';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
@@ -293,6 +300,7 @@ export class GameScene {
   private snowVisible = false;
   private low = localStorage.getItem('aclone.quality') === 'low';
   private software = false;
+  private labelOcclusion = new LabelOcclusion();
   private labelsHidden = false;
   zoom = 1;
   setZoom(zoom: number) {
@@ -305,6 +313,7 @@ export class GameScene {
   orbit = 0;
   private lookPitch = 0;
   onBuilding?: (id: string) => void;
+  onParkedVehicle?: (id: string) => void;
   onView?: (position: { x: number; z: number }, heading: number) => void;
   constructor(private container: HTMLElement) {
     this.renderer = new T.WebGLRenderer({
@@ -491,11 +500,17 @@ export class GameScene {
         ),
         this.camera,
       );
-      const hit = ray.intersectObjects(this.buildingMeshes, true)[0];
+      const hit = ray
+        .intersectObjects(
+          [...this.buildingMeshes, ...this.parkedVehicles.group.children.filter((g) => g.visible)],
+          true,
+        )
+        .find((hit) => hit.object instanceof T.Mesh);
       if (hit) {
         let obj: T.Object3D | null = hit.object;
-        while (obj && !obj.userData.building) obj = obj.parent;
-        if (obj?.userData.building) this.onBuilding?.(obj.userData.building);
+        while (obj && !obj.userData.building && !obj.userData.parkedVehicle) obj = obj.parent;
+        if (obj?.userData.parkedVehicle) this.onParkedVehicle?.(obj.userData.parkedVehicle);
+        else if (obj?.userData.building) this.onBuilding?.(obj.userData.building);
       }
     });
     this.renderer.domElement.addEventListener(
@@ -1441,7 +1456,8 @@ export class GameScene {
     g.userData.chimneys = model.userData.chimneys ?? [];
     if (model.userData.lighthouseRotor) g.userData.lighthouseRotor = model.userData.lighthouseRotor;
     const bounds = new T.Box3().setFromObject(g);
-    const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.65);
+    const sign = pilotLabel(b.name);
+    sign.material.color.set(b.construction ? '#e7b36b' : '#e5ddbe');
     // Keep the terminal name readable at the door, not above the tall spacecraft.
     sign.position.set(0, b.kind === 'starport' ? 8 : bounds.max.y + 1.1, 0);
     g.add(sign);
@@ -2455,28 +2471,71 @@ export class GameScene {
       }
       const scenic = document.documentElement.classList.contains('scenery-view');
       const tags = nameTagRules(w.settings);
-      for (const mesh of this.meshes.values()) {
-        const tag = mesh.userData.pilotLabel as T.Sprite | undefined;
-        if (tag) {
-          updatePilotLabel(tag, p, mesh.position, this.camera, tags, this.container.clientHeight);
-          if (scenic) tag.visible = false;
-        }
-      }
       if (scenic !== this.labelsHidden) {
         this.land.traverse((o) => {
           if (o instanceof T.Sprite) o.visible = !scenic;
         });
         this.labelsHidden = scenic;
       }
-      for (const g of this.buildingMeshes)
-        for (const child of g.children)
-          if (child instanceof T.Sprite) {
-            const tag = child === g.userData.saleTag;
-            // Sale tags carry further than names so listings catch the eye from the road.
-            child.visible = !scenic && distance(p, g.position) < (tag ? 70 : 32);
-            if (tag)
-              child.material.rotation = Math.sin(this.elapsed * 1.3 + child.userData.sway) * 0.06;
-          }
+      const names: ContextLabel[] = [];
+      for (const [id, mesh] of this.meshes) {
+        const tag = mesh.userData.pilotLabel as T.Sprite | undefined;
+        if (tag) {
+          tag.visible = false;
+          if (mesh.visible)
+            names.push({
+              id: 'pilot:' + id,
+              tag,
+              kind: 'pilot',
+              subject: mesh.position.clone().add(new T.Vector3(0, 1, 0)),
+              owner: mesh,
+            });
+        }
+      }
+      for (const mesh of this.parkedVehicles.group.children) {
+        const tag = mesh.userData.pilotLabel as T.Sprite | undefined;
+        if (tag) {
+          tag.visible = false;
+          if (mesh.visible)
+            names.push({
+              id: 'vehicle:' + mesh.userData.parkedVehicle,
+              tag,
+              kind: 'vehicle',
+              subject: mesh.position.clone().add(new T.Vector3(0, 1, 0)),
+              owner: mesh,
+            });
+        }
+      }
+      for (const g of this.buildingMeshes) {
+        const sign = g.userData.buildingLabel as T.Sprite | undefined;
+        if (sign)
+          names.push({
+            id: 'building:' + g.userData.building,
+            tag: sign,
+            kind: 'building',
+            subject: g.position.clone().add(new T.Vector3(0, Math.min(sign.position.y / 2, 3), 0)),
+            owner: g,
+          });
+        const sale = g.userData.saleTag as T.Sprite | undefined;
+        if (sale)
+          names.push({
+            id: 'sale:' + g.userData.building,
+            tag: sale,
+            kind: 'sale',
+            subject: g.position.clone().add(new T.Vector3(0, 1, 0)),
+            owner: g,
+          });
+      }
+      updateContextLabels(
+        names,
+        p,
+        this.camera,
+        tags,
+        this.container.clientWidth,
+        this.container.clientHeight,
+        scenic,
+        (c) => this.labelOcclusion.blocked(c, this.camera, this.buildingMeshes),
+      );
       for (const obj of this.land.children) {
         if (obj.userData.blades) obj.userData.blades.rotation.z += dt * 0.35;
         if (obj.userData.clouds) obj.position.x = Math.sin(this.elapsed * 0.006) * 25;

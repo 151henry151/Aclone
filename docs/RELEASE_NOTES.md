@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.140.1 — Read the street and board the vehicle beside you
+
+Prioritise nearby owned vehicles over a stored last tractor. Board from the HUD,
+Inventory or a click on the visible machine, with reach measured from its body.
+Keep ownership, qualification, activity, storage and height checks authoritative.
+Names of people, buildings and parked vehicles now follow proximity and viewing
+direction, with small pixel caps, overlap suppression and building occlusion.
+World Builder controls these rules. Course/checkpoint signs retain their designs.
+
+Verification: 85 relevant unit/integration tests, TypeScript and the crowded-street
+browser flow on desktop and mobile. Exercise Inventory/HUD/click boarding, empty
+and unqualified states, camera dragging, scenery view, overlap and world controls.
+No saved-world migration or live-player adjustment is needed. Reload clients.
+
 ## 0.140.0 — Store your fleet and build a private garage
 
 Store land vehicles, trailers or complete rigs at Spanner & Sons, with fuel,

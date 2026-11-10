@@ -65,6 +65,16 @@ test('name-tag rules validate atomically and persist through all world-building 
   for (const key of Object.keys(nameTagRules())) delete (w.settings as any)[key];
   assert.equal(nameTagRules(w.settings).pilotNameTagRange, 40);
   const values = {
+    ...nameTagRules(),
+    worldNameTags: true,
+    worldNameTagRange: 80,
+    worldNameTagFadeStart: 25,
+    worldNameTagMaxPixels: 16,
+    worldNameTagOpacity: 0.6,
+    focusNameTags: false,
+    nameTagFocusRadius: 0.4,
+    nameTagMaxVisible: 3,
+    nameTagOverlapPadding: 6,
     pilotNameTags: false,
     pilotNameTagRange: 60,
     pilotNameTagFadeStart: 15,
@@ -75,6 +85,10 @@ test('name-tag rules validate atomically and persist through all world-building 
   act(w, 'owner', { type: 'settings', patch: values });
   for (const [key, value] of Object.entries(values)) assert.equal((w.settings as any)[key], value);
   for (const patch of [
+    { worldNameTagFadeStart: 81 },
+    { nameTagMaxVisible: 1.5 },
+    { nameTagFocusRadius: 0 },
+    { worldNameTags: 'yes' },
     { pilotNameTagRange: 0 },
     { pilotNameTagFadeStart: 61 },
     { pilotNameTagScale: NaN },

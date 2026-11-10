@@ -5,6 +5,7 @@ import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 import { manufacturingPanel, refreshManufacturing } from './automotive-panel';
 import { automotiveConfig } from '../shared/automotive-config';
 import { bridgePanel, mountBridgePanel, type BridgeDraft } from './bridge-panel';
+import { boardingPanel, boardingReason } from './parking-status';
 import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { parkingStatus, tractorWaypoint } from './parking-status';
 import { persistentVehicles } from '../shared/parked-vehicles';
@@ -944,7 +945,7 @@ function updateHud() {
   if (parking)
     setHudHtml(
       'parked-status',
-      `<p>${esc(parking.text)}</p>${button('Mark parked vehicle', 'parked-waypoint')}${button('Board vehicle', 'vehicle', `data-id="${parking.slot}" ${parking.returnReason ? `disabled title="${esc(parking.returnReason)}"` : ''}`)}${button('Refuel parked vehicle', 'refuelParked', `data-id="${parking.slot}" ${parking.refuelReason ? `disabled title="${esc(parking.refuelReason)}"` : ''}`)}${parking.returnReason ? `<small>${esc(parking.returnReason)}</small>` : ''}${parking.refuelReason ? `<small>${esc(parking.refuelReason)}</small>` : ''}`,
+      `<p>${esc(parking.text)}</p>${button('Mark parked vehicle', 'parked-waypoint')}${button('Get in ' + esc(parking.point.name), 'vehicle', `data-id="${parking.slot}" ${parking.returnReason ? `disabled title="${esc(parking.returnReason)}"` : ''}`)}${button('Refuel parked vehicle', 'refuelParked', `data-id="${parking.slot}" ${parking.refuelReason ? `disabled title="${esc(parking.refuelReason)}"` : ''}`)}${parking.returnReason ? `<small>${esc(parking.returnReason)}</small>` : ''}${parking.refuelReason ? `<small>${esc(parking.refuelReason)}</small>` : ''}`,
     );
   const drunk = intoxicationLabel(me, world.time);
   $('intoxication-status').hidden = !drunk;
@@ -1589,6 +1590,8 @@ function refreshTaxInfo() {
   }
 }
 let fuelSignature = '';
+let boardingRoot: Element | null = null;
+let boardingSignature = '';
 let fuelPanelRoot: Element | null = null;
 let charterSignature = '';
 let expeditionSignature = '';
@@ -1652,8 +1655,18 @@ function refreshTradingPrices() {
       fuelSignature = html;
     }
   }
-  if (panel === 'inventory' && world && me)
+  if (panel === 'inventory' && world && me) {
     refreshSpringPanel(app.querySelector('[data-spring-panel]'), world, me);
+    const host = app.querySelector('[data-boarding-panel]'),
+      html = boardingPanel(world, me);
+    if (host && (host !== boardingRoot || boardingSignature !== html)) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      boardingRoot = wrapper.firstElementChild!;
+      host.replaceWith(boardingRoot);
+      boardingSignature = html;
+    }
+  }
   if (panel === 'social' && world && me) {
     const key = JSON.stringify([
       me.mail,
@@ -2193,7 +2206,7 @@ function renderPanel() {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
       panel === 'inventory'
-        ? `<p>${carry(me, world!)} of ${vehicleDef(world, me.vehicle).capacity} capacity · ${esc(vehicleDef(world, me.vehicle).name)}</p><div class="item-list">${Object.entries(
+        ? `${boardingPanel(world, me)}<p>${carry(me, world!)} of ${vehicleDef(world, me.vehicle).capacity} capacity · ${esc(vehicleDef(world, me.vehicle).name)}</p><div class="item-list">${Object.entries(
             me.inventory,
           )
             .filter(([, n]) => n)
@@ -3775,6 +3788,17 @@ function openInteraction(id: string) {
   );
 }
 scene.onBuilding = openInteraction;
+scene.onParkedVehicle = (key) => {
+  if (!world || !me) return;
+  const v = world.parkedVehicles?.[key];
+  if (!v) return;
+  const reason = boardingReason(world, me, v);
+  if (reason) {
+    toast(reason);
+    return;
+  }
+  send({ type: 'vehicle', slot: v.slot });
+};
 window.addEventListener('keydown', (e) => {
   if (
     (e.target as HTMLElement).matches('input,textarea,select') ||

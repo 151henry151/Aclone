@@ -65,13 +65,25 @@ export function parkableVehicle(w: World, slot: number) {
 export function parkedVehicle(w: World, p: Player, slot: number) {
   return w.parkedVehicles?.[parkedKey(p.id, slot)];
 }
+/** Distance to the oriented body, so a large machine is reachable beside its cab. */
+export function parkedBodyDistance(w: World, p: Pick<Player, 'x' | 'z'>, v: ParkedVehicle) {
+  const r = vehicleFootprint(w, v.slot, v),
+    dx = p.x - v.x,
+    dz = p.z - v.z;
+  return Math.hypot(
+    Math.max(0, Math.abs(dx * r.axes[0].x + dz * r.axes[0].z) - r.hx),
+    Math.max(0, Math.abs(dx * r.axes[1].x + dz * r.axes[1].z) - r.hz),
+  );
+}
 export function parkedReturnReason(w: World, p: Player, slot: number, building?: Building) {
   const v = parkedVehicle(w, p, slot);
+  if (v && v.owner !== p.id) return 'This vehicle belongs to another player';
   if (v?.garageStored) return 'Retrieve this vehicle from garage storage first';
   if (!persistentVehicles(w, p) && !v?.deliveryPending) return;
   if (
     isTractor(slot) &&
     ((storesSpareTractors(w, p) &&
+      (!v || !!v.inside) &&
       slot !== (isTractor(p.vehicle) ? p.vehicle : returnTractor(p))) ||
       v?.inside === GARAGE_STORAGE)
   ) {
@@ -82,9 +94,11 @@ export function parkedReturnReason(w: World, p: Player, slot: number, building?:
   if (v.inside) {
     if (building?.id !== v.inside) return 'Visit the garage where this vehicle is stored';
   } else {
-    const distance = Math.hypot(p.x - v.x, p.z - v.z);
+    if (Math.abs(p.y - v.y) > parkingRules(w.settings).parkingBoardHeight)
+      return 'Walk to the same ground level as the vehicle before boarding';
+    const distance = parkedBodyDistance(w, p, v);
     if (distance > parkingRules(w.settings).parkingReturnRange)
-      return `Walk to your ${isTractor(slot) ? 'tractor' : 'vehicle'} first — ${Math.round(distance)} m away`;
+      return `Walk to your ${isTractor(slot) ? 'tractor' : 'vehicle'} first — ${Math.round(Math.hypot(p.x - v.x, p.z - v.z))} m away`;
   }
 }
 export function parkCurrentVehicle(w: World, p: Player, inside?: string) {

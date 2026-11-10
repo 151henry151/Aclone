@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.140.1] - 2026-11-09
+
+### Fixed
+
+- Prioritise the owned vehicle beside a walking player, show Get in controls on the HUD and in Inventory, and allow clicking a parked vehicle to board; measure boarding reach from its body and retain ownership, activity and qualification checks.
+- Limit floating person, building and parked-vehicle names by viewing direction, proximity, size and overlap; hide names behind buildings and in scenery view, and expose the display rules in World Builder.
+
 ## [0.140.0] - 2026-11-09
 
 ### Added

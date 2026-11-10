@@ -2193,3 +2193,23 @@ catalogue and construction tuning. Goods capacity is separate from vehicle slots
 Owners may deposit; prior depositors retain retrieval rights after a sale. Public
 tractor garages accept every player's own vehicles. Occupied garages cannot be
 demolished or decay away. Cargo spoilage and refrigeration rules remain in effect.
+
+## Contextual names and boarding reach
+
+The **Pilot name tags** rules also control building and parked-vehicle names.
+`worldNameTags` enables these names; `worldNameTagRange` and
+`worldNameTagFadeStart` default to 60 m and 30 m. `worldNameTagOpacity` defaults to
+0.75; `worldNameTagMaxPixels` defaults to 18 pixels and also caps pilot labels.
+Existing pilot-specific proximity, scale and opacity rules still apply.
+`focusNameTags` defaults to true; `nameTagFocusRadius` sets the viewing focus as a
+fraction of screen height. `nameTagMaxVisible` defaults to four labels, and
+`nameTagOverlapPadding` to four pixels. The nearest screen-centre subjects take
+priority. Turn off focus to allow names across the view; range, count, occlusion
+and overlap protections still apply. Fade starts cannot exceed their ranges.
+Course/checkpoint signs are separate.
+
+`parkingReturnRange` is measured from the rotated, tuned vehicle body when
+boarding, instead of its centre. It still defaults to 3 m. The new
+`parkingBoardHeight` defaults to 3 m and allows 0.1–20 m. Retrieval, ownership,
+licences, stopped-player and activity checks remain authoritative on the server.
+Refuelling retains its existing handling rules.

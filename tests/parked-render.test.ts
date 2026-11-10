@@ -127,7 +127,7 @@ test('pedestrian door pivots survive scenery batching and rotate to the configur
   assert.ok(doors.every((d) => d.rotation.y === 0));
 });
 
-test('parked nameplates keep a fixed screen size when the camera approaches', async () => {
+test('parked nameplates retain world sizing and obey the contextual pixel cap when approached', async () => {
   const { ParkedVehicleScene } = await import('../src/client/parked-vehicle-scene');
   const { w } = setup();
   const scene = new ParkedVehicleScene(() => {
@@ -139,8 +139,35 @@ test('parked nameplates keep a fixed screen size when the camera approaches', as
   });
   scene.update(w, 0, 0, 500);
   const tag = scene.group.children[0].children[0] as T.Sprite;
-  assert.equal(tag.material.sizeAttenuation, false);
-  assert.ok(tag.scale.x <= 0.3);
+  assert.equal(tag.material.sizeAttenuation, true);
+  const { updateContextLabels } = await import('../src/client/labels');
+  const { nameTagRules } = await import('../src/shared/name-tag-rules');
+  const camera = new T.PerspectiveCamera(60, 1.6, 0.1, 1000);
+  camera.position.set(0, 1, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+  updateContextLabels(
+    [{ id: 'parked', tag, kind: 'vehicle', subject: new T.Vector3(0, 0, 0) }],
+    { x: 0, y: 0, z: 5 },
+    camera,
+    nameTagRules(),
+    1440,
+    900,
+    false,
+  );
+  assert.equal(tag.visible, true);
+  const world = tag.getWorldScale(new T.Vector3());
+  assert.ok((world.y / (2 * Math.hypot(1, 10) * Math.tan(Math.PI / 6))) * 900 <= 18.001);
+  updateContextLabels(
+    [{ id: 'parked', tag, kind: 'vehicle', subject: new T.Vector3(0, 0, 0) }],
+    { x: 0, y: 0, z: 100 },
+    camera,
+    nameTagRules(),
+    1440,
+    900,
+    false,
+  );
+  assert.equal(tag.visible, false);
 });
 
 test('mount animation walks from the door to the actual model seat, fades the driver, and restores materials', async () => {
