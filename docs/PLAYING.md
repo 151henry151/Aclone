@@ -13,6 +13,17 @@ Pilot name tags are compact single-line labels. By default they fade between
 **AI** suffix. Scenery view (**H**) hides them. Each world can set its own name-tag
 visibility, distance, size and opacity.
 
+## Finding goods in inventories
+
+Carried goods, shop listings, stockroom/pantry selectors and trailer/boat cargo
+use displayed item names in alphabetical order. Where a list also includes goods
+with no stock, available goods appear first and the remaining entries follow,
+also alphabetically. Shop **Buy** lists use the shop's stock; **Sell** lists use
+what you carry. Stockroom and pantry transfer selectors prioritize goods held on
+either side. Items keep their identity when the list changes, and an edited
+transfer selection is preserved. Prices, capacity and trade permissions still
+apply; an empty listing is not a promise of immediate supply.
+
 ## Your first day
 
 1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 12d for the first eight in a row, then less until a ten-minute break or some other work, and at most 200d of ordinary pay per game day. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes and does not count toward that cap. The button shows your current payment.

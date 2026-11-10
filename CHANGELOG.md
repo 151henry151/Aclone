@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.143.2] - 2026-11-10
+
+### Changed
+
+- Put available goods first and sort each group alphabetically across inventories, shops, stockrooms, pantries and cargo transfers, using world-defined item names while preserving transfer selections.
+
 ## [0.143.1] - 2026-11-10
 
 ### Fixed

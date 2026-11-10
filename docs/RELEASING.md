@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.143.2
+
+Deploy the approved backlog-implementation SHA with the usual backup, build and
+restart, publish the matching website and verify health, version and SHA. Ask
+players to reload for consistent inventory ordering. No migration or changes to
+saved stock, prices or player possessions are required.
+
 ## Upgrade 0.143.1
 
 Deploy the approved backlog-implementation SHA with the normal backup, build

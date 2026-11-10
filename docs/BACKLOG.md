@@ -896,3 +896,23 @@ Design references, economic calculations and usage: [Boats, rescue and haulage](
 - Random rod-fishing bites at the configured average rates.
 
 The completed release sections describe shipped work.
+
+## Planned — Inventory ordering and in-world construction preview
+
+Player feedback from Lightmun, 2026-11-10. Make goods easier to find across all
+inventory views: show items actually available first, alphabetically by their
+world-defined display names, then unavailable entries alphabetically. Preserve
+empty states, eligibility, prices, quantities and item identity when transferring
+or trading. Apply the same ordering to carried goods/HUD, shop listings,
+stockrooms and pantries, trailer/boat cargo and their transfer selectors.
+
+Then offer a translucent building preview at its actual proposed world position
+before construction. Reflect design, rotation, size, snapped intake and foundation
+height; show valid/refused status and the same reason as the construction menu.
+Provide clear confirm, return-to-design and cancel controls on desktop and phone.
+Previewing/cancelling must never spend money or create a building. Existing
+server siting, proximity, permission and payment rules remain authoritative.
+Dispose the preview when finished or leaving the world; do not add rendering work
+when the preview is closed. Implement inventory ordering first, then the building
+preview. Verify actual browser transfers and construction, failure/empty states,
+and local-only visibility. This does not include piloted spaceflight.

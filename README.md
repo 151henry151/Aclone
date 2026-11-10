@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.143.2 makes inventory lists put available goods first, with alphabetical names in each group.
+Shop buying uses shop stock; selling uses your cargo. Stockrooms put goods held
+in either store first, and empty choices remain available for planning.
+
 Version 0.143.1 makes shoreline construction clearer. The site plan shows the shoreline, boathouse waterfront and pump
 intake, with direction guidance and fine rotation. Choose fresh water for a
 pump-house and the sea coast for a desalination plant. See [water supplies](docs/PLAYING.md).

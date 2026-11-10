@@ -1,3 +1,4 @@
+import { itemEntries } from './item-order';
 import { earthworkGuidance } from '../shared/earthworks-work';
 import { garageStoragePanel } from './garage-storage-panel';
 import { earthworksPanel, mountEarthworksPanel } from './earthworks-panel';
@@ -1033,7 +1034,7 @@ function updateHud() {
 
   setHudHtml(
     'bag',
-    Object.entries(me.inventory)
+    itemEntries(me.inventory, items, me.inventory)
       .filter(([, n]) => n > 0)
       .slice(0, 4)
       .map(
@@ -2060,7 +2061,14 @@ function renderPanel() {
       'A slightly better spaceship.',
       `<p>${account.credits} galactic credits · ${Object.values(account.cargo).reduce((s, n) => s + n, 0)} cargo items</p><div class="cards">${galaxy.ships.map((s) => `<article><h3>${esc(s.name)}</h3><p>${esc(s.role)} · ${s.range} pc range · ${s.capacity} cargo · ${s.price} cr</p><p>${s.fuelPerPc}cr/pc · ${s.secondsPerPc}s/pc · ${Math.round(s.shield * 100)}% shielding</p>${button(s.id === account!.ship ? 'Current ship' : account!.hangar?.includes(s.id) ? 'Fly owned ship' : 'Buy ship', 'ship', `data-id="${s.id}" ${s.id === account!.ship ? 'disabled' : ''}`)}</article>`).join('')}</div><p class="note">Jumps add six seconds for departure. Frontier lanes have a published shielding-energy surcharge: 2cr per hazard level, reduced by hull shielding and rounded up. No random cargo loss or space combat. Route prices include every leg; you fly them individually.</p><h3>Ship fittings</h3><p>Fleet-wide fittings stay installed when switching ships. Current range ${shipStats(account).range} pc · capacity ${shipStats(account).capacity}.</p>${['drive', 'hold'].map((kind) => button(`${kind === 'drive' ? 'Jump drive +2 pc' : 'Cargo hold +20'} · level ${account!.upgrades?.[kind] ?? 0}/3 · ${((account!.upgrades?.[kind] ?? 0) + 1) * (kind === 'drive' ? 80 : 60)}cr`, 'upgrade', `data-id="${kind}" ${(account!.upgrades?.[kind] ?? 0) >= 3 ? 'disabled' : ''}`)).join('')}<h3>Courier desk</h3>${account.mission ? `<p>Ten sealed packages to ${esc(galaxy.systems.find((s) => s.id === account!.mission!.destination)?.name)} · reward ${account.mission.reward}cr. No expiry while offline.</p>${account.system === account.mission.destination && !account.transit ? button('Deliver contract', 'courier', 'data-id="deliver"') : ''}${button('Cancel contract', 'courier', 'data-id="cancel"')}` : `<p>Carry ten sealed packages to a reachable station. Keep jump fuel in reserve.</p>${button('Accept delivery contract', 'courier', 'data-id="accept"')}`}<h3>Exploration</h3><p>Survey each system once for 15cr. Frontier surveys at Lantern, Rime and The Vessel reveal relics; three relics unlock the alien ship. ${account.discoveries?.length ?? 0}/3 found.</p>${button('Survey this system', 'survey', ' ' + (account.visited?.includes(account.system) ? 'disabled' : ''))}${account.system !== 'hearth' && !account.transit && !account.mission && account.credits < 10 && !Object.values(account.cargo).some((n) => n > 0) ? button('Stranded pilot rescue', 'rescue') : ''}<p class="note">Free rescue to Hearth is available with an empty hold, no contract and under 10cr.</p><h3>Station trading</h3><p>Buy here, jump, sell elsewhere. Station prices differ by system.</p><form data-action="spaceTrade">${select(
         'item',
-        ['electronics', 'rareEarth', 'shipParts'].map((id) => [
+        itemEntries(
+          Object.fromEntries(
+            ['electronics', 'rareEarth', 'shipParts'].map((id) => [id, items[id]]),
+          ),
+          items,
+          market?.stock ?? {},
+          account.cargo,
+        ).map(([id]) => [
           id,
           `${items[id].name} · buy ${stationPrice(account!.system, id).buy} / sell ${stationPrice(account!.system, id).sell}cr · station ${market?.stock[id] ?? 200} · carried ${account!.cargo[id] ?? 0}`,
         ]),
@@ -2248,7 +2256,9 @@ function renderPanel() {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
       panel === 'inventory'
-        ? `${boardingPanel(world, me)}<p>${carry(me, world!)} of ${vehicleDef(world, me.vehicle).capacity} capacity · ${esc(vehicleDef(world, me.vehicle).name)}</p><div class="item-list">${Object.entries(
+        ? `${boardingPanel(world, me)}<p>${carry(me, world!)} of ${vehicleDef(world, me.vehicle).capacity} capacity · ${esc(vehicleDef(world, me.vehicle).name)}</p><div class="item-list">${itemEntries(
+            me.inventory,
+            items,
             me.inventory,
           )
             .filter(([, n]) => n)
@@ -2492,13 +2502,15 @@ function buildingWindow(b: Building) {
     }
     if (me.atHome && me.home === b.id) html += homeDepartureButtons();
     if (Object.keys(b.sell).length || Object.keys(b.buy).length)
-      html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<div class="trade-columns">${(
+      html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<p class="note">Available goods first, then other listings; each group is alphabetical. Buy lists use shop stock; sell lists use what you carry.</p><div class="trade-columns">${(
         ['sell', 'buy'] as const
       )
         .map(
           (side) =>
-            `<section><h3>${selfOwned ? (side === 'sell' ? 'Your sale listings' : 'Your purchase bids') : side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${Object.entries(
+            `<section><h3>${selfOwned ? (side === 'sell' ? 'Your sale listings' : 'Your purchase bids') : side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${itemEntries(
               b[side],
+              items,
+              side === 'sell' ? b.stock : me!.inventory,
             )
               .map(
                 ([id, price]) =>
@@ -2666,13 +2678,17 @@ function buildingWindow(b: Building) {
           button('Leave keeper job', 'quit');
       if (guest)
         html += `<h3>Your keeper pantry</h3><p>${
-          Object.entries(me.roomPantries?.[b.id] ?? guest.stock)
+          itemEntries(
+            me.roomPantries?.[b.id] ?? guest.stock,
+            items,
+            me.roomPantries?.[b.id] ?? guest.stock,
+          )
             .filter(([, n]) => n > 0)
             .map(([k, n]) => `${esc(items[k]?.name ?? k)} × ${n}`)
             .join(' · ') || 'No provisions stored.'
         }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
           'item',
-          Object.entries(items)
+          itemEntries(items, items, me.inventory, me.roomPantries?.[b.id] ?? guest.stock)
             .filter(([id, d]) => d.food || d.drink || rawMeats.includes(id))
             .map(([k, d]) => [k, d.name]),
         )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
@@ -2689,13 +2705,17 @@ function buildingWindow(b: Building) {
       html += `<h3>${roomCount(b)} guest rooms</h3><p>${Object.values(l?.guests ?? {}).filter((g) => g.until > world!.time).length} booked · ${money(l?.rate ?? 600)} per real hour · ${l?.open ? 'Accepting guests' : 'Closed to new bookings'}</p><p>Prepaid stays last 1–24 real hours. Enter your room to eat and drink from your personal stores, including offline. Checkout has no refund; your leftover supplies remain collectible. The owner cannot take guest supplies.</p>${booked ? `<p>Your stay: ${Math.ceil((guest.until - world.time) / 60)} minutes left</p>${button('Enter your room', 'home', `data-building="${b.id}"`)}<form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'checkout')}<button>Check out early</button></form>` : `<form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'rent')}${field('Real hours', 'hours', 6, 'number', 'min="1" max="24"')}<button ${!l?.open ? 'disabled' : ''}>Book a room</button></form>`}`;
       if (guest)
         html += `<h3>Your room pantry</h3><p>${
-          Object.entries(me.roomPantries?.[b.id] ?? guest.stock)
+          itemEntries(
+            me.roomPantries?.[b.id] ?? guest.stock,
+            items,
+            me.roomPantries?.[b.id] ?? guest.stock,
+          )
             .filter(([, n]) => n > 0)
             .map(([k, n]) => esc(items[k].name) + ' × ' + n)
             .join(' · ') || 'No provisions stored yet.'
         }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
           'item',
-          Object.entries(items)
+          itemEntries(items, items, me.inventory, me.roomPantries?.[b.id] ?? guest.stock)
             .filter(([id, d]) => d.food || d.drink || rawMeats.includes(id))
             .map(([k, d]) => [k, d.name]),
         )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
@@ -2773,9 +2793,9 @@ function buildingWindow(b: Building) {
   }
   if (tab === 'Stockroom')
     html += owned
-      ? `<p>Transfer between your vehicle and the building. Storage limit: ${b.capacity} per item.</p><form data-action="stock">${hidden('building', b.id)}${select(
+      ? `<p>Transfer between your vehicle and the building. Items held in either place come first, alphabetically. Storage limit: ${b.capacity} per item.</p><form data-action="stock">${hidden('building', b.id)}${select(
           'item',
-          Object.entries(items).map(([id, d]) => [
+          itemEntries(items, items, b.stock, me.inventory).map(([id, d]) => [
             id,
             `${d.name} · stock ${b.stock[id] ?? 0} / carrying ${me!.inventory[id] ?? 0}`,
           ]),
@@ -2805,7 +2825,7 @@ function buildingWindow(b: Building) {
           ],
         )}<button>Transfer cash</button></form><form data-action="buildingAdmin" data-business-details="${esc(b.id)}">${hidden('building', b.id)}<h3>Business details</h3><p data-saved-wage></p>${field('Building name', 'name', b.name, 'text', 'maxlength="48"')}${field('Wage in denarii', 'wageDenarii', b.wage / 100, 'number', 'min="0" max="10000" step="0.01" required')}<button>Save details</button></form><form data-action="buildingAdmin" data-price-editor="${esc(b.id)}">${hidden('building', b.id)}<h3>Set trading prices</h3><p class="note" data-shop-tax></p>${select(
           'item',
-          Object.entries(items).map(([id, d]) => [id, d.name]),
+          itemEntries(items, items, b.stock, me.inventory).map(([id, d]) => [id, d.name]),
           'Item',
           tradingSelection!.item,
         )}${select(

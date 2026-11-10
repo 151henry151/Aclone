@@ -1,3 +1,4 @@
+import { itemEntries } from './item-order';
 import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building, Stock } from '../shared/types';
@@ -34,7 +35,7 @@ const form = (
     .map(([k, v]) => hidden(k, v))
     .join('')}${content}<button ${disabled ? 'disabled' : ''}>${esc(label)}</button></form>`;
 const stockText = (w: World, stock: Stock) =>
-  Object.entries(stock)
+  itemEntries(stock, worldItems(w), stock)
     .map(([id, n]) => `${n} ${esc(worldItems(w)[id]?.name ?? id)}`)
     .join(' + ');
 export function livestockPanel(w: World, p: Player, b: Building) {
@@ -124,7 +125,7 @@ export function butcherPanel(w: World, p: Player, b: Building) {
   ];
   let count = 0;
   for (const source of sources)
-    for (const [id, n] of Object.entries(source.stock))
+    for (const [id, n] of itemEntries(source.stock, worldItems(w), source.stock))
       if (n > 0 && (id in meatAnimals || id in youngAnimals)) {
         count++;
         const adult = Object.hasOwn(meatAnimals, id);

@@ -1,3 +1,4 @@
+import { itemEntries } from './item-order';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Stock } from '../shared/types';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -26,7 +27,7 @@ export function freightPanel(w: World, p: Player) {
           ? (p.boatHold ?? {})
           : (p.boatHolds?.[slot] ?? w.mooredBoats?.[`${p.id}:${slot}`]?.cargo ?? {});
       let html = `<section class="notice" data-freight-slot="${slot}"><h3>${esc(v.name)} freight hold</h3><p>${active ? 'Aboard' : 'Moored'} · ${stockWeight(w, cargo)} / ${v.holdCapacity} weight · ${esc(v.cargoKind ?? 'box')} cargo</p><p>${
-        Object.entries(cargo)
+        itemEntries(cargo, items, cargo)
           .filter(([, n]) => n > 0)
           .map(([id, n]) => `${esc(items[id]?.name ?? id)}: ${n}`)
           .join(' · ') || 'Hold empty'
@@ -44,7 +45,7 @@ export function freightPanel(w: World, p: Player) {
       }
       const quantity = `<label>Quantity<input name="quantity" type="number" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1" required></label>`;
       const stockOptions = (stock: Stock) =>
-        Object.entries(stock)
+        itemEntries(stock, items, stock)
           .filter(([, n]) => n > 0)
           .map(
             ([id, n]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} (${n})</option>`,
@@ -76,7 +77,7 @@ export function freightPanel(w: World, p: Player) {
         for (const direction of ['buy', 'sell']) {
           const prices = direction === 'buy' ? b.sell : b.buy,
             label = direction === 'buy' ? 'Buy into hold' : 'Sell from hold';
-          const options = Object.entries(prices)
+          const options = itemEntries(prices, items, direction === 'buy' ? b.stock : cargo)
             .filter(([id, price]) => items[id] && Number.isFinite(price) && price >= 0)
             .map(
               ([id, price]) =>

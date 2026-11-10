@@ -1,3 +1,4 @@
+import { itemEntries } from './item-order';
 import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../shared/types';
@@ -303,7 +304,7 @@ export function mountEarthworksPanel(
             const store = `<label>Transfer with<select name="trailer"><option value="">Carried inventory / site heap</option>${trailers.map((t) => `<option value="${esc(t.id)}">Tipping trailer ${esc(t.id)}</option>`).join('')}</select></label>`;
             const guidance = earthworkGuidance(w, p, pad.id);
             return `<article data-earthwork-site data-id="${id}"><h3>Pad at ${number(pad.x)}, ${number(pad.z)} — ${Math.floor(pad.progress * 100)}%</h3>${allowed ? `<button type="button" data-earthwork-guide="${id}">Guide me here</button><p>${guidance?.pad?.id === pad.id ? esc(guidance.message) : 'Board a backhoe or bulldozer to see this work area and driving instructions.'}</p>` : ''}<details><summary>Site details and contracts</summary>${contractPanel(w, p, pad)}</details><p>${work.pendingApproval ? 'Awaiting permission' : pad.progress === 1 ? 'Complete — leave as level ground or build here' : work.active ? 'Reserved — drive slowly inside with the implement down' : 'Abandoned — the partial ground remains'}. Cut ${number(work.cut)} m³; fill ${number(work.fill)} m³. <b>${remaining > 0 ? `Deliver ${number(remaining)} m³ more fill` : 'Fill supplied'}</b>.<br>Site spoil: ${
-              Object.entries(work.spoil)
+              itemEntries(work.spoil, worldItems(w), work.spoil)
                 .map(([k, n]) => `${n} ${esc(worldItems(w)[k].name)}`)
                 .join(', ') || 'empty'
             }. Bucket: ${number(stockWeight(w, p.earthmovingCargo?.[p.vehicle] ?? {}))} weight. Finish: ${pad.finish}.</p>

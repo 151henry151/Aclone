@@ -1,3 +1,4 @@
+import { itemEntries } from './item-order';
 import { trailerStorage } from '../shared/stored-trailers';
 import { automotiveConfig } from '../shared/automotive-config';
 import { coolingInterval } from '../shared/highway-refrigeration';
@@ -56,7 +57,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
     }
     html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', t.attached ? 'unhitch' : 'hitch')}<button>${t.attached ? 'Unhitch here' : 'Hitch trailer'}</button></form>`;
     html += `<p>${
-      Object.entries(t.cargo)
+      itemEntries(t.cargo, items, t.cargo)
         .filter(([, n]) => n > 0)
         .map(([id, n]) => `${esc(items[id]?.name ?? id)}: ${n}`)
         .join(' · ') || 'Empty'
@@ -85,7 +86,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       ['load', source, 'Load'],
       ['unload', t.cargo, 'Unload'],
     ] as const) {
-      const choices = Object.entries(stock).filter(
+      const choices = itemEntries(stock, items, stock).filter(
         ([id, n]) => n > 0 && (operation === 'unload' || trailerAccepts(w, t, id, 1)),
       );
       if (choices.length)
@@ -94,7 +95,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
     if (b && b.owner !== p.id && t.attached === p.id) {
       for (const direction of ['buy', 'sell']) {
         const prices = direction === 'buy' ? b.sell : b.buy;
-        const choices = Object.entries(prices).filter(
+        const choices = itemEntries(prices, items, direction === 'buy' ? b.stock : t.cargo).filter(
           ([id, price]) =>
             Number.isFinite(price) &&
             price >= 0 &&

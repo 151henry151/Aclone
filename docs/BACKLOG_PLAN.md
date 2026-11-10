@@ -11521,3 +11521,36 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15697311929
 Excluded receipts: output/shoreline-audit/release/. Investigation of Lightmun's
 particular site still requires its location/refusal; no general placement-rule
 defect was reproduced in this audit. Other backlog items retain their order.
+
+### Lightmun usability feedback — 2026-11-10
+
+Insert two requested slices ahead of the remaining feature queue: (1) consistent
+inventory ordering, (2) in-world construction ghost. Keep their releases separate.
+
+Inventory completion criteria (before production): add a failing ordering test
+covering populated/empty stock, custom displayed names, deterministic ties and
+nonmutation; add a failing browser flow with intentionally scrambled carried/shop
+stock, depleted listings after stocked ones, alphabetical stockroom choices,
+actual buy/sell/transfer preserving item IDs, and empty inventory. Exercise phone
+layout and trailer/hold selectors; preserve the selected item during refresh.
+Use a single client ordering helper, with source stock chosen for each action.
+Run relevant ordering/cargo/inventory tests and browser flows, TypeScript,
+Prettier and production build; update player guide/README/changelog. No economic
+rules or gameplay limits change.
+
+Ghost completion criteria will be written against the inspected placement flow
+before its production changes. Required scope: exact local placement preview,
+valid/refused state, no payment on cancel, successful authoritative confirmation,
+desktop/phone controls, and cleanup. Keep ordinary placement restrictions intact.
+
+Inventory verification: the new unit test initially fails because the ordering
+helper is absent; the browser regression fails with carried Water/Bread/Fuel
+instead of Bread/Fuel/Water. Implement one presentation helper and apply it to
+goods lists and selectors. Correct two fixture expectations without weakening
+criteria: shop bids must satisfy the world's existing minimum price, and box
+trailers must continue excluding liquid Water. All 50 relevant tests and four
+browser flows pass, including actual purchases, sales, phone transfers, retained
+selection, empty inventory and cargo restrictions. Inspect shop and phone images
+in excluded output/item-order/. TypeScript exits 0. Leave historical accounting
+reports in their existing order; they are transaction summaries, not inventories.
+Prepare 0.143.2; final format/build, publication and verification remain pending.

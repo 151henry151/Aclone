@@ -2,6 +2,19 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.143.2 — Find goods faster
+
+Put available goods first and alphabetize each group by the world's item names.
+Use shop stock when buying and carried cargo when selling; put goods held on
+either side first in storage transfers. Apply the same ordering to Inventory,
+pantries, trailers, boat holds and provisioning without changing eligibility,
+prices, quantities or selected item IDs.
+
+Verify 50 relevant tests and four browser flows, including purchases, sales,
+phone stockroom transfers, empty inventory and preserved selections. Retain box
+trailer restrictions on liquid cargo. TypeScript, formatting and production
+build must pass. Reload clients; no data migration is required.
+
 ## 0.143.1 — See where waterfront buildings fit
 
 Show water at high tide, the complete boathouse waterfront and pump intake lines
