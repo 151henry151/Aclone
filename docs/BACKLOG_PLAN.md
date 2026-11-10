@@ -11406,3 +11406,50 @@ worklet JavaScript (HTTP 200 with the existing CSP). Website published. Backup:
 `/var/backups/aclone-website/site-20261109-225149.tar.gz`.
 Verify the bot announcement and local browser screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569560503045586978
+
+Usability finding: holding forward in the backhoe quickly exceeds the working
+speed, silently stopping progress. Confirm a new failing movement test for this.
+Add world-builder switch `earthworksSpeedAssist` (default true): while the implement
+is down inside permitted active work, cap forward/reverse travel at the existing
+world working-speed limit. Raised implements, other vehicles and the disabled
+switch retain travel behavior. Verify sustained keyboard passes earn work without
+requiring throttle tapping; show the assistance and world limit to the driver.
+
+Earthworks verification in progress: new driver-guidance tests first fail because
+the helper/renderer do not exist; the browser reproduces the absent Centre on me
+control. The speed-assist test first fails because held throttle exceeds the work
+limit. After implementation, all 95 focused earthworks/construction/plant/NPC tests
+pass and TypeScript completes cleanly. The first browser survey-to-driver check
+passes. Screenshot inspection exposes phone CSS hiding the new buttons; add a
+failing mobile visibility assertion and restore the driver control row. Expand
+browser coverage to full backhoe completion and saved World Builder assistance.
+An older machine test still names the previously renamed Board vehicle control;
+retain its licence/boarding assertions against the visible Get in vehicle button.
+Release remains pending the complete affected browser checks.
+
+The first affected-browser batch passes both contracting flows, the natural
+hillside/controller/touch/terrain-refresh/build flow, keyboard abandon/resume/
+completion, and phone fill delivery/gravel/weathering. Retain all those checks.
+Two checks require reruns: the old boarding label, and the new reach-only fixture
+whose moved centre also creates an independently invalid steep shoulder. In that
+fixture use the ground-level control at the moved centre so the reach assertion
+isolates distance without removing the shoulder guard. The driver screenshot and
+mobile controls remain part of the rerun; no production criteria are relaxed.
+
+All seven affected browser flows subsequently pass, including full backhoe work,
+phone implement/engine controls, fuel and unauthorized-site states, and saving
+and reloading the assistance setting. Screenshot review then finds confirmation
+below the initial viewport: add a failing full-visibility assertion, make the
+reach/Confirm footer sticky, and verify it remains in view on desktop and phone.
+Rerun the complete guidance flow for that layout change before release.
+
+Final earthworks browser verification passes: seven affected flows, with the full
+guidance flow rerun after the sticky confirmation fix. Confirm is fully in view
+on both desktop and phone. Inspect driver, survey, phone and completed screenshots
+under excluded output/earthworks/guidance/. Preserve all permission, material,
+escrow, terrain and construction checks. Prepare 0.143.0; deployment remains
+pending final TypeScript, formatting and the prefixed production build.
+
+Release gate passed: final `npx tsc --noEmit` exits 0, Prettier runs on every
+changed file, `git diff --check` is clean and the /aclone/ production build passes.
+Commit and deploy the completed earthworks usability slice as 0.143.0.

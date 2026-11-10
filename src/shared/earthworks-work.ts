@@ -213,10 +213,7 @@ export function earthworkAction(w: World, p: Player, a: Action) {
     const input = Object.fromEntries(
       ['x', 'z', 'width', 'depth', 'rotation', 'target', 'shoulder'].map((k) => [k, Number(a[k])]),
     ) as unknown as EarthworkInput;
-    need(
-      Math.hypot(input.x - p.x, input.z - p.z) <= r.constructionPlacementReach,
-      'Move closer to survey that pad',
-    );
+    need(earthworkSurveyReach(w, p, input).allowed, 'Move closer to survey that pad');
     const survey = surveyEarthwork(w, p, input);
     need(!survey.reason, survey.reason ?? 'Invalid pad');
     const id = survey.pad.id;
@@ -348,6 +345,122 @@ export function earthworkAction(w: World, p: Player, a: Action) {
   }
   throw Error('Unknown earthwork operation');
 }
+/** One read-only explanation for the local operator, using the server's work rules. */
+export function earthworkGuidance(w: World, p: Player, preferred?: string) {
+  if (!isEarthmover(p.vehicle) || p.inside || p.atHome || p.hitch || p.game || p.task) return;
+  const jobs = (w.earthworks ?? []).filter(
+    (e) => e.work && permitted(p, e) && earthworkOperatorAllowed(e, p.id),
+  );
+  const pad =
+    jobs.find((e) => e.id === preferred) ??
+    jobs.sort(
+      (a, b) =>
+        Number(a.progress === 1 || !a.work!.active) - Number(b.progress === 1 || !b.work!.active) ||
+        Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z),
+    )[0];
+  const result = (phase: string, message: string) => ({
+    pad,
+    phase,
+    message,
+    distance: pad ? Math.hypot(p.x - pad.x, p.z - pad.z) : 0,
+    progress: pad?.work?.volume
+      ? Math.min(1, pad.work.done / pad.work.volume)
+      : (pad?.progress ?? 0),
+  });
+  if (!pad)
+    return result('empty', 'Open Earthworks to survey an area here. No building plan is needed.');
+  if (pad.progress === 1)
+    return result(
+      'complete',
+      'Finished — this ground is level. You can leave it as it is or build on it.',
+    );
+  if (pad.work!.pendingApproval)
+    return result(
+      'permission',
+      'Wait for the property owner to approve this survey in Earthworks.',
+    );
+  if (!pad.work!.active)
+    return result('paused', 'Work is stopped. Open Earthworks and choose Resume work.');
+  const permission = earthworkPermissionReason(w, p.id, pad);
+  if (permission) return result('permission', permission);
+  const machine = earthworkMachineBlock(w, p);
+  if (machine) return result(machine.phase, machine.message);
+  if (!within(pad, p))
+    return result(
+      'travel',
+      'Drive inside the solid work boundary. The dashed shoulder blends into the surrounding ground.',
+    );
+  const r = constructionRules(w.settings),
+    job = pad.work!;
+  if (Math.abs(p.speed) > r.earthworksWorkingSpeed + 1e-6)
+    return result(
+      'speed',
+      `Slow down to ${r.earthworksWorkingSpeed} m/s (${(r.earthworksWorkingSpeed * 2.237).toFixed(1)} mph) or less to work.`,
+    );
+  if (Math.abs(p.y - terrainHeight(w, p.x, p.z)) > r.earthworksTolerance)
+    return result('ground', 'Bring the machine down onto the ground before working.');
+  const fraction = job.fill > 0 ? Math.min(1, (job.cut + job.delivered) / job.fill) : 1;
+  if (fraction < 1 && job.done >= job.volume * fraction - 1e-8)
+    return result(
+      'fill',
+      `Deliver ${Math.ceil((job.fill - job.cut - job.delivered) / r.earthworksFillVolume)} Topsoil or Gravel in Earthworks to continue. Cut ground is reused first.`,
+    );
+  const cargo = p.vehicle === BULLDOZER ? job.spoil : (p.earthmovingCargo?.[p.vehicle] ?? {}),
+    capacity = p.vehicle === BULLDOZER ? r.earthworksHeapCapacity : r.earthworksBucketCapacity;
+  if (job.cut > job.fill && stockWeight(w, cargo) + worldItems(w)[job.material].weight > capacity)
+    return result(
+      'storage',
+      p.vehicle === BULLDOZER
+        ? 'The site heap is full. Collect spoil into your inventory or tipping trailer in Earthworks.'
+        : 'The bucket is full. Open Earthworks and unload it into the site heap or a tipping trailer.',
+    );
+  return result(
+    Math.abs(p.speed) > 0 ? 'working' : 'ready',
+    `${r.earthworksSpeedAssist ? 'Work-speed assist is on. ' : ''}Drive back and forth inside the solid boundary at up to ${r.earthworksWorkingSpeed} m/s (${(r.earthworksWorkingSpeed * 2.237).toFixed(1)} mph). Keep the implement down; standing still does no work.`,
+  );
+}
+/** The same speed assistance runs on server movement and local prediction. */
+export function earthworkSpeedLimit(w: World, p: Player) {
+  if (!isEarthmover(p.vehicle) || !p.earthmovingImplement) return Infinity;
+  const r = constructionRules(w.settings);
+  if (!r.earthworksSpeedAssist) return Infinity;
+  return w.earthworks?.some(
+    (e) =>
+      e.work?.active &&
+      !e.work.pendingApproval &&
+      e.progress < 1 &&
+      permitted(p, e) &&
+      earthworkOperatorAllowed(e, p.id) &&
+      within(e, p),
+  )
+    ? r.earthworksWorkingSpeed
+    : Infinity;
+}
+function earthworkMachineBlock(w: World, p: Player) {
+  const licence = helmBlock(w, p.vehicle, p.skills);
+  if (licence) return { phase: 'licence', message: licence };
+  if (p.fuel <= 0)
+    return {
+      phase: 'fuel',
+      message: 'Out of fuel. Carry Fuel, open Inventory, and choose Refuel.',
+    };
+  if (!p.engine) return { phase: 'engine', message: 'Start the engine to work.' };
+  if (!p.earthmovingImplement)
+    return {
+      phase: 'implement',
+      message: 'Lower the implement, then drive slowly inside the solid work boundary.',
+    };
+}
+/** Shared proximity check keeps the preview and authoritative confirmation in agreement. */
+export function earthworkSurveyReach(
+  w: World,
+  p: Pick<Player, 'x' | 'z'>,
+  input: Pick<EarthworkInput, 'x' | 'z'>,
+) {
+  const distance = Math.hypot(input.x - p.x, input.z - p.z),
+    reach = constructionRules(w.settings).constructionPlacementReach;
+  return { distance, reach, allowed: distance <= reach };
+}
 /** The move call supplies actual collision-resolved travel. Prediction never writes shared pads. */
 export function workEarthwork(
   w: World,
@@ -359,15 +472,12 @@ export function workEarthwork(
   if (
     prediction ||
     !isEarthmover(p.vehicle) ||
-    !p.earthmovingImplement ||
-    !p.engine ||
-    p.fuel <= 0 ||
+    earthworkMachineBlock(w, p) ||
     p.task ||
     p.game ||
     p.hitch ||
     p.atHome ||
-    p.inside ||
-    helmBlock(w, p.vehicle, p.skills)
+    p.inside
   )
     return;
   const r = constructionRules(w.settings),

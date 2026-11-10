@@ -7,7 +7,7 @@ import { creatorSchema } from '../src/shared/creator';
 import { terrainHeight } from '../src/shared/terrain';
 import { constructionRules } from '../src/shared/construction-rules';
 import { earthworkReserved } from '../src/shared/earthworks-reservations';
-import { surveyEarthwork, workEarthwork } from '../src/shared/earthworks-work';
+import { earthworkGuidance, surveyEarthwork, workEarthwork } from '../src/shared/earthworks-work';
 import { gatheringRules } from '../src/shared/gathering-rules';
 
 function setup(target = 9) {
@@ -498,4 +498,93 @@ test('stored tipping-trailer cargo cannot supply earthwork fill from its previou
     /Move alongside your own tipping trailer/,
   );
   assert.equal(JSON.stringify(f.w), before);
+});
+
+test('driver guidance follows the permitted job, rotated boundary and world rules', () => {
+  const f = setup(),
+    pad = confirm(f);
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'implement');
+  f.p.earthmovingImplement = true;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'working');
+  f.p.speed = 0;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'ready');
+  f.p.speed = 1;
+  f.w.settings.earthworksWorkingSpeed = 0.5;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'speed');
+  f.w.settings.earthworksWorkingSpeed = 2;
+  f.p.engine = false;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'engine');
+  f.p.engine = true;
+  f.p.fuel = 0;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'fuel');
+  f.p.fuel = 100;
+  f.p.skills = [];
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'licence');
+  f.p.skills = ['plant operator'];
+  pad.rotation = Math.PI / 4;
+  pad.width = 2;
+  pad.depth = 12;
+  f.p.x += 3;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'travel');
+  f.p.x -= 3;
+  pad.work!.active = false;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'paused');
+  pad.progress = 1;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'complete');
+  f.p.vehicle = 5;
+  assert.equal(earthworkGuidance(f.w, f.p), undefined);
+  f.p.vehicle = 0;
+  assert.equal(earthworkGuidance(f.w, f.p), undefined);
+  f.p.vehicle = 39;
+  assert.equal(earthworkGuidance(f.w, f.p)?.pad?.id, pad.id);
+  f.p.inside = 'building';
+  assert.equal(earthworkGuidance(f.w, f.p), undefined);
+  f.p.inside = undefined;
+  pad.owner = 'other';
+  assert.equal(earthworkGuidance(f.w, f.p)?.pad, undefined);
+  pad.work!.operators.push(f.p.id);
+  assert.equal(earthworkGuidance(f.w, f.p)?.pad?.id, pad.id);
+});
+
+test('driver guidance explains fill shortage, permission and spoil capacity', () => {
+  const f = setup(11),
+    pad = confirm(f);
+  f.p.earthmovingImplement = true;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'fill');
+  assert.match(earthworkGuidance(f.w, f.p)!.message, /Topsoil|Gravel/);
+  pad.work!.delivered = pad.work!.fill;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'working');
+  pad.work!.pendingApproval = true;
+  assert.equal(earthworkGuidance(f.w, f.p)?.phase, 'permission');
+  pad.work!.pendingApproval = false;
+  const cut = setup(),
+    cutPad = confirm(cut);
+  cut.p.earthmovingImplement = true;
+  cut.w.settings.earthworksHeapCapacity = 1;
+  cutPad.work!.spoil = { dirt: 1 };
+  assert.equal(earthworkGuidance(cut.w, cut.p)?.phase, 'storage');
+  cut.p.vehicle = 39;
+  cut.w.settings.earthworksBucketCapacity = 1;
+  cut.p.earthmovingCargo = { 39: { dirt: 1 } };
+  assert.match(earthworkGuidance(cut.w, cut.p)!.message, /bucket/i);
+});
+
+test('work-speed assist lets a backhoe make full-throttle passes at the world working speed', () => {
+  for (const enabled of [true, false]) {
+    const f = setup();
+    f.input.width = f.input.depth = 40;
+    confirm(f);
+    f.p.vehicle = 39;
+    f.p.fuelVehicle = 39;
+    f.p.earthmovingImplement = true;
+    Object.assign(f.w.settings, { earthworksSpeedAssist: enabled, earthworksWorkingSpeed: 0.5 });
+    for (let i = 0; i < 30; i++) move(f.w, f.p, { throttle: 1, steer: 0, boost: true }, 0.1);
+    if (enabled) {
+      assert.ok(Math.abs(f.p.speed) <= 0.5 + 1e-6, 'working speed must follow the world rule');
+      assert.ok(f.w.earthworks![0].work!.done > 0, 'full throttle still earns work');
+      f.p.earthmovingImplement = false;
+      for (let i = 0; i < 30; i++) move(f.w, f.p, { throttle: 1, steer: 0, boost: false }, 0.1);
+      assert.ok(f.p.speed > 0.5, 'raised implement restores travelling speed');
+    } else assert.ok(f.p.speed > 0.5, 'world builders can disable speed assist');
+  }
 });

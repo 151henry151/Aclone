@@ -92,13 +92,16 @@ test('a client posts and a mobile operator accepts, refunds, resumes and earns a
     await page.getByRole('button', { name: 'Build', exact: true }).click();
     await page.getByRole('button', { name: 'Earthworks', exact: true }).click();
     const root = page.locator('[data-earthworks-panel]');
+    await root.getByText('Precise position and shoulder', { exact: true }).click();
     for (const [name, value] of Object.entries({ x: '80', width: '8', depth: '8', target: '9' }))
       await root.locator(`[name="${name}"]`).fill(value);
     await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
     await expect.poll(() => w.earthworks?.length).toBe(1);
-    await root.getByText('Survey a new pad', { exact: true }).click();
+    // Confirmation collapses the new-survey form automatically.
+
     const site = root.locator('[data-earthwork-site]'),
       remote = operatorPage.locator('[data-earthwork-site]');
+    await site.getByText('Site details and contracts', { exact: true }).click();
     await site.locator('[name="feeDenarii"]').fill('100');
     await site.locator('[name="fillBy"]').selectOption('operator');
     await site.getByRole('button', { name: 'Post contract', exact: true }).click();
@@ -106,11 +109,25 @@ test('a client posts and a mobile operator accepts, refunds, resumes and earns a
     expect(clientPlayer.cash).toBe(50000);
     await expect(remote).toContainText('Operator supplies fill');
     await page.screenshot({ path: 'output/earthworks/contracts/client-offer.png' });
+    if (
+      !(await remote
+        .locator('details')
+        .first()
+        .evaluate((e) => (e as HTMLDetailsElement).open))
+    )
+      await remote.getByText('Site details and contracts', { exact: true }).click();
     await remote.getByRole('button', { name: 'Accept contract', exact: true }).click();
     await expect(operatorPage.locator('#toast')).toContainText('plant');
     w = app.worlds.get(w.id)!;
     op = w.players[operator.account.id];
     op.skills = ['plant operator'];
+    if (
+      !(await remote
+        .locator('details')
+        .first()
+        .evaluate((e) => (e as HTMLDetailsElement).open))
+    )
+      await remote.getByText('Site details and contracts', { exact: true }).click();
     await remote.getByRole('button', { name: 'Accept contract', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.contract?.state).toBe('accepted');
     expect(w.players[client.account.id].cash).toBe(40000);
@@ -119,6 +136,13 @@ test('a client posts and a mobile operator accepts, refunds, resumes and earns a
     await operatorPage.screenshot({ path: 'output/earthworks/contracts/mobile-accepted.png' });
     await remote.getByRole('button', { name: 'Abandon work', exact: true }).click();
     await expect.poll(() => w.players[client.account.id].cash).toBe(50000);
+    if (
+      !(await remote
+        .locator('details')
+        .first()
+        .evaluate((e) => (e as HTMLDetailsElement).open))
+    )
+      await remote.getByText('Site details and contracts', { exact: true }).click();
     await remote.getByRole('button', { name: 'Accept contract', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.contract?.state).toBe('accepted');
     await operatorPage.keyboard.press('Escape');
@@ -222,10 +246,13 @@ test('a property owner can decline a survey, sees a protected-site refusal, and 
     await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
     await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
     await expect(remote).toContainText('target 9 m');
+    await remote.getByText('Site details and contracts', { exact: true }).click();
     await remote.getByRole('button', { name: 'Decline survey', exact: true }).click();
     await expect.poll(() => w.earthworks?.length).toBe(0);
+    await root.getByText('Survey a new pad', { exact: true }).click();
     await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
     await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
+    await remote.getByText('Site details and contracts', { exact: true }).click();
     w.zones.push({ id: 'protected', kind: 'noBuild', x: 80, z: 80, radius: 20 } as any);
     await remote.getByRole('button', { name: 'Confirm property permission', exact: true }).click();
     await expect(ownerPage.locator('#toast')).toContainText('no-build');
@@ -236,7 +263,8 @@ test('a property owner can decline a survey, sees a protected-site refusal, and 
     await remote.getByRole('button', { name: 'Confirm property permission', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.pendingApproval).toBe(false);
     await expect(root.locator('[data-earthwork-site]')).toContainText('Reserved');
-    await root.getByText('Survey a new pad', { exact: true }).click();
+    // Confirmation collapses the new-survey form automatically.
+
     await page.screenshot({ path: 'output/earthworks/contracts/property-approved.png' });
   } finally {
     await page.close();

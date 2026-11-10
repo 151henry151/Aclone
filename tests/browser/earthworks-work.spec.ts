@@ -250,6 +250,7 @@ test('fill shortages, inventory and trailer delivery, gravel and weathering rema
     await expect.poll(() => w.earthworks?.length).toBe(1);
     const site = root.locator('[data-earthwork-site]');
     await expect(site).toContainText('Deliver');
+    await site.locator('[data-earthwork-materials] > summary').click();
     await site.getByRole('button', { name: 'Deliver fill', exact: true }).click();
     await expect(page.locator('#toast')).toContainText('Not enough supplied material');
     // Refused actions restore the server's atomic world checkpoint.
@@ -265,12 +266,12 @@ test('fill shortages, inventory and trailer delivery, gravel and weathering rema
     await page.keyboard.press('i');
     await page.getByRole('button', { name: 'Earthworks', exact: true }).click();
     p.inventory.dirt = 1;
-    await root.getByText('Survey a new pad', { exact: true }).click();
+    await root.locator('[data-earthwork-materials] > summary').click();
 
     await site.getByRole('button', { name: 'Deliver fill', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.delivered).toBe(100);
     await expect(site).toContainText('Deliver 95.84 m³ more fill');
-    await expect(root.locator('details')).not.toHaveAttribute('open');
+    await expect(root.locator('[data-earthwork-new]')).not.toHaveAttribute('open');
     await site.locator('[name="trailer"]').selectOption('tip');
     await site.getByRole('button', { name: 'Deliver fill', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.delivered).toBe(200);
@@ -296,6 +297,7 @@ test('fill shortages, inventory and trailer delivery, gravel and weathering rema
     await expect.poll(() => w.earthworks![0].progress).toBe(1);
     await page.keyboard.press('i');
     await page.getByRole('button', { name: 'Earthworks', exact: true }).click();
+    await site.locator('[data-earthwork-materials] > summary').click();
     await site.getByRole('button', { name: 'Spread gravel', exact: true }).click();
     await expect.poll(() => w.earthworks![0].finish).toBe('gravel');
     expect(p.inventory.gravel ?? 0).toBe(0);

@@ -2,6 +2,16 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.143.0
+
+Deploy the approved backlog-implementation SHA with the normal SQLite backup,
+client/server build and restart; publish the matching website and verify health,
+version and SHA. Existing pads and work counters remain unchanged. Missing
+`earthworksSpeedAssist` uses true; Construction rules can disable it. Client
+prediction and server movement must update together. Ask clients to reload for
+the guided survey panel and private driver overlay. No manual world migration,
+asset grants or terrain modification is required.
+
 ## Upgrade 0.142.0
 
 Deploy client and server together from the approved backlog-implementation SHA

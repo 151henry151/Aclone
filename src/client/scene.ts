@@ -1,3 +1,4 @@
+import { EarthworkGuide } from './earthwork-guide';
 import { earthworkDust } from '../shared/earthworks-work';
 import { changedEarthworkBounds } from '../shared/earthworks-ground';
 import { BuildingCamera } from './building-camera';
@@ -228,6 +229,7 @@ export class GameScene {
   private revision = '';
   private terrainRevision = '';
   private earthworks?: World['earthworks'];
+  readonly earthworkGuide = new EarthworkGuide();
   private worldBuild?: Generator<void | Promise<unknown>>;
   private worldBuildError?: unknown;
   private snowJob?: Generator<void | Promise<unknown>>;
@@ -365,6 +367,7 @@ export class GameScene {
     this.precipitation.mesh.visible = false;
     this.scene.add(
       this.land,
+      this.earthworkGuide.group,
       this.lighthouseLights.group,
       this.horizon.group,
       this.inland.group,
@@ -630,6 +633,8 @@ export class GameScene {
     const padChanges = changedEarthworkBounds(this.earthworks, world.earthworks);
     this.earthworks = world.earthworks;
     const rebuilt = this.revision !== rev;
+    if (rebuilt || padChanges.length) this.earthworkGuide.invalidate();
+    if (this.me) this.earthworkGuide.update(world, this.me);
     if (rebuilt) {
       this.revision = rev;
       this.queueWorldBuild(world);
@@ -888,6 +893,8 @@ export class GameScene {
     this.onLoading?.();
     this.audio.clear();
     this.bridges.clear();
+    this.earthworkGuide.group.visible = false;
+    this.earthworkGuide.selection = undefined;
     this.aircraftCrashes.clear();
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');

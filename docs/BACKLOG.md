@@ -258,6 +258,24 @@ Two connected pieces: a stricter, size-aware slope rule for construction, and la
 4. **Completion and weathering.** When progress reaches 1 the pad is level to within a tolerance (for example ±0.15 m) and the reservation turns into a buildable surface that passes the grade rule. The surface starts as bare earth, becomes gravel if gravel was spread, and greens over game days. Abandoning a pad part way leaves the partial earthwork in place as scarred ground; it can be resumed by any machine with the owner's consent.
 5. **Shoulders and neighbours.** Shoulders are computed from the final level and the maximum shoulder grade so a 4 m cut into a hillside produces a sloped bank, never a vertical wall; if the shoulder would intrude on a neighbour's building, road or field, the pad is refused or shrunk at survey time. Roads crossing a pad's shoulder are re-graded by the ordinary road rules on their next maintenance pass.
 
+### Requested usability follow-up (2026-11-09)
+
+Make the whole survey-to-work flow understandable without learning coordinate
+entry first. Start at the player, offer Centre on me and current ground level,
+label the player and both boundaries on the preview, and show the actual world
+survey reach before enabling confirmation. Explain standalone levelling, cut,
+fill and shoulders. Keep exact coordinates, material transfers, contracts and
+permissions available behind labelled disclosures.
+
+After confirmation, show the selected permitted work area outside the menu only
+to its local backhoe/bulldozer driver. Include progress, direction and practical
+next steps for engine, implement, movement, fill, storage, permission and
+completion. Keep the outline inexpensive to render. Provide configurable
+`earthworksSpeedAssist` (default true) so a lowered implement inside active work
+limits travel to the existing world working speed; raised implements retain
+normal travel. Verify the complete workflow in desktop and phone browsers,
+including invalid/empty states and private visibility.
+
 ### Contracting and permissions
 
 - A machine owner can **take contracts**: a client surveys and confirms a pad on open land (or on their own property clearance), posts it with an offered fee, and any plant operator can accept. Reuse the tug rescue and charter boat **escrow** flow: the fee is held when the operator accepts, released on completion, refunded if the operator abandons, and split proportionally if a different operator finishes. Materials for net fill are the client's responsibility unless the contract says otherwise. Contracts appear in the parish directory and the World list next to supply orders so remote towns can find a dozer.

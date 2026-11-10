@@ -2,6 +2,29 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.143.0 — Follow earthworks from survey to finished ground
+
+Guide players through choosing an area, checking cut/fill and confirming a survey.
+Offer Centre on me, current ground level, labelled boundaries and proximity
+validation using the server's existing world rule. Keep confirmation and reach
+visible in a sticky footer on desktop and phone. Group precise positioning,
+materials, contracts and permissions behind labelled disclosures.
+
+Show private terrain-following boundaries and corner marks only to the local
+backhoe/bulldozer operator. Add progress, direction, implement/engine buttons and
+instructions for movement, fuel, qualification, fill, storage, permission and
+completion. Cache a bounded outline between terrain changes. Enable configurable
+work-speed assistance inside active permitted sites with lowered implements;
+retain the world working limit and ordinary travelling behavior.
+
+Verify 95 relevant shared tests and seven affected browser flows, including actual
+keyboard grading to completion, contracts, terrain/scenery updates, phone material
+handling, qualifications, fuel, saved settings and survey failures. Recheck the
+complete driver flow after the sticky-footer adjustment. TypeScript, formatting
+and the prefixed production build must pass before deployment. Reload clients;
+existing surveys and stored progress remain valid. No live player grants or
+terrain changes are performed by the release.
+
 ## 0.142.0 — Speak over vehicle CB
 
 Replace human typed CB transmissions with live microphone push-to-talk. Capture

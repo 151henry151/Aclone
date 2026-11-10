@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.143.0 makes surveying and grading easier to follow: choose
+an area, check and confirm it, then follow private work outlines and instructions
+from your backhoe or bulldozer. Work-speed assist keeps active passes slow enough
+to count; world builders can turn it off. See [Surveying and grading](docs/PLAYING.md#surveying-and-grading).
+
 Version 0.142.0 brings **microphone voice to CB radio**. Open CB with V, hold T
 or the on-screen button and speak; release to stop. Calls follow local channels,
 terrain and squelch, with no recordings or transcripts. Allow microphone access

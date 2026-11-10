@@ -153,6 +153,7 @@ test('grade a natural northern hillside, clear trees, meet a road and build usin
     ).toBeDisabled();
     await page.getByRole('button', { name: 'Earthworks', exact: true }).click();
     const root = page.locator('[data-earthworks-panel]');
+    await root.getByText('Precise position and shoulder', { exact: true }).click();
     for (const [name, value] of Object.entries({
       width: '16',
       depth: '16',
@@ -168,6 +169,7 @@ test('grade a natural northern hillside, clear trees, meet a road and build usin
     await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
     await expect.poll(() => w.earthworks?.length).toBe(1);
     const site = root.locator('[data-earthwork-site]');
+    await site.locator('[data-earthwork-materials] > summary').click();
     await site.locator('[name="quantity"]').fill('2');
     await site.getByRole('button', { name: 'Deliver fill', exact: true }).click();
     await expect.poll(() => w.earthworks![0].work!.delivered).toBe(200);

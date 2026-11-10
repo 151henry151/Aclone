@@ -692,6 +692,7 @@
   "earthworksResourceClearance": 12,
   "earthworksBankClearance": 320,
   "earthworksPlantLicence": true,
+  "earthworksSpeedAssist": true,
   "earthworksWorkingSpeed": 1.5,
   "earthworksDozerVolume": 0.8,
   "earthworksBackhoeVolume": 0.25,

@@ -1346,6 +1346,19 @@ protected sites or supersede another owner's works. Regrading one's completed
 pad is allowed. Progress refreshes nearby terrain and map contours and clears
 procedural obstacles only where their ground changes.
 
+The survey menu validates distance against `constructionPlacementReach` before
+submission, using the same rule as the server (4 m by default, measured to the
+centre). The driver's private work outline uses the confirmed pad dimensions and
+shoulder. It is only displayed to an earthmover operator with access to that job.
+
+`earthworksSpeedAssist` defaults to true. Under Construction, **Limit machine
+speed while working a surveyed area** caps forward/reverse motion at the existing
+`earthworksWorkingSpeed` while the implement is lowered inside an active permitted
+site. Turning it off restores manual speed management. Raised implements and
+ordinary travel retain normal vehicle speed. Client prediction and the server
+apply the same rule. Assistance does not change output per metre, fill costs,
+fuel rates, permission, qualifications or the maximum permitted work speed.
+
 Players confirm pads through Build → Earthworks, then operate manufactured
 machines and supply any net fill. Grading and weathering rules are described below.
 

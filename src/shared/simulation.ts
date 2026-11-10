@@ -1,4 +1,9 @@
-import { earthworkAction, workEarthwork, weatherEarthworks } from './earthworks-work';
+import {
+  earthworkSpeedLimit,
+  earthworkAction,
+  workEarthwork,
+  weatherEarthworks,
+} from './earthworks-work';
 import { cancelEarthworksOnDeath } from './earthworks-contracts';
 import { slopeAssessment, slopeBypass } from './construction-slope';
 import { coolingInterval } from './highway-refrigeration';
@@ -3501,7 +3506,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (isEarthmover(p.vehicle)) {
     const field = !('onRoad' in surface && surface.onRoad);
     const limit = Math.min(v.speed, field ? (v.offRoadSpeed ?? v.speed) : v.speed);
-    p.speed = clamp(p.speed, -limit * 0.4, limit);
+    const workLimit = earthworkSpeedLimit(w, p);
+    p.speed = clamp(p.speed, -Math.min(limit * 0.4, workLimit), Math.min(limit, workLimit));
   }
   if (v.mode === 2 || v.mode === 6)
     p.y = Math.max(

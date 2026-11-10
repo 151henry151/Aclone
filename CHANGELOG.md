@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.143.0] - 2026-11-09
+
+### Added
+
+- Guide earthmover drivers with private terrain-following work boundaries, progress, direction and actionable instructions outside the Earthworks menu.
+- Keep slow working passes manageable with configurable work-speed assistance inside active surveyed areas; raise the implement to return to travelling speed.
+
+### Changed
+
+- Explain earthworks as choose, confirm and drive; put size and height first, offer Centre on me and ground-level targeting, and group precise coordinates, materials, contracts and permissions behind labelled controls.
+
+### Fixed
+
+- Validate survey distance before confirmation and show the world's reach beside the button, including changes while the menu remains open.
+
 ## [0.142.0] - 2026-11-09
 
 ### Added

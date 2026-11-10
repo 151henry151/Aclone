@@ -1114,21 +1114,41 @@ World → Earthworks contracts.
 ### Surveying and grading
 
 Open **Build → Earthworks**, or **Inventory/Actions → Earthworks** while aboard
-a machine. Drag the site plan to draw a pad; refine its centre, dimensions,
-rotation, target height and shoulder. Amber marks ground to cut, blue marks fill.
-The survey shows cut/fill volumes including shoulders, material, estimated travel,
-passes and fuel, and the permitted target range. It charges nothing. A refusal
-explains protected land, water, occupied sites or limits that prevent confirmation.
+an earthmover. No building plan is needed: you can level a yard or other open
+area without placing a building.
 
-Confirming reserves the site. With the plant qualification, fuel and engine on,
-lower the implement and drive slowly inside the pad. Both ends of a working pass
-must stay inside it. Stationary machines and client prediction cannot earn work.
-The default maximum working speed is 1.5 m/s; use short passes or reverse slowly
-in the faster backhoe. Stone-bearing uplands take more work, and low health reduces
-how much you move. Terrain changes gradually at the world's configured cadence.
+1. **Choose the area.** The survey starts centred on you. Set width, depth and
+   target level; lower the target to dig down or raise it to fill up. **Use ground
+   level here** resets the target to the ground at the proposed centre. You can
+   also drag the plan. **Precise position and shoulder** reveals coordinates,
+   rotation and the sloping edge that blends the area into surrounding terrain.
+2. **Check and confirm.** The white dot is you. Amber means cut, blue means fill,
+   and green means already level. The solid boundary is the area to drive inside;
+   the dashed boundary includes the shoulder. Read the material and fuel estimate.
+   You must be within the world's survey reach of the **centre** (4 m by default).
+   A distant or invalid survey cannot be confirmed; **Centre on me** brings it
+   back to your position. Previewing charges nothing. Confirmation reserves land,
+   or asks the property owner for permission where necessary.
+3. **Drive the work.** Choose **Guide me here** on the confirmed site to return to
+   driving. Only your own view, while aboard a backhoe or bulldozer, shows the work
+   outline and corner markers. The driver panel gives direction and distance to
+   the centre, progress and the next action. It selects nearby permitted work
+   automatically, or follows the site you chose. Other players and pedestrians
+   do not see your survey markers.
+
+Start the engine, lower the implement using the driver button or **G**, and drive
+back and forth inside the solid outline. Both ends of a working pass must stay
+inside it; the shoulder blends automatically. Standing still does no work.
+**Work-speed assist** defaults on: inside active permitted work with the implement
+down, it limits movement to the world's working speed (default 1.5 m/s, about
+3.4 mph). Raise the implement for travelling. If a world builder disables assist,
+you must keep below that speed yourself. The guide explains shortages, a full
+bucket or heap, missing qualifications, stopped work and completion. Stone-bearing
+uplands take more work; poor health reduces output. Terrain changes at the world's
+configured cadence.
 
 Cut supplies fill on the same job first. For a shortfall, stop nearby and use the
-site's **Deliver fill** form with Topsoil or Gravel from your inventory or your
+site's **Materials and spoil → Deliver fill** form with Topsoil or Gravel from your inventory or your
 own nearby quarry tipping trailer. The panel reports what remains. Delivery
 consumes the goods once; working passes do not charge them again. Defaults allow
 one cubic metre per delivered item. Shortages stop progress before completion.
@@ -1145,7 +1165,8 @@ gravel** consumes the displayed area's requirement from inventory or a selected
 tipping trailer. Bare and gravel finishes green over after five game days by
 default; a stopped day clock also stops this recovery. **Abandon work** releases
 the reservation but keeps the partial terrain and supplied material. The owner
-can resume or give another named operator permission to resume. Saved worlds
+can resume or expand **Operator permissions** to authorize another player.
+Expand **Site details and contracts** to hire or accept paid work. Saved worlds
 retain work and bucket/site goods; portable designs retain the terrain and berm,
 but do not clone collectible spoil or private vehicle cargo.
 

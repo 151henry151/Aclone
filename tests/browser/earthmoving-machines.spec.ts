@@ -128,14 +128,14 @@ test('manufacture, purchase, qualify, fuel and drive both earthmovers with worki
         await expect(
           page
             .locator('#parked-status')
-            .getByRole('button', { name: 'Board vehicle', exact: true }),
+            .getByRole('button', { name: 'Get in ' + recipe.name, exact: true }),
         ).toBeDisabled();
         await page.screenshot({ path: evidence + '/qualification-required.png' });
         p.skills.push('plant operator');
       }
       await page
         .locator('#parked-status')
-        .getByRole('button', { name: 'Board vehicle', exact: true })
+        .getByRole('button', { name: 'Get in ' + recipe.name, exact: true })
         .click();
       await expect.poll(() => p.vehicle).toBe(slot);
       await expect(page.locator('#driving')).toContainText(recipe.name);

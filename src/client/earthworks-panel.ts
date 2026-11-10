@@ -2,7 +2,12 @@ import { trailerStorage } from '../shared/stored-trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../shared/types';
 import { constructionRules } from '../shared/construction-rules';
-import { surveyEarthwork, type EarthworkInput } from '../shared/earthworks-work';
+import {
+  earthworkGuidance,
+  earthworkSurveyReach,
+  surveyEarthwork,
+  type EarthworkInput,
+} from '../shared/earthworks-work';
 import { terrainHeight } from '../shared/terrain';
 import { worldItems } from '../shared/world-catalogue';
 import { stockWeight } from '../shared/fishing-expedition';
@@ -70,25 +75,35 @@ function contractPanel(w: World, p: Player, pad: Earthwork) {
 }
 export function earthworksPanel(w: World, p: Player) {
   const r = constructionRules(w.settings);
-  return `<div data-earthworks-panel><p>Survey a level building pad. Cut ground supplies fill first; bring Topsoil or Gravel for any shortfall. Nothing is charged by previewing a survey.</p>
- <details open><summary>Survey a new pad</summary><form data-earthwork-draft class="build-designer"><div class="settings-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));align-content:start">${input('Centre X (m)', 'x', Math.round(p.x * 10) / 10)}${input('Centre Z (m)', 'z', Math.round(p.z * 10) / 10)}${input('Width (m)', 'width', Math.min(r.earthworksSurveySide, r.earthworksMaximumSide), `min="1" max="${r.earthworksMaximumSide}"`)}${input('Depth (m)', 'depth', Math.min(r.earthworksSurveySide, r.earthworksMaximumSide), `min="1" max="${r.earthworksMaximumSide}"`)}${input('Rotation (degrees)', 'rotation', 0)}${input('Target level (m)', 'target', Math.round(terrainHeight(w, p.x, p.z) * 100) / 100)}${input('Shoulder (m)', 'shoulder', Math.min(r.earthworksSurveyShoulder, r.earthworksMaximumShoulder), `min="1" max="${r.earthworksMaximumShoulder}"`)}</div>
- <div><canvas data-earthwork-map class="build-site" width="600" height="300" style="touch-action:none;max-height:none" aria-label="Earthwork site plan; drag to draw a pad"></canvas><p class="note">North is up. Drag the plan to draw a pad, then adjust rotation and level. Amber is cut; blue is fill; the dashed boundary includes the shoulder.</p><div data-earthwork-survey aria-live="polite"></div></div><button class="primary" type="submit" data-confirm-earthwork>Confirm pad</button></form></details><section data-earthwork-sites></section></div>`;
+  return `<div data-earthworks-panel>
+ <p>Make a level area for a yard, a field or a future building. You do not need a building plan.</p>
+ <ol class="earthwork-steps"><li><b>Choose your area.</b> Start where you are, choose its size and the height you want.</li><li><b>Check and confirm.</b> Amber ground is cut down; blue ground needs filling. Previewing costs nothing.</li><li><b>Drive the work.</b> In a backhoe or bulldozer, follow the outline, lower the implement and make slow passes. The driver guide explains what to do.</li></ol>
+ <section data-earthwork-sites></section>
+ <details ${(w.earthworks ?? []).some((e) => e.work && e.owner === p.id) ? '' : 'open'} data-earthwork-new><summary>Survey a new pad</summary><form data-earthwork-draft>
+ <div class="button-row"><button type="button" data-earthwork-centre>Centre on me</button><button type="button" data-earthwork-level>Use ground level here</button></div>
+ <div class="build-designer"><div><h3>1. Size and level</h3><div class="settings-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">${input('Width (m)', 'width', Math.min(r.earthworksSurveySide, r.earthworksMaximumSide), `min="1" max="${r.earthworksMaximumSide}"`)}${input('Depth (m)', 'depth', Math.min(r.earthworksSurveySide, r.earthworksMaximumSide), `min="1" max="${r.earthworksMaximumSide}"`)}${input('Target level (m)', 'target', Math.round(terrainHeight(w, p.x, p.z) * 100) / 100)}</div>
+ <p>Lower the target to dig down; raise it to fill up. Cut ground supplies fill first. Extra fill needs Topsoil or Gravel.</p>
+ <details data-earthwork-precise><summary>Precise position and shoulder</summary><div class="settings-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">${input('Centre X (m)', 'x', p.x)}${input('Centre Z (m)', 'z', p.z)}${input('Rotation (degrees)', 'rotation', 0)}${input('Shoulder (m)', 'shoulder', Math.min(r.earthworksSurveyShoulder, r.earthworksMaximumShoulder), `min="1" max="${r.earthworksMaximumShoulder}"`)}</div><p>The shoulder is the sloping edge that blends the level area into the surrounding land. It is not part of the area you drive over to work.</p></details></div>
+ <div><h3>2. Check the plan</h3><canvas data-earthwork-map class="build-site" width="600" height="300" style="touch-action:none;max-height:none" aria-label="Earthwork site plan; drag to draw a pad"></canvas><p class="note">North is up. You are the white dot. Drag to draw an area. Solid outline: work area. Dashed outline: shoulder. Amber: cut down. Blue: fill up. Green: already level.</p><div data-earthwork-survey aria-live="polite"></div></div></div>
+ <div class="earthwork-confirm"><p data-earthwork-reach role="status"></p><button class="primary" type="submit" data-confirm-earthwork>Confirm pad</button></div></form></details></div>`;
 }
 export function mountEarthworksPanel(
   root: HTMLElement,
   getState: () => { w: World; p: Player },
   send: (a: Action) => void,
+  guide: (id: string) => void = () => {},
 ) {
   const form = root.querySelector<HTMLFormElement>('[data-earthwork-draft]')!,
     canvas = root.querySelector<HTMLCanvasElement>('canvas')!,
     ctx = canvas.getContext('2d')!,
     summary = root.querySelector<HTMLElement>('[data-earthwork-survey]')!,
     confirm = root.querySelector<HTMLButtonElement>('[data-confirm-earthwork]')!,
-    sites = root.querySelector<HTMLElement>('[data-earthwork-sites]')!;
+    sites = root.querySelector<HTMLElement>('[data-earthwork-sites]')!,
+    reachStatus = root.querySelector<HTMLElement>('[data-earthwork-reach]')!;
   const origin = { x: getState().p.x, z: getState().p.z },
     r = constructionRules(getState().w.settings),
-    span = r.earthworksMaximumSide + r.earthworksMaximumShoulder * 2,
-    scale = canvas.height / span;
+    span = r.earthworksMaximumSide + r.earthworksMaximumShoulder * 2;
+  let scale = canvas.height / span;
   const field = (key: string) => form.elements.namedItem(key) as HTMLInputElement;
   const draft = () =>
     Object.fromEntries(
@@ -98,7 +113,10 @@ export function mountEarthworksPanel(
       ]),
     ) as unknown as EarthworkInput;
   let valid: EarthworkInput | undefined,
-    key = '';
+    key = '',
+    previewKey = '';
+  let confirming = false;
+  const initialIds = new Set(getState().w.earthworks?.map((e) => e.id));
   const screen = (x: number, z: number) => ({
     x: canvas.width / 2 + (x - origin.x) * scale,
     y: canvas.height / 2 + (z - origin.z) * scale,
@@ -106,6 +124,25 @@ export function mountEarthworksPanel(
   function preview() {
     const { w, p } = getState();
     valid = undefined;
+    const shape = draft();
+    if (!start && Object.values(shape).every(Number.isFinite)) {
+      const c = Math.abs(Math.cos(shape.rotation)),
+        s = Math.abs(Math.sin(shape.rotation));
+      const halfX = (shape.width / 2 + shape.shoulder) * c + (shape.depth / 2 + shape.shoulder) * s;
+      const halfZ = (shape.width / 2 + shape.shoulder) * s + (shape.depth / 2 + shape.shoulder) * c;
+      const minX = Math.min(p.x, shape.x - halfX),
+        maxX = Math.max(p.x, shape.x + halfX);
+      const minZ = Math.min(p.z, shape.z - halfZ),
+        maxZ = Math.max(p.z, shape.z + halfZ);
+      origin.x = (minX + maxX) / 2;
+      origin.z = (minZ + maxZ) / 2;
+      scale =
+        Math.min(
+          canvas.width / Math.max(1, maxX - minX),
+          canvas.height / Math.max(1, maxZ - minZ),
+        ) / 1.3;
+    }
+    reachStatus.textContent = '';
     ctx.fillStyle = '#243c2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (const b of w.buildings) {
@@ -117,7 +154,16 @@ export function mountEarthworksPanel(
       const d = draft(),
         s = surveyEarthwork(w, p, d),
         pad = s.pad;
-      valid = s.reason ? undefined : { ...d, target: pad.target };
+      const reach = earthworkSurveyReach(w, p, d);
+      valid =
+        s.reason || !reach.allowed || p.task || p.game || p.hitch || p.atHome || p.inside
+          ? undefined
+          : { ...d, target: pad.target };
+      reachStatus.textContent = reach.allowed
+        ? `Centre ${number(reach.distance)} m away — within this world's ${number(reach.reach)} m survey reach. Confirm reserves the area; it does not do the work.`
+        : `Centre ${number(reach.distance)} m away. Move within ${number(reach.reach)} m of the centre, or choose Centre on me.`;
+      if (p.task || p.game || p.hitch || p.atHome || p.inside)
+        reachStatus.textContent = 'Finish your activity and go outside to confirm a survey.';
       const c = Math.cos(pad.rotation),
         sn = Math.sin(pad.rotation),
         nx = Math.ceil(pad.width / 2),
@@ -147,6 +193,12 @@ export function mountEarthworksPanel(
       ctx.translate(at.x, at.y);
       ctx.rotate(-pad.rotation);
       ctx.strokeStyle = '#eee3bc';
+      ctx.strokeRect(
+        (-pad.width / 2) * scale,
+        (-pad.depth / 2) * scale,
+        pad.width * scale,
+        pad.depth * scale,
+      );
       ctx.setLineDash([5, 4]);
       ctx.strokeRect(
         -(pad.width / 2 + pad.shoulder) * scale,
@@ -165,6 +217,7 @@ export function mountEarthworksPanel(
     ctx.beginPath();
     ctx.arc(at.x, at.y, 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillText('You', at.x + 7, at.y - 7);
     ctx.fillText('N ↑', 8, 16);
     confirm.disabled = !valid;
   }
@@ -178,8 +231,37 @@ export function mountEarthworksPanel(
             (e.work.pendingApproval && earthworkPropertyOwners(w, e).includes(p.id)) ||
             ['offered', 'accepted'].includes(e.work.contract?.state ?? '')),
       );
+    const positionKey = JSON.stringify([
+      p.x,
+      p.z,
+      p.vehicle,
+      p.task,
+      p.game,
+      p.hitch,
+      p.atHome,
+      p.inside,
+      w.settings,
+      w.earthworks,
+    ]);
+    if (positionKey !== previewKey) {
+      previewKey = positionKey;
+      preview();
+    }
+    if (confirming && jobs.some((e) => e.owner === p.id && !initialIds.has(e.id))) {
+      confirming = false;
+      (root.querySelector('[data-earthwork-new]') as HTMLDetailsElement).open = false;
+      sites.scrollIntoView({ block: 'nearest' });
+    }
     const next = JSON.stringify([
       jobs,
+      p.x,
+      p.z,
+      p.vehicle,
+      p.engine,
+      p.earthmovingImplement,
+      p.fuel,
+      p.speed,
+
       p.earthmovingCargo,
       p.inventory,
       Object.values(w.trailers ?? {})
@@ -195,6 +277,11 @@ export function mountEarthworksPanel(
     key = next;
     // Refresh the amounts without discarding the player's next transfer choice.
     const choices = new Map<string, string>();
+    const expanded = new Set<string>();
+    for (const article of sites.querySelectorAll<HTMLElement>('[data-earthwork-site]'))
+      [...article.querySelectorAll('details')].forEach((detail, i) => {
+        if (detail.open) expanded.add(`${article.dataset.id}:${i}`);
+      });
     for (const article of sites.querySelectorAll<HTMLElement>('[data-earthwork-site]'))
       for (const field of article.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
         'input[name],select[name]',
@@ -214,26 +301,31 @@ export function mountEarthworksPanel(
               (t) => !trailerStorage(w, t) && t.kind === 'dump' && t.owner === p.id,
             );
             const store = `<label>Transfer with<select name="trailer"><option value="">Carried inventory / site heap</option>${trailers.map((t) => `<option value="${esc(t.id)}">Tipping trailer ${esc(t.id)}</option>`).join('')}</select></label>`;
-            return `<article data-earthwork-site data-id="${id}"><h3>Pad at ${number(pad.x)}, ${number(pad.z)} — ${Math.floor(pad.progress * 100)}%</h3>${contractPanel(w, p, pad)}<p>${work.pendingApproval ? 'Awaiting permission' : pad.progress === 1 ? 'Complete — ready to build' : work.active ? 'Reserved — drive slowly inside with the implement down' : 'Abandoned — the partial ground remains'}. Cut ${number(work.cut)} m³; fill ${number(work.fill)} m³. <b>${remaining > 0 ? `Deliver ${number(remaining)} m³ more fill` : 'Fill supplied'}</b>.<br>Site spoil: ${
+            const guidance = earthworkGuidance(w, p, pad.id);
+            return `<article data-earthwork-site data-id="${id}"><h3>Pad at ${number(pad.x)}, ${number(pad.z)} — ${Math.floor(pad.progress * 100)}%</h3>${allowed ? `<button type="button" data-earthwork-guide="${id}">Guide me here</button><p>${guidance?.pad?.id === pad.id ? esc(guidance.message) : 'Board a backhoe or bulldozer to see this work area and driving instructions.'}</p>` : ''}<details><summary>Site details and contracts</summary>${contractPanel(w, p, pad)}</details><p>${work.pendingApproval ? 'Awaiting permission' : pad.progress === 1 ? 'Complete — leave as level ground or build here' : work.active ? 'Reserved — drive slowly inside with the implement down' : 'Abandoned — the partial ground remains'}. Cut ${number(work.cut)} m³; fill ${number(work.fill)} m³. <b>${remaining > 0 ? `Deliver ${number(remaining)} m³ more fill` : 'Fill supplied'}</b>.<br>Site spoil: ${
               Object.entries(work.spoil)
                 .map(([k, n]) => `${n} ${esc(worldItems(w)[k].name)}`)
                 .join(', ') || 'empty'
             }. Bucket: ${number(stockWeight(w, p.earthmovingCargo?.[p.vehicle] ?? {}))} weight. Finish: ${pad.finish}.</p>
    ${allowed && pad.progress < 1 ? `<button type="button" data-earthwork-op="${work.active ? 'abandon' : 'resume'}">${work.active ? 'Abandon work' : 'Resume work'}</button>` : ''}
-   ${allowed ? `<form data-earthwork-transfer>${store}<label>Material<select name="item"><option value="dirt">Topsoil</option><option value="gravel">Gravel</option><option value="stone">Stone</option></select></label>${input('Quantity', 'quantity', 1, 'min="1" step="1"')}<div class="button-row"><button type="submit" name="operation" value="deliver" ${remaining <= 0 ? 'disabled' : ''}>Deliver fill</button><button type="submit" name="operation" value="unload">Unload bucket</button><button type="submit" name="operation" value="collect">Collect site spoil</button>${pad.progress === 1 ? '<button type="submit" name="operation" value="gravel">Spread gravel</button>' : ''}</div></form>` : ''}
+   ${allowed ? `<details data-earthwork-materials><summary>Materials and spoil${remaining > 0 ? ` — fill needed` : ''}</summary><p>Choose a store and material, then the quantity to move. Deliver fill supplies this site; Unload bucket empties your backhoe; Collect site spoil takes material from the site heap.</p><form data-earthwork-transfer>${store}<label>Material<select name="item"><option value="dirt">Topsoil</option><option value="gravel">Gravel</option><option value="stone">Stone</option></select></label>${input('Quantity', 'quantity', 1, 'min="1" step="1"')}<div class="button-row"><button type="submit" name="operation" value="deliver" ${remaining <= 0 ? 'disabled' : ''}>Deliver fill</button><button type="submit" name="operation" value="unload">Unload bucket</button><button type="submit" name="operation" value="collect">Collect site spoil</button>${pad.progress === 1 ? '<button type="submit" name="operation" value="gravel">Spread gravel</button>' : ''}</div></form></details>` : ''}
    ${
      pad.owner === p.id && !work.pendingApproval
-       ? `<form data-earthwork-consent><label>Allow an operator<select name="operator">${Object.values(
+       ? `<details><summary>Operator permissions</summary><form data-earthwork-consent><label>Allow an operator<select name="operator">${Object.values(
            w.players,
          )
            .filter((q) => q.id !== p.id)
            .map((q) => `<option value="${esc(q.id)}">${esc(q.name)}</option>`)
-           .join('')}</select></label><button>Give permission</button></form>`
+           .join('')}</select></label><button>Give permission</button></form></details>`
        : ''
    }</article>`;
           })
           .join('')
-      : '<p>No earthwork sites. Draw a pad above to begin.</p>';
+      : '<p>No earthwork sites. Start with Survey a new pad below.</p>';
+    for (const article of sites.querySelectorAll<HTMLElement>('[data-earthwork-site]'))
+      [...article.querySelectorAll('details')].forEach((detail, i) => {
+        detail.open = expanded.has(`${article.dataset.id}:${i}`);
+      });
     for (const article of sites.querySelectorAll<HTMLElement>('[data-earthwork-site]'))
       for (const field of article.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
         'input[name],select[name]',
@@ -254,7 +346,12 @@ export function mountEarthworksPanel(
     const target = e.target as HTMLFormElement;
     if (target === form) {
       preview();
-      if (valid) send({ type: 'earthwork', operation: 'confirm', ...valid });
+      if (valid) {
+        initialIds.clear();
+        for (const pad of getState().w.earthworks ?? []) initialIds.add(pad.id);
+        confirming = true;
+        send({ type: 'earthwork', operation: 'confirm', ...valid });
+      }
       return;
     }
     const values = Object.fromEntries(new FormData(target).entries()),
@@ -275,6 +372,25 @@ export function mountEarthworksPanel(
     (document.activeElement as HTMLElement)?.blur();
   };
   const click = (e: MouseEvent) => {
+    const target = e.target as Element;
+    if (target.closest('[data-earthwork-centre]')) {
+      const { p } = getState();
+      origin.x = p.x;
+      origin.z = p.z;
+      field('x').value = String(p.x);
+      field('z').value = String(p.z);
+      preview();
+    }
+    if (target.closest('[data-earthwork-level]')) {
+      const { w } = getState();
+      field('target').value = String(
+        Math.round(terrainHeight(w, Number(field('x').value), Number(field('z').value)) * 100) /
+          100,
+      );
+      preview();
+    }
+    const selected = target.closest<HTMLElement>('[data-earthwork-guide]');
+    if (selected) guide(selected.dataset.earthworkGuide!);
     const b = (e.target as Element).closest<HTMLElement>('[data-earthwork-op]');
     if (b)
       send({
@@ -314,6 +430,7 @@ export function mountEarthworksPanel(
   };
   const up = () => {
     start = undefined;
+    preview();
   };
   form.addEventListener('input', preview);
   root.addEventListener('submit', submit);

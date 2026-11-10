@@ -29,6 +29,7 @@ export const constructionRuleFields = {
     max: 10000,
     step: 1,
   },
+  earthworksSpeedAssist: { label: 'Limit machine speed while working a surveyed area' },
   earthworksWorkingSpeed: {
     label: 'Maximum earthmoving work speed (m/s)',
     min: 0.1,

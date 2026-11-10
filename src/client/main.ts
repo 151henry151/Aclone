@@ -1,3 +1,4 @@
+import { earthworkGuidance } from '../shared/earthworks-work';
 import { garageStoragePanel } from './garage-storage-panel';
 import { earthworksPanel, mountEarthworksPanel } from './earthworks-panel';
 import { isEarthmover } from '../shared/earthmoving-definitions';
@@ -236,7 +237,7 @@ document
   .querySelector('.bottom-left')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="parked-status" hidden aria-label="Parked vehicle"></section>',
+    '<section id="earthwork-guide" hidden aria-label="Earthworks driver guide"></section><section id="parked-status" hidden aria-label="Parked vehicle"></section>',
   );
 const waypoints = new Waypoints(localStorage);
 document
@@ -953,7 +954,27 @@ function updateHud() {
     $('driving').append(info);
   }
   $('find-tractor-shortcut').hidden = !tractorWaypoint(world, me);
-  const parking = parkingStatus(world, me);
+  const guide = earthworkGuidance(world, me, scene.earthworkGuide.selection);
+  $('earthwork-guide').hidden = !guide;
+  if (guide) {
+    const pad = guide.pad,
+      bearing = pad ? Math.atan2(pad.x - me.x, me.z - pad.z) : 0;
+    const direction = [
+      'north',
+      'northeast',
+      'east',
+      'southeast',
+      'south',
+      'southwest',
+      'west',
+      'northwest',
+    ][(Math.round(bearing / (Math.PI / 4)) + 8) % 8];
+    setHudHtml(
+      'earthwork-guide',
+      `<strong>${pad ? `Earthworks · ${Math.floor(guide.progress * 100)}%` : 'Earthworks'}</strong>${pad ? `<small><span aria-hidden="true" style="display:inline-block;transform:rotate(${Math.atan2(pad.x - me.x, pad.z - me.z) - me.heading}rad)">↑</span> ${Math.round(guide.distance)} m ${direction} to centre · solid line = work area</small><progress max="1" value="${guide.progress}" aria-label="Earthworks progress"></progress>` : ''}<p role="status">${esc(guide.message)}</p><div class="button-row">${button('Earthworks', 'earthworks')}${button(me.earthmovingImplement ? 'Raise implement' : 'Lower implement', 'earthmoving-implement')}${!me.engine ? button('Start engine', 'engine') : ''}</div>`,
+    );
+  }
+  const parking = guide ? undefined : parkingStatus(world, me);
   $('parked-status').hidden = !parking;
   if (parking)
     setHudHtml(
@@ -2314,6 +2335,12 @@ function renderPanel() {
       $('modal-host').querySelector<HTMLElement>('[data-earthworks-panel]')!,
       () => ({ w: world!, p: me! }),
       send,
+      (id) => {
+        scene.earthworkGuide.selection = id;
+        scene.earthworkGuide.update(world!, me!);
+        closePanel();
+        updateHud();
+      },
     );
     return;
   }
