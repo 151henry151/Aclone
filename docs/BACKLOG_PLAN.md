@@ -11041,3 +11041,12 @@ Audit key: `storage:town-except-lightmun:2026-11-09`. Excluded local evidence an
 receipts: output/garage-storage/release/. Remaining release work: publish the
 website/gallery and verified screenshot announcement, then begin contextual
 boarding and labels.
+
+Garage slice done: publish website/gallery successfully, with backup
+`/var/backups/aclone-website/site-20261109-194616.tar.gz`. Verify the live gallery
+image and version in a browser. Correct the smoke probe to check the game entry
+DOM is attached rather than demanding the normally hidden overlay be visible.
+Post and verify the bot announcement with two inspected screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569513711801081866
+Proceed to contextual boarding/labels; broader intermittent performance work
+remains open.
