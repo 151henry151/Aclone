@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.142.0 brings **microphone voice to CB radio**. Open CB with V, hold T
+or the on-screen button and speak; release to stop. Calls follow local channels,
+terrain and squelch, with no recordings or transcripts. Allow microphone access
+and turn on sound to hear calls. Voice limits are world configurable.
+
 Version 0.141.1 keeps parish chat quieter: after one death notice, further deaths
 while a player remains offline stay silent until they return. Deaths and their
 consequences continue normally; World Builder can opt out of the quieter notices.

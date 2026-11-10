@@ -2,6 +2,15 @@
 import defaults from '../../data/settings.json';
 export const radioRuleFields = {
   radioEnabled: { label: 'Enable vehicle CB radios' },
+  radioVoiceSampleRate: { label: 'Voice samples per second', min: 8000, max: 24000, step: 1 },
+  radioVoiceChunkMs: { label: 'Voice packet duration (milliseconds)', min: 40, max: 200, step: 1 },
+  radioVoiceMaxSeconds: { label: 'Maximum microphone hold (seconds)', min: 1, max: 120, step: 1 },
+  radioVoiceBufferMs: {
+    label: 'Maximum queued voice (milliseconds)',
+    min: 200,
+    max: 2000,
+    step: 1,
+  },
   radioChannelCount: { label: 'Number of channels', min: 1, max: 80, step: 1 },
   radioDefaultChannel: { label: 'Default road channel', min: 1, max: 80, step: 1 },
   radioEmergencyChannel: { label: 'Emergency channel', min: 1, max: 80, step: 1 },
@@ -18,9 +27,9 @@ export const radioRuleFields = {
     step: 0.01,
   },
   radioTerrainSamples: { label: 'Terrain samples per radio path', min: 3, max: 32, step: 1 },
-  radioCharsPerSecond: { label: 'Spoken characters per second', min: 1, max: 60, step: 1 },
+  radioCharsPerSecond: { label: 'Legacy text characters per second', min: 1, max: 60, step: 1 },
   radioMinDuration: {
-    label: 'Minimum transmission duration (seconds)',
+    label: 'Legacy text minimum duration (seconds)',
     min: 0.1,
     max: 5,
     step: 0.1,
@@ -31,7 +40,7 @@ export const radioRuleFields = {
     max: 0.5,
     step: 0.01,
   },
-  radioMaxLength: { label: 'Transmission character limit', min: 1, max: 1200, step: 1 },
+  radioMaxLength: { label: 'Legacy text character limit', min: 1, max: 1200, step: 1 },
   radioHandleLength: { label: 'Call-sign character limit', min: 1, max: 80, step: 1 },
   radioClearSignal: { label: 'Clear reception signal threshold', min: 0.1, max: 1, step: 0.01 },
   radioStaticSignal: { label: 'Static signal threshold', min: 0, max: 0.9, step: 0.01 },
@@ -50,4 +59,18 @@ export function radioRules(settings: Partial<RadioRules> = {}): RadioRules {
       settings[key as keyof RadioRules] ?? defaults[key as keyof RadioRules],
     ]),
   ) as RadioRules;
+}
+
+/** Protocol bounds derive from the editable rule definitions, not duplicate defaults. */
+export const radioVoiceMaxEncoded =
+  Math.ceil(
+    (((radioRuleFields.radioVoiceSampleRate.max * radioRuleFields.radioVoiceChunkMs.max) / 1000) *
+      2) /
+      3,
+  ) * 4;
+export function radioVoiceSamples(r: RadioRules) {
+  return Math.floor((r.radioVoiceSampleRate * r.radioVoiceChunkMs) / 1000);
+}
+export function radioVoiceQueueBytes(r: RadioRules) {
+  return Math.ceil((((r.radioVoiceSampleRate * r.radioVoiceBufferMs) / 1000) * 2) / 3) * 4;
 }

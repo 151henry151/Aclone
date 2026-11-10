@@ -1,3 +1,5 @@
+import { RadioVoiceRelay } from './radio-voice';
+import { radioVoiceMaxEncoded, radioVoiceQueueBytes, radioRules } from '../shared/radio-rules';
 import {
   publicParkedVehicles,
   parkOnSignOff,
@@ -115,9 +117,16 @@ const messageSchema = z.discriminatedUnion('type', [
     action: z.record(z.string(), z.unknown()),
   }),
   z.object({ type: z.literal('ping'), at: z.number() }),
+  z.object({
+    type: z.literal('radio-audio'),
+    token: z.string().min(1).max(64),
+    sequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+    data: z.string().max(radioVoiceMaxEncoded),
+  }),
 ]);
 interface Peer {
   socket: WebSocket;
+  voice?: RadioVoiceRelay;
   account?: Account;
   world?: string;
   input: Input;
@@ -946,6 +955,23 @@ export async function createApp(options: AppOptions) {
           return;
         }
         if (!p.account) throw Error('Authenticate first');
+        if (m.type === 'radio-audio') {
+          const w = p.world && worlds.get(p.world),
+            me = w && w.players[p.account.id];
+          if (!w || !me) return;
+          const limit = radioVoiceQueueBytes(radioRules(w.settings));
+          for (const delivery of (p.voice ??= new RadioVoiceRelay()).relay(w, me, m, now)) {
+            for (const other of peers)
+              if (
+                other.world === w.id &&
+                other.account?.id === delivery.id &&
+                other.socket.readyState === WebSocket.OPEN &&
+                other.socket.bufferedAmount < limit
+              )
+                other.socket.send(JSON.stringify(delivery.message), { compress: false });
+          }
+          return;
+        }
         if (m.type === 'ping') {
           if (now - p.pingAt < 250) return;
           p.pingAt = now;

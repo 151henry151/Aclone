@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.142.0] - 2026-11-09
+
+### Added
+
+- Transmit live microphone audio over vehicle CB radios while push-to-talk is held; preserve local channels, terrain reception, doubling and manual rescue cues, with configurable voice quality, timing and queue limits.
+
+### Fixed
+
+- Replace the typed CB dashboard with microphone controls, permission feedback and automatic capture cleanup on release, blur, vehicle changes and disconnect.
+
 ## [0.141.1] - 2026-11-09
 
 ### Fixed

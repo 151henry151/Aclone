@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.142.0
+
+Deploy client and server together from the approved backlog-implementation SHA
+using the usual backup/build/restart, then publish the matching website. Verify
+health, SHA and the emitted radio-capture worklet asset under the /aclone/ prefix.
+New voice rules load from catalogue defaults in old worlds. No recordings are
+stored and no microphone access is requested until a player holds push-to-talk.
+Use HTTPS and reload clients; browser permission and audio unlock are per device.
+
 ## Upgrade 0.141.1
 
 Deploy the approved backlog-implementation SHA with the normal backup and build,

@@ -606,23 +606,35 @@ over-water range. Antenna elevation extends reach; a bounded terrain survey
 attenuates signals behind ridges. Ground, boat and aircraft antenna offsets,
 elevation scaling, terrain sample count and attenuation are configurable.
 
-Speech defaults to 12 characters/second, with a 0.5-second minimum and 1,200-character
-limit. Keys within 0.12 seconds can collide; later callers who hear the carrier
-receive a busy refusal. Squelch defaults to 0.12. Reception below 0.2 becomes
-static; below 0.7 it loses words. These thresholds, the retained traffic count,
-handle limit and emergency prompt range are also rules. Channel choices clamp to
-a reduced channel count without deleting saved per-vehicle settings.
+Microphone voice defaults to 16,000 mono samples/second (`radioVoiceSampleRate`),
+100 ms packets (`radioVoiceChunkMs`), a 30-second maximum hold
+(`radioVoiceMaxSeconds`) and at most 500 ms of queued audio (`radioVoiceBufferMs`).
+Lower sample rates reduce bandwidth; shorter packets reduce capture delay while
+increasing packet overhead. Captured PCM16 audio travels through authenticated
+live sockets; the server enforces framing, rate, session and recipient checks
+without saving audio or running a full game action for each packet. Packet sizes
+and queue limits derive from these rules. Already-keyed transmissions retain their
+quoted framing and hold limit; subsequent holds use changed settings.
 
-Public-chat mute and lock restrictions apply by default; disabling radio moderation
-explicitly removes those restrictions from CB transmissions. Resident radio use
-is disabled by default and enabling it does not add an AI reply routine. Channel
-9 rescue cues are local and manual. Selected channel, handle, volume and squelch
-persist per driver and vehicle; active transmissions and received logs are transient
-and never enter the public chat archive. Portable designs retain the world rules.
-Players open the vehicle dashboard with V, the CB HUD button or mobile Actions.
-Keyboard, touch and configurable controller push-to-talk use the same authority.
-Disabled worlds show an explanatory dashboard state. Radio volume controls the
-received-message tone and respects master mute; squelch changes server reception.
+Keys within 0.12 seconds can collide; later callers who hear the carrier receive
+a busy refusal. Squelch defaults to 0.12. Reception below 0.2 becomes static;
+below 0.7 it mixes with noise. These thresholds, retained traffic count, handle
+limit and emergency prompt range are rules. Channel choices clamp to a reduced
+channel count without deleting saved per-vehicle settings. The older text carrier
+protocol retains its labelled legacy character/rate limits for compatibility;
+the human dashboard uses the microphone and has no typed-message field.
+
+Public-chat mute and lock restrictions apply by default, including during speech;
+disabling radio moderation explicitly removes those participation restrictions.
+Audio is not transcribed or filtered as text. Resident radio use is disabled by
+default and enabling it does not add an AI reply routine. Channel 9 rescue cues
+are local and manual. Selected channel, handle, volume and squelch persist per
+driver and vehicle. Active transmissions and received metadata are transient;
+neither recordings nor transcripts enter the world save or public-chat archive.
+Portable designs retain the world rules. Players open CB with V, the HUD button
+or mobile Actions. Keyboard, touch and remappable controller push-to-talk share
+the same authority. Listening respects radio and master volume; squelch changes
+server reception. Microphone capture requires HTTPS and browser permission.
 
 ## Survival and needs rules
 

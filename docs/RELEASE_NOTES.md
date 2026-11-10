@@ -2,6 +2,21 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.142.0 — Speak over vehicle CB
+
+Replace human typed CB transmissions with live microphone push-to-talk. Capture
+on an AudioWorklet and relay bounded PCM16 frames through authenticated sockets,
+without world clones, saves, recordings or transcripts. Retain channel isolation,
+terrain/squelch reception, busy/doubling, per-vehicle settings and manual rescue.
+Expose voice sampling, packet duration, maximum hold and queue limits in CB rules.
+
+Verify actual samples reaching another browser's Web Audio playback, closed-pane
+listening and master mute, denied/missing/delayed permissions, release/timeout/
+blur/vehicle-change/disconnect cleanup, touch and controller remapping. Five
+browser flows and 23 focused tests pass, along with TypeScript and formatting.
+Legacy text protocol remains compatible; human users use the microphone. Reload
+the game for the new dashboard and allow browser microphone access when speaking.
+
 ## 0.141.1 — Quiet repeated offline deaths
 
 Announce the first ordinary death, then suppress later public death and absence

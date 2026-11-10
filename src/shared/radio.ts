@@ -1,7 +1,7 @@
 import { communicationRules } from './communication-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from './types';
-import { radioRules } from './radio-rules';
+import { radioRules, type RadioRules } from './radio-rules';
 import { vehicleDef } from './vehicle-config';
 import { terrainHeight } from './terrain';
 import { surfaceWaterLevel } from './ocean';
@@ -32,6 +32,8 @@ interface Transmission {
   since: number;
   duration: number;
   rate: number;
+  voice?: string;
+  voiceRules?: RadioRules;
   heard: Map<string, { strength: number; collision: boolean; text: string; end: number }>;
 }
 interface Listener {
@@ -137,6 +139,7 @@ export function radioView(w: World, p: Player) {
     keyed: [...s.transmitters.values()]
       .filter((tx) => heard(w, p, tx) > 0)
       .map((tx) => ({
+        voice: tx.voice,
         from: tx.from,
         handle: tx.handle,
         remaining: Math.max(0, tx.duration - (s.now - tx.since)),
@@ -178,7 +181,13 @@ function finish(w: World, s: State, tx: Transmission) {
       collision,
       text: collision
         ? '[doubling — overlapping transmissions]'
-        : radioLegibility(reception.text, reception.strength, w, `${tx.id}:${id}`),
+        : tx.voice
+          ? reception.strength <= r.radioStaticSignal
+            ? '[static]'
+            : reception.strength < r.radioClearSignal
+              ? 'Voice transmission · weak reception'
+              : 'Voice transmission'
+          : radioLegibility(reception.text, reception.strength, w, `${tx.id}:${id}`),
     };
     if (
       !collision &&
@@ -205,12 +214,18 @@ export function radioAction(w: World, p: Player, a: Action) {
     cfg = radioConfig(w, p),
     s = state(w),
     op = a.operation;
-  if (op === 'key') {
+  if (op === 'key' || op === 'voice') {
+    const voice = op === 'voice';
+    if (voice)
+      need(
+        typeof a.value === 'string' && /^[a-zA-Z0-9-]{1,64}$/.test(a.value),
+        'Invalid microphone session',
+      );
     const text = chatText(
       w,
       p,
-      a.text,
-      Math.min(r.radioMaxLength, communicationRules(w.settings).chatMaxLength),
+      voice ? 'Voice transmission' : a.text,
+      voice ? Infinity : Math.min(r.radioMaxLength, communicationRules(w.settings).chatMaxLength),
       r.radioModeration,
     );
     need(!s.transmitters.has(p.id), 'Your microphone is already keyed');
@@ -228,7 +243,10 @@ export function radioAction(w: World, p: Player, a: Action) {
       handle: cfg.handle,
       text,
       since: s.now,
-      duration: Math.max(r.radioMinDuration, text.length / r.radioCharsPerSecond),
+      duration: voice
+        ? r.radioVoiceMaxSeconds
+        : Math.max(r.radioMinDuration, text.length / r.radioCharsPerSecond),
+      ...(voice ? { voice: String(a.value), voiceRules: r } : {}),
       rate: r.radioCharsPerSecond,
       heard: new Map(),
     });
@@ -236,7 +254,7 @@ export function radioAction(w: World, p: Player, a: Action) {
   }
   if (op === 'release') {
     const tx = s.transmitters.get(p.id);
-    if (tx) finish(w, s, tx);
+    if (tx && (!a.value || tx.voice === a.value)) finish(w, s, tx);
     return 'CB microphone released';
   }
   need(!s.transmitters.has(p.id), 'Release the microphone before adjusting the radio');
@@ -273,7 +291,13 @@ export function tickRadio(w: World, seconds: number) {
   for (const p of Object.values(w.players)) listener(w, p);
   for (const [id, tx] of s.transmitters) {
     const p = w.players[id];
-    if (!p || !radioAvailable(w, p) || p.vehicle !== tx.slot) s.transmitters.delete(id);
+    if (
+      !p ||
+      !radioAvailable(w, p) ||
+      p.vehicle !== tx.slot ||
+      (tx.voice && radioRules(w.settings).radioModeration && (p.muted || w.settings.chatLocked))
+    )
+      s.transmitters.delete(id);
   }
   for (const p of Object.values(w.players)) {
     if (!radioAvailable(w, p)) continue;
@@ -281,7 +305,7 @@ export function tickRadio(w: World, seconds: number) {
       .map((tx) => ({ tx, strength: heard(w, p, tx) }))
       .filter((v) => v.strength > 0);
     for (const { tx, strength } of receiving) {
-      if (tx.from === p.id) continue;
+      if (tx.from === p.id || tx.voice) continue;
       const old = tx.heard.get(p.id),
         elapsed = Math.min(seconds, Math.max(0, tx.duration - (s.now - tx.since)));
       const start = Math.max(old?.end ?? 0, Math.floor((s.now - tx.since) * tx.rate + 1e-9)),
@@ -317,4 +341,43 @@ export function radioCheckpoint(w: World) {
 export function restoreRadio(w: World, checkpoint: ReturnType<typeof radioCheckpoint>) {
   if (checkpoint) states.set(w, checkpoint);
   else states.delete(w);
+}
+
+/** Validate the live carrier independently of the client and the simulation tick. */
+export function radioVoiceSession(w: World, p: Player, token: string) {
+  const tx = state(w).transmitters.get(p.id),
+    r = radioRules(w.settings);
+  if (
+    !tx ||
+    tx.voice !== token ||
+    !tx.voiceRules ||
+    !radioAvailable(w, p) ||
+    p.vehicle !== tx.slot ||
+    radioConfig(w, p).channel !== tx.channel ||
+    w.maintenance?.paused ||
+    (r.radioModeration && (p.muted || w.settings.chatLocked))
+  )
+    return;
+  return tx;
+}
+export function radioVoiceListeners(w: World, sender: Player, token: string) {
+  const tx = radioVoiceSession(w, sender, token);
+  if (!tx) return [];
+  const s = state(w);
+  return Object.values(w.players).flatMap((p) => {
+    if (p.id === sender.id || s.transmitters.has(p.id)) return [];
+    const strength = heard(w, p, tx);
+    if (!strength) return [];
+    const collision = [...s.transmitters.values()].some(
+      (other) => other !== tx && heard(w, p, other) > 0,
+    );
+    const old = tx.heard.get(p.id);
+    tx.heard.set(p.id, {
+      strength: Math.min(old?.strength ?? 1, strength),
+      collision: !!old?.collision || collision,
+      text: 'Voice transmission',
+      end: 0,
+    });
+    return [{ id: p.id, strength, collision }];
+  });
 }

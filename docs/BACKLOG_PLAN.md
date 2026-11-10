@@ -11303,3 +11303,63 @@ Prettier pass. SQLite backup:
 Verify the bot announcement and its local browser screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569552822947680357
 Resume microphone CB next.
+
+#### Microphone CB — concrete transport and verification criteria
+
+Replace the human radio textarea with microphone push-to-talk. Acquire permission
+only while held; cancel pending acquisition and stop every microphone track on
+release, blur, closing the pane, leaving the vehicle/world or disconnect. A denied
+or missing microphone must show an actionable error without keying the channel.
+Preserve keyboard T, touch cancellation and controller bindings. Reception works
+with the pane closed, respects master/radio volume and requires an explicit audio
+unlock when browser autoplay is blocked. Do not save or transcribe audio.
+
+Use small mono PCM16 frames through the authenticated game socket, with capture on
+an AudioWorklet. World defaults: `radioVoiceSampleRate` 16000 samples/second,
+`radioVoiceChunkMs` 100 ms, `radioVoiceMaxSeconds` 30 seconds and
+`radioVoiceBufferMs` 500 ms. Expose all four in CB rules; derive frame limits from
+those definitions. Enforce the keyed session token, monotonic packet sequence,
+frame length, elapsed-time rate, maximum talk time and bounded socket/playback
+queues. Process frames without world cloning or SQLite saves. Never relay to a
+foreign world/channel, out-of-range/squelched listener or the transmitter itself.
+Enforce mute/lock changes during speech. Preserve busy/doubling/terrain/rescue
+semantics, using static/distortion for poor audio instead of garbled typed text.
+Legacy text carriers may remain for compatibility, but the human UI has no draft.
+
+Run new failing shared and socket tests before production changes. Verify actual
+nonzero captured samples reach a receiver's Web Audio playback in two browser
+clients using synthetic microphone input. Cover channel isolation, busy, doubling,
+weak reception, mute/lock, radio disabled, walking, boat/aircraft, rescue, persisted
+channel/handle, denied/missing microphone, permission resolving after release,
+release/blur/disconnect, touch cancellation and controller remapping. Keep existing
+propagation and legacy protocol tests. Run relevant radio/controller tests,
+`npx tsc --noEmit`, Prettier, and browser radio/rules flows. Inspect screenshots.
+Release only after these pass; voice remains unreleased until then.
+
+Microphone CB validation: first reproduce the missing voice action and the typed
+browser field. Add real capture/playback; verify nonzero microphone samples reach
+the other browser's AudioBufferSource, rather than accepting signalling alone.
+All 23 focused radio/voice/socket/audio tests pass. Include malformed, stale,
+wrong-token, over-rate and after-release frames; range/channel/squelch/mute/pause,
+configured framing, rollback and rapid re-keying cannot bypass the rate budget.
+Audio packets never call saveWorld and never enter saved world/chat data.
+
+All five browser flows pass: editable voice rules; two-client real audio with
+closed-pane listening and master mute; denied/missing/late permission and timeout/
+close/reconnect cleanup; channel/busy/doubling/weak reception/vehicle/rescue and
+saved settings; touch cancellation and controller remapping/disconnection/blur.
+TypeScript completes cleanly after correcting optional-rule reads in a test.
+Prettier runs; inspect output/radio-voice/received-voice.png. Prepare release
+0.142.0. The newly reported Earthworks survey-distance usability fix follows as
+a separate slice; no earthworks behavior is included in this voice release.
+
+Production-build verification: reproduce microphone failure when Vite inlines the
+worklet as a data URL forbidden by the production CSP. Emit a same-origin worklet
+asset instead; both production-browser capture/playback and permission/cleanup
+flows pass. Keep the CSP unchanged. Verify the /aclone/ build references the
+emitted asset. Final TypeScript check completes cleanly.
+
+Next priority is the expanded earthworks usability request: a complete guided
+survey-to-finished-work flow, clear proximity validation before confirmation, and
+a work-area overlay plus actionable progress guidance visible only to the local
+earthmover driver. This replaces the narrower survey-distance-only scope.

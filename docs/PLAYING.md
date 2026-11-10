@@ -707,27 +707,31 @@ these, volume and squelch are saved separately for each of your vehicles. The
 usual defaults are road channel **19** and emergency channel **9**. The world
 owner can change these rules.
 
-Type in **Radio message**, leave the text field, then hold **T**, or hold the
-**Hold to transmit** button. Release to end early. A message occupies the air
-for its speaking time and finishes automatically if you keep holding. Typed T
-characters stay in your draft. On a controller, **View (8)** opens CB and the
-**right trigger (7)** holds the microphone; D-pad up/down moves focus and
-left/right changes the selected channel or slider. Remap radio buttons under
-Pilot & preferences → Controller settings.
+Hold **T** or the **Hold to transmit** button and speak into your microphone.
+Allow microphone access when your browser asks; release to stop. A hold ends after
+30 seconds by default. If permission arrives after you released, hold again to
+speak. On a controller, **View (8)** opens CB and the **right trigger (7)** holds
+the microphone; D-pad up/down moves focus and left/right changes the selected
+channel or slider. Remap radio buttons under Pilot & preferences → Controller settings.
 
 Only nearby stations on your channel hear you. Hills and aircraft height can
-extend reach; ridges obstruct it, and open water carries signals further. A
-weak message loses words or becomes static. Raise **Squelch** to hide weak
-stations; **Volume** sets the received-message tone and respects the usual sound
-mute. The pane shows the current carrier, remaining airtime and signal strength.
-Wait when the channel is busy. Simultaneous keys cause garbled “doubling”. The
-public-chat mute and lock rules also apply by default. AI neighbours do not reply.
+extend reach; ridges obstruct it, and open water carries signals further. Weak
+voice mixes with noise and can become static. Raise **Squelch** to hide weak
+stations. **Volume** sets incoming voice volume and respects the game's sound
+switch and master volume. If your browser blocks audio, choose **Enable listening**.
+You can hear incoming calls with the dashboard closed; no microphone permission
+is needed just to listen. The pane shows who is keyed, remaining airtime and
+signal strength. Wait when the channel is busy. Simultaneous keys cause garbled
+“doubling”. Public-chat mute and lock rules also apply by default. AI neighbours
+do not reply.
 
-Received traffic appears after a carrier finishes. It stays separate from parish
-chat and is cleared when you leave the vehicle or disconnect. Closing the pane,
-losing focus or cancelling a touch releases your microphone. Your draft stays
-while you close and reopen the pane in the same vehicle; changing vehicles clears
-it. Walking and disabled-world states explain why the microphone is unavailable.
+Received traffic lists call signs and reception information after each call;
+it contains no recording or transcript. Audio is live and never saved in parish
+chat. Traffic metadata clears when you leave the vehicle or disconnect. Releasing
+the control, closing the pane, losing focus, changing vehicles, disconnecting or
+cancelling a touch stops microphone capture. Denied permission and missing devices
+show retry instructions. Walking and disabled-world states explain why the radio
+is unavailable. Use the secure game address (HTTPS) for microphone access.
 
 A nearby boat receiving an emergency-channel call from a stranded vessel can
 choose **Open rescue options**. This opens the existing player aid panel: fuel,

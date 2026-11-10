@@ -8,6 +8,19 @@ import { createWorld, addPlayer, act } from '../../src/shared/simulation';
 import { creatorSchema } from '../../src/shared/creator';
 import { waitForWorld } from './fixtures/ready';
 import { radioView } from '../../src/shared/radio';
+test.use({
+  launchOptions: {
+    args: [
+      '--no-sandbox',
+      '--enable-webgl',
+      '--enable-gpu',
+      '--use-angle=gl',
+      '--ignore-gpu-blocklist',
+      '--use-fake-device-for-media-stream',
+      '--use-fake-ui-for-media-stream',
+    ],
+  },
+});
 async function login(page: Page, token: string, port: number) {
   page.setDefaultTimeout(15000);
   await page.addInitScript(
@@ -57,7 +70,7 @@ async function fixture() {
   const port = await app.listen();
   return { app, dir, first, second, w, a, b, port };
 }
-test('CB dashboard exchanges keyboard traffic, preserves drafts, explains refusals and offers manual rescue', async ({
+test('CB dashboard exchanges keyboard traffic, retains controls, explains refusals and offers manual rescue', async ({
   browser,
 }) => {
   test.setTimeout(240000);
@@ -80,36 +93,28 @@ test('CB dashboard exchanges keyboard traffic, preserves drafts, explains refusa
       br = b.locator('.radio-console');
     await expect(ar).toContainText('No received traffic');
     await expect(ar.getByRole('log')).toBeInViewport();
-    await expect(ar.getByRole('button', { name: 'Hold to transmit', exact: true })).toBeDisabled();
+    await expect(ar.getByRole('button', { name: 'Hold to transmit', exact: true })).toBeEnabled();
     await ar.getByLabel('Call sign', { exact: true }).fill('Marsh tractor');
     await ar.getByLabel('Call sign', { exact: true }).press('Tab');
     await expect.poll(() => pilotA().radios?.[0]?.handle).toBe('Marsh tractor');
-    const draft = ar.getByLabel('Radio message', { exact: true });
-    await draft.fill('Hello neighbour');
-    await a.waitForTimeout(600);
-    await expect(draft).toBeFocused();
-    await expect(draft).toHaveValue('Hello neighbour');
-    await draft.press('Tab');
+    await ar.getByRole('button', { name: 'Hold to transmit', exact: true }).focus();
     await a.keyboard.down('t');
     await expect(br.locator('[data-radio-keyed]')).toContainText('Marsh tractor');
-    await expect(br.getByRole('log')).toContainText('Hello neighbour');
+    await a.waitForTimeout(350);
     await a.keyboard.up('t');
-    expect(current().messages.some((m) => m.text === 'Hello neighbour')).toBe(false);
+    await expect(br.getByRole('log')).toContainText('Voice transmission');
+    expect(current().messages.some((m) => m.text.includes('Voice transmission'))).toBe(false);
     await a.screenshot({ path: 'test-results/radio-tractor.png' });
     await br.getByLabel('Channel', { exact: true }).selectOption('9');
     await expect.poll(() => pilotB().radios?.[0]?.channel).toBe(9);
-    await draft.fill('Channel nineteen only');
-    await draft.press('Tab');
+    const receivedBefore = radioView(current(), pilotB()).traffic.length;
     await a.keyboard.down('t');
     await a.waitForTimeout(2100);
     await a.keyboard.up('t');
-    await expect(br.getByRole('log')).not.toContainText('Channel nineteen only');
+    expect(radioView(current(), pilotB()).traffic.length).toBe(receivedBefore);
     await br.getByLabel('Channel', { exact: true }).selectOption('19');
     await expect.poll(() => pilotB().radios?.[0]?.channel).toBe(19);
-    await br
-      .getByLabel('Radio message', { exact: true })
-      .fill('This is a longer carrier that keeps the channel occupied');
-    await br.getByLabel('Radio message', { exact: true }).press('Tab');
+    await br.getByRole('button', { name: 'Hold to transmit', exact: true }).focus();
     await b.keyboard.down('t');
     await expect(ar.locator('[data-radio-keyed]')).toContainText('Bob radio');
     await a.waitForTimeout(250);
@@ -135,11 +140,12 @@ test('CB dashboard exchanges keyboard traffic, preserves drafts, explains refusa
     await squelch.focus();
     await squelch.press('Home');
     await expect.poll(() => pilotB().radios?.[0]?.squelch).toBe(0);
-    await draft.fill('one two three four five six seven eight');
-    await draft.press('Tab');
+    await ar.getByRole('button', { name: 'Hold to transmit', exact: true }).focus();
     await a.keyboard.down('t');
-    await expect(br.getByRole('log')).toContainText(/static|…/);
+    await expect(ar.locator('[data-radio-audio]')).toContainText('Microphone live');
+    await a.waitForTimeout(350);
     await a.keyboard.up('t');
+    await expect(br.getByRole('log')).toContainText(/static|weak reception/);
     await br.getByRole('log').scrollIntoViewIfNeeded();
     await b.screenshot({ path: 'test-results/radio-weak.png' });
     current().settings.chatLocked = true;
@@ -156,9 +162,7 @@ test('CB dashboard exchanges keyboard traffic, preserves drafts, explains refusa
     current().settings.radioEnabled = true;
     for (const slot of [33, 2]) {
       pilotA().vehicle = slot;
-      await expect(
-        ar.getByRole('button', { name: 'Hold to transmit', exact: true }),
-      ).toBeDisabled();
+      await expect(ar.getByRole('button', { name: 'Hold to transmit', exact: true })).toBeEnabled();
       await expect(ar.locator('[data-radio-vehicle]')).toContainText(
         slot === 33 ? 'motorboat' : 'Biplane',
       );
@@ -171,9 +175,11 @@ test('CB dashboard exchanges keyboard traffic, preserves drafts, explains refusa
     await br.getByLabel('Channel', { exact: true }).selectOption('9');
     await expect.poll(() => pilotA().radios?.[33]?.channel).toBe(9);
     await expect.poll(() => pilotB().radios?.[33]?.channel).toBe(9);
-    await draft.fill('Need fuel at this position');
-    await draft.press('Tab');
+    await ar.getByRole('button', { name: 'Hold to transmit', exact: true }).focus();
     await a.keyboard.down('t');
+    await expect(ar.locator('[data-radio-audio]')).toContainText('Microphone live');
+    await a.waitForTimeout(350);
+    await a.keyboard.up('t');
     await expect(
       br.getByRole('button', { name: 'Open rescue options', exact: true }),
     ).toBeVisible();
@@ -220,13 +226,11 @@ test('mobile touch and configurable controller bindings hold and release the CB 
     await page.getByRole('button', { name: 'Actions', exact: true }).click();
     await page.getByRole('button', { name: 'CB radio', exact: true }).click();
     const radio = page.locator('.radio-console'),
-      draft = radio.getByLabel('Radio message', { exact: true }),
       ptt = radio.getByRole('button', { name: 'Hold to transmit', exact: true });
-    await draft.fill('touch t stays a draft until the microphone is held');
     const keyed = () =>
       radioView(f.app.worlds.get(f.w.id)!, f.app.worlds.get(f.w.id)!.players[f.a.id]).keyed.length;
     expect(keyed()).toBe(0);
-    await draft.press('Tab');
+    await ptt.focus();
     await ptt.scrollIntoViewIfNeeded();
     const box = (await ptt.boundingBox())!,
       cdp = await context.newCDPSession(page);
@@ -256,8 +260,7 @@ test('mobile touch and configurable controller bindings hold and release the CB 
     await press(8, true);
     await press(8, false);
     await expect(radio).toBeVisible();
-    await draft.fill('Controller transmission with enough time to inspect');
-    await draft.press('Tab');
+    await ptt.focus();
     await press(7, true);
     await expect.poll(keyed).toBe(1);
     await press(7, false);
@@ -276,7 +279,7 @@ test('mobile touch and configurable controller bindings hold and release the CB 
     await press(15, true);
     await press(15, false);
     await expect(radio.getByLabel('Channel', { exact: true })).toHaveValue('20');
-    await draft.press('Tab');
+    await ptt.focus();
     await press(7, true);
     await expect.poll(keyed).toBe(1);
     await page.evaluate(() => window.dispatchEvent(new Event('blur')));
@@ -291,8 +294,7 @@ test('mobile touch and configurable controller bindings hold and release the CB 
     await press(6, true);
     await press(6, false);
     await expect(radio).toBeVisible();
-    await draft.fill('Remapped controller microphone');
-    await draft.press('Tab');
+    await ptt.focus();
     await press(4, true);
     await expect.poll(keyed).toBe(1);
     await press(4, false);

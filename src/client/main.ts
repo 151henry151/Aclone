@@ -450,8 +450,19 @@ document.addEventListener('input', (e) => {
       Number(input.value) / 100,
     );
 });
-const radioRequests = new Set<number>();
-const radioConsole = new RadioConsole(send, (volume) => sound.radio(volume));
+const radioRequests = new Map<number, Action>();
+const radioConsole = new RadioConsole(
+  send,
+  (volume) => sound.radio(volume),
+  (frame, limit) => {
+    if (ws?.readyState !== WebSocket.OPEN || ws.bufferedAmount >= limit) return false;
+    ws.send(JSON.stringify(frame));
+    return true;
+  },
+  () => (sound.enabled && !document.hidden ? sound.volume : 0),
+);
+window.addEventListener('pointerdown', () => void radioConsole.unlock(), { capture: true });
+window.addEventListener('keydown', () => void radioConsole.unlock(), { capture: true });
 const actionViews = new Map<number, string | undefined>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
@@ -463,7 +474,7 @@ function send(action: Action) {
     return;
   }
   const id = ++request;
-  if (action.type === 'radio') radioRequests.add(id);
+  if (action.type === 'radio') radioRequests.set(id, action);
   actionViews.set(id, $('modal-host').dataset.viewKey);
   if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
   if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
@@ -557,6 +568,7 @@ async function connect() {
       if (!world) showGalaxy();
     }
     if (msg.type === 'radio') radioConsole.receive(msg);
+    if (msg.type === 'radio-audio') radioConsole.audio(msg);
     if (msg.type === 'state') {
       const previousWorld = world;
       world = mergeState(world, msg);
@@ -622,8 +634,9 @@ async function connect() {
     }
     if (msg.type === 'result') {
       if (!msg.ok && msg.request === arrivalRequest) requestedArrival = undefined;
-      const radioResult = radioRequests.delete(msg.request);
-      if (radioResult) radioConsole.result(msg.ok, msg.message ?? '');
+      const radioResult = radioRequests.get(msg.request);
+      radioRequests.delete(msg.request);
+      if (radioResult) radioConsole.result(msg.ok, msg.message ?? '', radioResult);
       const visit = tradeVisits.get(msg.request);
       tradeVisits.delete(msg.request);
       if (msg.ok && msg.trade && visit !== undefined) {
