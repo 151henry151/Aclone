@@ -11236,3 +11236,28 @@ family, employer or other active references need rewriting. Dry-run both asset
 dispositions; use the stated lossless default to transfer cash, bank balance,
 galactic credits, aircraft and reserve biplane entitlement. Preserve current Hank
 state outside those fields and the current primary authentication key.
+
+HankMobile consolidation done: release 0.141.0, committed/pushed/deployed cf7acb1e.
+Eight focused tests, the phone browser flow, TypeScript and Prettier pass. Verify
+public health, matching remote SHA and website version. Deployment backup:
+`/var/lib/aclone/backups/pre-deploy-20261109-213241.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261109-213346.tar.gz`.
+
+Apply the separate stopped-service transaction with the stated lossless asset
+default, preserving HankMobile's 2,107 cash hundredths, 20,000 bank hundredths,
+50 galactic credits, hangar biplane and one reserve-biplane entitlement under
+HANK_ROMP. Remove only the duplicate account/world player, its old parked-aircraft
+key and obsolete credentials/recovery/playtime records. Retain its hashed device
+key bound to Hank's unchanged primary key. Preserve Hank's other progress and all
+28 skills; assert all unrelated world records unchanged. No additional user
+response about assets was received; preservation was the stated implementation
+assumption, not a claimed reply. Verify after restart: no duplicate player/account,
+old phone-key hash resolves to HANK_ROMP, primary key unchanged, plane ownership
+correct, skills intact, and a repeat invocation reports alreadyApplied.
+
+Audit key: `merge:hankmobile-into-hank-romp:2026-11-09`; consistent backup:
+`/var/lib/aclone/backups/pre-hankmobile-merge-2026-11-10T023420-036Z.sqlite`.
+Excluded scripts and receipts: output/hankmobile-merge-2026-11-09/.
+Verify the general device-login announcement with its local test screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569540901905109136
+Microphone CB remains the next pending feature correction.
