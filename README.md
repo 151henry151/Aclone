@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.140.3 stores your arriving tractor and trailer inside the aircraft
+hangar, keeping the apron free for boarding. Return to that hangar and expand
+**Vehicle storage** to retrieve the rig with its fuel and cargo intact.
+
 Version 0.140.2 keeps long fleet lists collapsed behind labelled summaries with
 counts. Expand trailers, vehicle storage or the tractor showroom when needed;
 live updates preserve the open section and each building remembers its own state.

@@ -42,7 +42,7 @@ export function garageStoragePanel(w: World, p: Player, b: Building) {
       })),
   ];
   const atThis = (stored: string | undefined) =>
-    stored === b.id || (stored === GARAGE_STORAGE && b.kind === 'garage');
+    stored === b.id || (stored === GARAGE_STORAGE && b.kind === 'garage' && !b.aircraftHangar);
   const row = (item: (typeof items)[number]) => {
     const retrieval = !!item.stored,
       here = atThis(item.stored),

@@ -4,6 +4,8 @@ import { parkingRules } from './parking-rules';
 import { vehicleDef } from './vehicle-config';
 import {
   parkedKey,
+  parkCurrentVehicle,
+  persistentVehicles,
   GARAGE_STORAGE,
   clearParkedRig,
   relocatedParkedTrailers,
@@ -11,22 +13,76 @@ import {
 import { kerbParking } from './parking-site';
 import { clearTrailer, trailerDef } from './trailers';
 import { trailerStorage } from './stored-trailers';
-import { isTractor } from './tractors';
+import { isTractor, switchVehicle } from './tractors';
 import { parkingBlocker } from './ground-parking';
 export const storageGarage = (b?: Building) =>
-  !!b &&
-  !b.construction &&
-  (b.kind === 'vehicleStorage' || (b.kind === 'garage' && !b.aircraftHangar));
+  !!b && !b.construction && (b.kind === 'vehicleStorage' || b.kind === 'garage');
 export function landStorageVehicle(w: World, slot: number) {
   return ![5, 6, 7, 29, 34].includes(slot) && [0, 1, 4, 5].includes(vehicleDef(w, slot).mode);
 }
 function need(value: unknown, reason: string): asserts value {
   if (!value) throw Error(reason);
 }
+function checkDeposit(
+  w: World,
+  p: Player,
+  b: Building,
+  target: { x: number; z: number },
+  incoming: number,
+) {
+  const r = parkingRules(w.settings);
+  need(r.garageStorageEnabled, 'New garage storage is disabled in this world');
+  need(
+    b.kind !== 'vehicleStorage' || b.owner === p.id,
+    'Only the private garage owner may store vehicles here',
+  );
+  need(
+    Math.hypot(target.x - b.x, target.z - b.z) <= r.garageStorageRange &&
+      Math.hypot(target.x - p.x, target.z - p.z) <= r.garageStorageRange,
+    'Bring the vehicle within the garage storage handling range',
+  );
+  const count =
+    Object.values(w.parkedVehicles ?? {}).filter((v) => v.owner === p.id && v.inside === b.id)
+      .length +
+    Object.values(w.trailers ?? {}).filter((t) => t.owner === p.id && trailerStorage(w, t) === b.id)
+      .length;
+  need(
+    !r.garageStorageLimit || count + incoming <= r.garageStorageLimit,
+    'Garage storage limit reached; retrieve a vehicle first',
+  );
+}
+/** Validate the whole arriving rig before parking or changing the active vehicle. */
+export function storeHangarArrival(w: World, p: Player, b: Building) {
+  if (
+    !b.aircraftHangar ||
+    !storageGarage(b) ||
+    !persistentVehicles(w, p) ||
+    !landStorageVehicle(w, p.vehicle) ||
+    !parkingRules(w.settings).garageStorageEnabled
+  )
+    return false;
+  need((p.fleet ?? [0, 5]).includes(p.vehicle), 'Choose your own land vehicle');
+  const rig = Object.values(w.trailers ?? {}).filter((t) => t.attached === p.id && !t.parkedWith);
+  need(
+    rig.every((t) => t.owner === p.id),
+    'Only your own trailers may be stored with this vehicle',
+  );
+  checkDeposit(w, p, b, p, 1 + rig.length);
+  const slot = p.vehicle;
+  parkCurrentVehicle(w, p, b.id).garageStored = true;
+  switchVehicle(p, 5, true, w);
+  p.homeParking = { building: b.id, slot };
+  p.engine = false;
+  p.lights = false;
+  return true;
+}
 export function garageStorageAction(w: World, p: Player, a: Action) {
   const b = w.buildings.find((b) => b.id === a.building),
     r = parkingRules(w.settings);
-  need(b && storageGarage(b), 'Choose a completed vehicle storage garage or tractor garage');
+  need(
+    b && storageGarage(b),
+    'Choose a completed vehicle storage garage, tractor garage or aircraft hangar',
+  );
   need(
     !p.task &&
       !p.game &&
@@ -71,27 +127,8 @@ export function garageStorageAction(w: World, p: Player, a: Action) {
     'Only your own trailers may be stored with this vehicle',
   );
   if (store) {
-    need(r.garageStorageEnabled, 'New garage storage is disabled in this world');
-    need(
-      b.kind !== 'vehicleStorage' || b.owner === p.id,
-      'Only the private garage owner may store vehicles here',
-    );
     need(!stored, 'This vehicle is already stored; retrieve it first');
-    need(
-      Math.hypot(target.x - b.x, target.z - b.z) <= r.garageStorageRange &&
-        Math.hypot(target.x - p.x, target.z - p.z) <= r.garageStorageRange,
-      'Bring the vehicle within the garage storage handling range',
-    );
-    const count =
-      Object.values(w.parkedVehicles ?? {}).filter((v) => v.owner === p.id && v.inside === b.id)
-        .length +
-      Object.values(w.trailers ?? {}).filter(
-        (t) => t.owner === p.id && trailerStorage(w, t) === b.id,
-      ).length;
-    need(
-      !r.garageStorageLimit || count + 1 + rig.length <= r.garageStorageLimit,
-      'Garage storage limit reached; retrieve a vehicle first',
-    );
+    checkDeposit(w, p, b, target, 1 + rig.length);
     if (v) {
       v.inside = b.id;
       v.garageStored = true;
@@ -100,7 +137,7 @@ export function garageStorageAction(w: World, p: Player, a: Action) {
     return 'Stored in the garage. Fuel, condition and cargo stay with the vehicle.';
   }
   need(
-    stored === b.id || (stored === GARAGE_STORAGE && b.kind === 'garage'),
+    stored === b.id || (stored === GARAGE_STORAGE && b.kind === 'garage' && !b.aircraftHangar),
     'Retrieve this vehicle at the garage where it is stored',
   );
   // Retrieval never requires a licence: it delivers the unoccupied vehicle outside.

@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.140.3 — Keep the aircraft apron clear
+
+Entering an aircraft hangar in a land vehicle stores it and its complete rig there,
+using the existing configurable storage rules. Retrieve it from the hangar's
+Vehicle storage section after flying. Check capacity, ownership and reach before
+mutating the arriving vehicle. Preserve safe-exit checks and all fuel/cargo state.
+
+Verify authoritative entry/plane boarding/retrieval, save/load, animation,
+disabled/full storage, foreign ownership and blocked exits; exercise the real
+Ctrl entry → plane → return → rig retrieval browser flow. Existing parked vehicles
+are not relocated by this release. Reload clients; no saved-world migration runs.
+
 ## 0.140.2 — Compact fleet menus
 
 Open Your trailers, Vehicle storage, Specialist trailers or the Tractor showroom

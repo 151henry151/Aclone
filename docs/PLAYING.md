@@ -1198,3 +1198,14 @@ items are available. Keyboard users can focus a summary and press Enter or Space
 The menu remembers open/closed sections and edited fields during live updates,
 separately for each building in this session. Nearby Get in controls and the
 hangar's aircraft boarding button stay directly accessible.
+
+### Leave your tractor at the airfield
+
+Drive to an aircraft hangar, stop and press Ctrl/E to enter. With garage storage
+enabled, your land vehicle and its hitched trailers go into that hangar's storage,
+leaving the aircraft apron clear. Board your owned airplane normally. After flying,
+return to the same hangar, open Vehicle storage and choose Retrieve outside beside
+the tractor to retrieve the complete rig. Fuel, condition, paint and trailer cargo
+stay with it. Retrieval requires clear space outside. Storage limits and handling
+reach still apply; a refusal leaves your vehicle unchanged. If the world disables
+new garage storage, arrivals use ordinary outdoor parking instead.

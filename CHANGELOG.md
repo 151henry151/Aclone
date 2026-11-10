@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.140.3] - 2026-11-09
+
+### Fixed
+
+- Store an arriving land vehicle and its hitched trailers inside the aircraft hangar, keeping the apron clear for boarding; retrieve the preserved rig from that hangar’s Vehicle storage section and respect the existing storage rules.
+
 ## [0.140.2] - 2026-11-09
 
 ### Fixed

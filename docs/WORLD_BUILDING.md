@@ -2213,3 +2213,10 @@ boarding, instead of its centre. It still defaults to 3 m. The new
 `parkingBoardHeight` defaults to 3 m and allows 0.1–20 m. Retrieval, ownership,
 licences, stopped-player and activity checks remain authoritative on the server.
 Refuelling retains its existing handling rules.
+
+Aircraft hangars also accept land-vehicle and trailer storage. An arriving land
+vehicle is stored automatically when `garageStorageEnabled` is on, using
+`garageStorageRange` and `garageStorageLimit` for the complete rig. These are the
+same rules as other garages. Disabling new deposits keeps existing retrieval
+available and falls back to outdoor arrival parking; hangars do not retrieve
+virtual spare tractors from another garage.

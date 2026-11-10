@@ -2491,7 +2491,7 @@ function buildingWindow(b: Building) {
     html += garageStoragePanel(world, me, b) + canoePanel(world, me) + trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
-      html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;
+      html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here. When garage storage is enabled, entering in a land vehicle stores it and its rig here, keeping the apron clear. Expand Vehicle storage to retrieve it after flying. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;
     if (b.kind === 'garage' && !b.aircraftHangar && hasAircraftHangar(world))
       html +=
         '<p>Biplanes are available at Puddlewick airfield hangar, on the western edge of town.</p>';

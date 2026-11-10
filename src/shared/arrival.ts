@@ -1,4 +1,5 @@
 import { boatSlot } from './boats';
+import { storeHangarArrival } from './garage-storage';
 import { beginVehicleMount } from './vehicle-mount';
 import { say } from './messages';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -54,7 +55,7 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     throw Error(`Move within ${parkingRules(w.settings).arrivalRange} metres of this building`);
   const original = { x: p.x, y: p.y, z: p.z };
   const previousVehicle = p.vehicle;
-  parkAtHome(w, p, b);
+  if (!storeHangarArrival(w, p, b)) parkAtHome(w, p, b);
   // ParkAtHome finds the safe kerb; the visible walk starts at its driver side.
   const from =
     p.homeParking?.building === b.id
