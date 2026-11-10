@@ -11160,3 +11160,19 @@ spring, drink and observe cooldown, custom ranges/disabled springs, carried and
 nearby canoe states, trailer disclosure and mobile layout. Confirm approaching
 and leaving updates the open menu without a reload. Check TypeScript to completion
 and format touched files; update docs, release and announce a real screenshot.
+
+### Requested testing grant — Hank's skills (2026-11-09)
+
+Done: grant all 28 currently defined Puddlewick skills to the verified human
+HANK_ROMP account `f2a5f340-b270-4960-9a4e-da15c57c1313`. The normal three-skill
+limit applies to school enrollment and does not truncate existing qualifications;
+leave that world rule and every other player's record unchanged. Use the world's
+skill catalogue, including custom skills, rather than a hard-coded skill list.
+The dry-run/apply script asserts an idempotent transformation and no changes beyond
+Hank's skills and any redundant current lesson (none existed). Stop, back up,
+apply in a transaction, restart and verify all 28 qualifications persisted with
+no duplicates and healthy 0.140.3. Audit key:
+`grant:hank-romp-all-skills:2026-11-09`. Backup:
+`/var/lib/aclone/backups/pre-hank-skills-2026-11-10T013428-369Z.sqlite`.
+Local receipts and scripts remain excluded under output/hank-skills-2026-11-09/.
+This is a one-time testing grant, not an automatic grant of future skills.
