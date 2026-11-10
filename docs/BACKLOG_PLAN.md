@@ -11453,3 +11453,19 @@ pending final TypeScript, formatting and the prefixed production build.
 Release gate passed: final `npx tsc --noEmit` exits 0, Prettier runs on every
 changed file, `git diff --check` is clean and the /aclone/ production build passes.
 Commit and deploy the completed earthworks usability slice as 0.143.0.
+
+Earthworks usability done: commit/push/deploy `96085c0b`, release 0.143.0. Verify
+healthy public 0.143.0, matching live SHA, active service and the published website.
+The deployment script's first check caught a transient startup 502; a subsequent
+read-only health check passed, so publish the website without repeating deployment.
+All 95 focused tests, seven browser flows (plus the final full guidance/layout
+rerun), TypeScript, Prettier and the prefixed production build pass. Verify the
+private driver outline, progress, mobile controls and always-visible confirmation
+in the inspected local screenshots. No live assets or terrain are changed.
+SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261109-232108.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261109-232325.tar.gz`.
+Verify the bot announcement and both screenshot attachments:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569568204693438525
+Excluded release receipts and images: output/earthworks/guidance/release/.
+Other pending backlog work remains in its recorded order; piloted spaceflight
+remains excluded.
