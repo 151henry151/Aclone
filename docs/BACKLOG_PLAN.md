@@ -11013,3 +11013,31 @@ Completion criteria, before production changes:
   standing authorization. No changes to piloted spaceflight.
 
 Status: criteria recorded; implementation pending garage release.
+
+### Garage release and requested town cleanup
+
+Release 0.140.0 code as 9aea992a. The first deploy health probe encountered a brief
+502 during startup; the subsequent public check reports healthy 0.140.0 with five
+worlds and an active service. Pre-deploy database backup:
+`/var/lib/aclone/backups/pre-deploy-20261109-194237.sqlite`.
+The website build correctly refused publication because the new catalogue kind had
+no gallery asset. Generate and inspect the real five-model/open-interior contact
+sheet, add its WebP, then rebuild successfully. Publish this release-completion
+asset before announcing; do not relax the gallery check.
+
+Henry expands the live cleanup from Hank's grant to all parked land vehicles and
+trailers in Puddlewick, excluding Lightmun. Apply a one-time audited transfer of
+24 parked land vehicles and 11 independent trailers to Spanner & Sons. Exclude
+both Lightmun and Cmdr Lightmun, retaining their vehicle/trailer records byte-for-byte.
+Preserve fuel, cargo, condition, ownership, hitches and all other world state; clear
+only matching automatic sign-in seat intents so stored units stay stored. Resident
+vehicles retain the existing garage retrieval path. Re-running the transfer is
+idempotent. The final stopped-service snapshot includes one additional resident
+vehicle that had parked since the dry run. Verify all 35 records against the saved
+audit after restart; health remains 0.140.0. No boats or aircraft are moved.
+
+Backup: `/var/lib/aclone/backups/pre-town-storage-2026-11-10T004505-489Z.sqlite`.
+Audit key: `storage:town-except-lightmun:2026-11-09`. Excluded local evidence and
+receipts: output/garage-storage/release/. Remaining release work: publish the
+website/gallery and verified screenshot announcement, then begin contextual
+boarding and labels.
