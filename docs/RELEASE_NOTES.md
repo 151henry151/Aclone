@@ -2,6 +2,17 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.140.2 — Compact fleet menus
+
+Open Your trailers, Vehicle storage, Specialist trailers or the Tractor showroom
+only when needed. Each summary displays its item count and supports keyboard and
+touch. Live updates retain the open section and form drafts, scoped to the building
+and menu. Nearby boarding and the hangar's aircraft button remain directly available.
+
+Verify 28 relevant tests plus browser flows for an eleven-trailer fleet, storage
+success/refusal, empty/private garages, showroom purchases/paint on desktop and
+phone, and panel draft/disclosure retention. No world rules or saves change.
+
 ## 0.140.1 — Read the street and board the vehicle beside you
 
 Prioritise nearby owned vehicles over a stored last tractor. Board from the HUD,

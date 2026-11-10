@@ -64,7 +64,7 @@ export function garageStoragePanel(w: World, p: Player, b: Building) {
                 : '';
     return `<article data-garage-unit="${esc(item.type + ':' + item.id)}"><h4>${esc(item.name)}</h4><p>${item.stored ? 'Stored: ' + esc(w.buildings.find((b) => b.id === item.stored)?.name ?? 'tractor garage storage') : `Parked outside · ${Math.round(distance)} m from garage`}</p><form data-action="garageStorage"><input type="hidden" name="building" value="${esc(b.id)}"><input type="hidden" name="operation" value="${retrieval ? 'retrieve' : 'store'}${item.type}"><input type="hidden" name="${item.field}" value="${esc(item.id)}"><button ${reason ? 'disabled' : ''}>${retrieval ? 'Retrieve outside' : 'Store in garage'}</button></form>${reason ? `<p class="note">${esc(reason)}</p>` : ''}</article>`;
   };
-  return `<section data-garage-storage><h3>Vehicle storage</h3><p>${r.garageStorageLimit ? `Up to ${r.garageStorageLimit} vehicles and trailers per player here.` : 'Unlimited vehicle and trailer storage.'} Store your parked land vehicles and trailers here, or leave them outside where you park. Fuel, paint, condition and cargo stay with them. Retrieval needs clear space outside. Boats and aircraft use their own facilities.</p>${b.kind === 'vehicleStorage' ? '<p>Private storage garage. It offers storage, not vehicle sales or repairs. Existing depositors keep access to their own vehicles if the garage changes hands.</p>' : ''}${landStorageVehicle(w, p.vehicle) ? '<p>Park and step out of your vehicle before storing it.</p>' : ''}<h4>Stored here</h4><div class="cards">${
+  return `<section data-garage-storage><details data-fleet-disclosure="garage-storage"><summary>Vehicle storage (${items.length})</summary><p>${r.garageStorageLimit ? `Up to ${r.garageStorageLimit} vehicles and trailers per player here.` : 'Unlimited vehicle and trailer storage.'} Store your parked land vehicles and trailers here, or leave them outside where you park. Fuel, paint, condition and cargo stay with them. Retrieval needs clear space outside. Boats and aircraft use their own facilities.</p>${b.kind === 'vehicleStorage' ? '<p>Private storage garage. It offers storage, not vehicle sales or repairs. Existing depositors keep access to their own vehicles if the garage changes hands.</p>' : ''}${landStorageVehicle(w, p.vehicle) ? '<p>Park and step out of your vehicle before storing it.</p>' : ''}<h4>Stored here</h4><div class="cards">${
     items
       .filter((i) => atThis(i.stored))
       .map(row)
@@ -74,5 +74,5 @@ export function garageStoragePanel(w: World, p: Player, b: Building) {
       .filter((i) => !atThis(i.stored))
       .map(row)
       .join('') || '<p>No other parked vehicles or trailers.</p>'
-  }</div></section>`;
+  }</div></details></section>`;
 }

@@ -51,6 +51,7 @@ for (const mobile of [false, true])
       await page.goto(`http://127.0.0.1:${port}`);
       await waitForWorld(page);
       await page.keyboard.press('e');
+      await page.locator('[data-fleet-disclosure="tractor-shop"] > summary').click();
       const choice = page.getByLabel('Tractor model');
       await expect(choice).toBeVisible();
       for (const slot of tractorSlots) {

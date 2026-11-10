@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.140.2] - 2026-11-09
+
+### Fixed
+
+- Collapse long trailer, vehicle-storage and tractor-showroom sections behind labelled counts; retain each building menu’s open sections during updates while keeping nearby boarding controls accessible.
+
 ## [0.140.1] - 2026-11-09
 
 ### Fixed

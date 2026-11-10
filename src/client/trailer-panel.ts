@@ -26,18 +26,16 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
   const owned = Object.values(w.trailers ?? {}).filter((t) => t.owner === p.id);
   let html = fuelPanel(w, p);
   if (b?.kind === 'garage' && !b.aircraftHangar) {
-    html +=
-      '<h3>Specialist trailers</h3><p>Bring your tractor with clear space behind it. Trailers stay where you unhitch them, with their cargo.</p><div class="directory">';
+    html += `<details data-fleet-disclosure="trailer-shop"><summary>Specialist trailers (${Object.keys(trailerDefs).filter((kind) => !isSemitrailer(kind as TrailerKind)).length})</summary><p>Bring your tractor with clear space behind it. Trailers stay where you unhitch them, with their cargo.</p><div class="directory">`;
     for (const kind of Object.keys(trailerDefs) as TrailerKind[]) {
       if (isSemitrailer(kind)) continue;
       const d = trailerDef(w, kind);
       html += `<section><h4>${d.name} · ${money(d.price, w.settings.denariiPerSheckle)}</h4><p>${d.description} ${d.capacity} weight capacity.</p><form data-action="trailer">${hidden('operation', 'buy')}${hidden('kind', kind)}${hidden('building', b.id)}<button>Buy &amp; hitch</button></form></section>`;
     }
-    html += '</div>';
+    html += '</div></details>';
   }
   if (!owned.length) return html;
-  html +=
-    '<h3>Your trailers</h3><p>Unhitch before changing vehicles. To reconnect, reverse the matching tractor to the drawbar or semitrailer kingpin. Loads slow travel and increase fuel use.</p>';
+  html += `<details data-fleet-disclosure="owned-trailers"><summary>Your trailers (${owned.length})</summary><p>Unhitch before changing vehicles. To reconnect, reverse the matching tractor to the drawbar or semitrailer kingpin. Loads slow travel and increase fuel use.</p>`;
   const items = worldItems(w);
   for (const publicTrailer of owned) {
     const t = {
@@ -108,5 +106,5 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
     }
     html += '</section>';
   }
-  return html;
+  return html + '</details>';
 }

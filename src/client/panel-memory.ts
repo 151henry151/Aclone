@@ -5,6 +5,7 @@ type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 type Value = { value: string; checked?: boolean; selected?: string[] };
 type View = {
   fields: Map<string, Value>;
+  disclosures: Map<string, boolean>;
   scroll: [number, number][];
   focus?: string;
   selection?: [number | null, number | null];
@@ -21,7 +22,7 @@ export class PanelMemory {
   private view(key: string) {
     let view = this.views.get(key);
     if (!view) {
-      view = { fields: new Map(), scroll: [] };
+      view = { fields: new Map(), disclosures: new Map(), scroll: [] };
       this.views.set(key, view);
       if (this.views.size > 64) this.views.delete(this.views.keys().next().value!);
     }
@@ -99,6 +100,11 @@ export class PanelMemory {
     const scope = this.host.dataset.viewKey;
     if (!scope || !this.host.firstElementChild) return;
     const view = this.view(scope);
+    view.disclosures = new Map(
+      [...this.host.querySelectorAll<HTMLDetailsElement>('details[data-fleet-disclosure]')].map(
+        (el) => [el.dataset.fleetDisclosure!, el.open],
+      ),
+    );
     view.scroll = this.scrollers().map((el) => [el.scrollLeft, el.scrollTop]);
     const focused = this.controls().find((el) => el === document.activeElement);
     view.focus = focused && this.key(focused);
@@ -115,6 +121,10 @@ export class PanelMemory {
       beforeScroll?.();
       return;
     }
+    for (const disclosure of this.host.querySelectorAll<HTMLDetailsElement>(
+      'details[data-fleet-disclosure]',
+    ))
+      disclosure.open = view.disclosures.get(disclosure.dataset.fleetDisclosure!) ?? false;
     for (const input of this.controls()) {
       const key = this.key(input),
         value = key && view.fields.get(key);

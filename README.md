@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.140.2 keeps long fleet lists collapsed behind labelled summaries with
+counts. Expand trailers, vehicle storage or the tractor showroom when needed;
+live updates preserve the open section and each building remembers its own state.
+
 Version 0.140.1 makes nearby vehicles easier to board: use **Get in** on the HUD
 or in Inventory, or click your parked machine. Small, nearby names follow your
 viewing direction and avoid overlap. World Builder controls label visibility and

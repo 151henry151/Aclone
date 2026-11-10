@@ -3078,3 +3078,16 @@ html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
     min-width: 0;
   }
 }
+
+/* Fleet lists stay compact until requested, including on narrow screens. */
+details[data-fleet-disclosure] {
+  margin: 12px 0;
+}
+details[data-fleet-disclosure] > summary {
+  cursor: pointer;
+  padding: 12px;
+  border: 1px solid #657359;
+  border-radius: 3px;
+  background: #3e4b36;
+  font-weight: 600;
+}

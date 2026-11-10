@@ -1189,3 +1189,12 @@ parked vehicles receive small labels; names fade with distance and yield when
 labels would overlap. Buildings obscure names behind them. Scenery view (H) hides
 these labels. Course/checkpoint signs keep their existing role. World builders can
 adjust ranges, opacity, size, viewing focus and the number of names displayed.
+
+### Compact fleet menus
+
+Vehicle storage, Your trailers, Specialist trailers and the Tractor showroom start
+collapsed. Select their labelled summary to expand them; counts show how many
+items are available. Keyboard users can focus a summary and press Enter or Space.
+The menu remembers open/closed sections and edited fields during live updates,
+separately for each building in this session. Nearby Get in controls and the
+hangar's aircraft boarding button stay directly accessible.

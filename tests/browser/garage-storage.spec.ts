@@ -110,6 +110,7 @@ test('store and retrieve land vehicles and trailers, then build and inspect a pr
     await page.keyboard.press('e');
     const panel = page.locator('[data-garage-storage]');
     await expect(panel).toBeVisible();
+    await panel.locator('summary').click();
     await expect(panel).toContainText('No vehicles or trailers stored here.');
     const machine = page.locator('[data-garage-unit="Vehicle:38"]');
     await machine.getByRole('button', { name: 'Store in garage' }).click();
@@ -202,6 +203,7 @@ test('store and retrieve land vehicles and trailers, then build and inspect a pr
     await page.waitForTimeout(1500);
     await page.screenshot({ path: 'output/garage-storage/vehicle-shed.png' });
     await page.keyboard.press('e');
+    await panel.locator('summary').click();
     await expect(panel).toContainText('Private storage garage');
     await expect(panel).toContainText('No vehicles or trailers stored here.');
     const v = w.parkedVehicles![key];
@@ -214,8 +216,10 @@ test('store and retrieve land vehicles and trailers, then build and inspect a pr
     await machine.getByRole('button').click();
     await expect.poll(() => v.inside).toBe(shed.id);
     await page.setViewportSize({ width: 390, height: 844 });
-    await panel.scrollIntoViewIfNeeded();
-    await expect(machine.getByRole('button', { name: 'Retrieve outside' })).toBeVisible();
+    await expect(async () => {
+      await panel.scrollIntoViewIfNeeded();
+      await expect(machine.getByRole('button', { name: 'Retrieve outside' })).toBeInViewport();
+    }).toPass({ timeout: 10000 });
     await page.screenshot({ path: 'output/garage-storage/mobile-storage.png' });
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),

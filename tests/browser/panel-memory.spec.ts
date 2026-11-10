@@ -160,3 +160,48 @@ test('panel memory scopes drafts, preserves live defaults, and excludes credenti
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('fleet disclosures retain open and closed state across refreshes, scoped to each building', async ({
+  page,
+}) => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-fleet-memory-')),
+    app = await createApp({ dataDir: dir, port: 0, dev: true });
+  try {
+    const port = await app.listen();
+    await page.goto(`http://127.0.0.1:${port}`);
+    const result = await page.evaluate(async () => {
+      const modulePath = '/src/client/panel-memory.ts';
+      const { PanelMemory } = await import(modulePath);
+      const host = document.createElement('div');
+      document.body.append(host);
+      const memory = new PanelMemory(host);
+      const render = (scope: string) => {
+        memory.capture();
+        host.innerHTML =
+          '<details data-fleet-disclosure="owned-trailers"><summary>Your trailers (12)</summary><button>Hitch trailer</button></details>';
+        memory.restore(scope);
+        return host.querySelector('details')!;
+      };
+      const initial = render('garage').open;
+      host.querySelector('details')!.open = true;
+      const refreshed = render('garage').open;
+      const other = render('hangar').open;
+      const returned = render('garage').open;
+      host.querySelector('details')!.open = false;
+      const closed = render('garage').open;
+      host.remove();
+      return { initial, refreshed, other, returned, closed };
+    });
+    expect(result).toEqual({
+      initial: false,
+      refreshed: true,
+      other: false,
+      returned: true,
+      closed: false,
+    });
+  } finally {
+    await page.close();
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
