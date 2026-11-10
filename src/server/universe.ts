@@ -59,9 +59,18 @@ export class Universe {
   }
   authenticate(token: string) {
     if (typeof token !== 'string' || token.length > 100) return undefined;
-    const r = this.store.db
-      .prepare('SELECT state FROM accounts WHERE token_hash=?')
-      .get(tokenHash(token));
+    const digest = tokenHash(token);
+    // Operator-retained device keys follow the current account, never a copied
+    // account snapshot. Binding to its primary key preserves global revocation.
+    const r =
+      this.store.db.prepare('SELECT state FROM accounts WHERE token_hash=?').get(digest) ??
+      this.store.db
+        .prepare(
+          `SELECT a.state FROM account_device_keys k
+        JOIN accounts a ON a.id=k.account AND a.token_hash=k.primary_hash
+        WHERE k.token_hash=?`,
+        )
+        .get(digest);
     if (!r) return undefined;
     const a = JSON.parse(String(r.state)) as Account;
     if (a.npc) return undefined;

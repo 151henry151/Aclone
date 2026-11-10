@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.141.0 lets the server operator retain a device's saved login when
+retiring a duplicate pilot. Both devices resume the surviving character; only
+one connection can control it at a time. Password resets and global sign-out
+continue to revoke old saved keys.
+
 Version 0.140.4 keeps Inventory focused on what you carry and can use nearby.
 Spring, canoe and boating actions appear in context; trailer lists stay collapsed
 until opened. Reload to get the cleaner menu.

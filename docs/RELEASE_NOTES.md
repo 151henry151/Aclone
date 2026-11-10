@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.141.0 — Retain device logins for retired duplicate pilots
+
+Add operator-provisioned, hashed device keys that resolve to the current surviving
+account. Bind them to its current primary key so existing password login/reset,
+global sign-out and account removal revoke them. Reject NPC identities. No public
+account-linking endpoint or automatic merge is introduced.
+
+Verify retained/current/invalid keys, persistence, revocation, HTTP identity and a
+phone browser resuming the existing character after its duplicate account is
+retired. Preserve the existing one-active-connection behavior. Live consolidation
+is a separate backed-up operator action, not a startup migration.
+
 ## 0.140.4 — Inventory that fits your surroundings
 
 Reveal spring, canoe and boating actions only when they relate to nearby services,

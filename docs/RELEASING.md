@@ -2,6 +2,19 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.141.0
+
+Deploy the approved backlog-implementation SHA with the usual backup and build.
+Startup creates the empty `account_device_keys` table. It does not merge accounts.
+An explicitly authorized operator consolidation can store a retired device's
+hashed key against the survivor ID and current primary-key hash, within the same
+transaction that retires the duplicate account and handles its world records.
+Never copy account JSON between IDs, disclose keys, or link an unverified identity.
+Take a consistent backup while stopped and record the exact account scope and
+asset disposition. Verify both preserved authentication paths and the world state
+after restart. Retained keys cease working when the primary key rotates or the
+surviving account is deleted. Publish the matching website and verify health/SHA.
+
 ## Upgrade 0.140.4
 
 Deploy the approved backlog-implementation SHA with the normal backup, prefixed

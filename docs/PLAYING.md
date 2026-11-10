@@ -40,6 +40,14 @@ There is no free return-to-town shortcut. Plan for the return journey's fuel and
 If stranded on land, walk for supplies or ask another player to bring fuel; at sea, use the
 boat recovery options. Genuine bugs can still be handled by a caretaker.
 
+If the server operator consolidates your duplicate pilot, they can retain the
+old device's saved login for your surviving character. Reload on that device to
+resume the surviving pilot's progress. Only one connection controls a character:
+joining on the phone disconnects the laptop's game session. Password login,
+password reset and **Sign out of all devices** revoke previously saved keys,
+including retained device keys. Clearing browser storage also removes its saved
+key; use the surviving account's normal sign-in or recovery then.
+
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
 ## Biplane flight

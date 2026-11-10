@@ -11200,3 +11200,39 @@ and both attached screenshots:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569528728751571046
 Recheck Hank's 28/28 skills after deployment; the normal world limit remains 3.
 Microphone CB remains pending; do not describe it as shipped voice chat.
+
+### Requested priority — Retire HankMobile and retain its phone login (2026-11-09)
+
+Before production, add failing authentication tests: an explicitly provisioned old
+device key must authenticate the surviving human account, both current keys must
+work, unknown keys must fail, NPC targets must fail, and primary-key rotation or
+account removal must invalidate retained keys. Preserve existing password/reset/
+sign-out-all semantics. Persist only hashes; never expose live keys in output.
+Run `node --import tsx --test tests/account-device-keys.test.ts tests/accounts.test.ts
+tests/account-http.test.ts`. Verify a phone-sized browser seeded with a synthetic
+retired pilot key automatically opens the survivor's existing world character,
+including skills and money; verify ordinary HTTP and WebSocket identity and the
+existing one-active-connection policy. Run TypeScript and Prettier before release.
+
+After deploying the tested support, retire only the verified human HankMobile
+account and its duplicate world character. Back up while stopped, apply atomically,
+preserve Hank's current identity/key/progress and all unrelated players, record an
+idempotent audit, restart and verify. Offer a choice for the duplicate assets; use the stated lossless default of
+preserving the remaining money and aircraft under Hank rather than discarding
+them. Record this as the implementation assumption, not a user reply. Historical ledger
+and chat entries remain history; this is not a general history-erasure feature.
+CB microphone work remains pending behind this requested account correction.
+
+Device-key support validation: the new tests first fail because retained device
+keys have no storage/authentication path. Add that path and pass all 8 focused
+account/device-key/HTTP tests, covering password/email-reset revocation as well as
+persistence and NPC exclusion. The phone browser verifies HTTP authentication,
+old-key automatic login to the survivor, same funds/skills, desktop disconnection
+code 4001 and page reload. Correct the test's desktop-only Skills shortcut to
+Actions → Skills & employment; the final browser run passes in 23.3 seconds.
+Inspect output/account-device-key/phone-resumed.png. The live scope audit finds
+only HankMobile's world player and one hangar aircraft record; no properties,
+family, employer or other active references need rewriting. Dry-run both asset
+dispositions; use the stated lossless default to transfer cash, bank balance,
+galactic credits, aircraft and reserve biplane entitlement. Preserve current Hank
+state outside those fields and the current primary authentication key.

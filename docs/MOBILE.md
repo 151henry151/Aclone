@@ -4,6 +4,14 @@ Compact controls appear automatically on phones/touch tablets, in portrait or la
 
 ![Portrait controls](screenshots/mobile-portrait.png)
 
+## Resuming the same pilot on another device
+
+Use the same pilot on phone and desktop to share progress. If the server operator
+retires a duplicate pilot and retains its saved device key, reloading the phone
+opens the surviving character automatically. Joining there disconnects the other
+active session. Password login/reset or global sign-out revokes old saved keys;
+after that, sign in with the surviving pilot's current credentials.
+
 ## Driving and looking around
 
 - Left **◀/▶** steers; right **↑/↓** drives/reverses. Hold steering and throttle together. Release to slow; **Boost** uses more fuel. Walking uses the same controls.

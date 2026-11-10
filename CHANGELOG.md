@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.141.0] - 2026-11-09
+
+### Added
+
+- Retain an explicitly linked device login when an operator retires a duplicate pilot, resolving it to the surviving account while preserving password-reset and global sign-out revocation.
+
 ## [0.140.4] - 2026-11-09
 
 ### Fixed
