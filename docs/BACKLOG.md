@@ -916,3 +916,22 @@ Dispose the preview when finished or leaving the world; do not add rendering wor
 when the preview is closed. Implement inventory ordering first, then the building
 preview. Verify actual browser transfers and construction, failure/empty states,
 and local-only visibility. This does not include piloted spaceflight.
+
+## Planned — Small emergency tool supplies
+
+Lightmun reports that a young player economy cannot yet supply an occasional
+chainsaw. Inspect the existing import/export shop and replenishment rules before
+implementation. Offer a small, occasional supply of eligible scarce tools through
+that existing trading facility, without replacing normal production or granting
+items directly. Clarify the shop's player-facing name; the request calls it
+“exports”.
+
+Make the feature switch, eligible item pool, supply interval/chance, quantity,
+stock cap, scarcity criteria and price policy world-builder configurable. Choose
+and document defaults after auditing current trade balance. Use persisted,
+seeded scheduling so reloads cannot reroll or duplicate deliveries. Keep an off
+switch and respect world-defined item catalogues and existing purchase checks.
+Acceptance: deterministic tests cover scarce/available items, quantities/caps,
+disabled rules, custom items, time advancement and save/reload. A browser flow
+shows buying a supplied tool, its limited availability and an empty interval.
+Document the limits in the player and world-builder guides.
