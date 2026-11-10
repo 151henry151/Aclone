@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.144.0] - 2026-11-10
+
+### Added
+
+- Preview a translucent building on the actual terrain before construction, with the selected model, size, bearing and foundation; rotate the view, inspect site refusals and confirm or cancel from compact desktop and phone controls.
+
 ## [0.143.2] - 2026-11-10
 
 ### Changed

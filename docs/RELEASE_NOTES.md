@@ -2,6 +2,21 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.144.0 — See your building before placing it
+
+Add a private translucent ghost in the existing world renderer. Show the chosen
+model, size, rotation and foundation on the real ground, including fitted
+waterfronts and snapped pump sites. Keep the designer's placement checks and
+costs, show current refusals, retain designs when returning to the menu and
+restore the camera on cancellation. Confirm through the authoritative server.
+
+Verify 38 relevant model/construction tests and five desktop/phone browser flows,
+including actual construction, cancellation without payment, insufficient funds,
+occupied sites, coastal boathouses and spring pumps. Inspect valid and refused
+screenshots; check TypeScript, formatting and the prefixed production build.
+Geometry is cached between status updates and removed when the preview closes.
+Reload clients; no saved-world migration is required.
+
 ## 0.143.2 — Find goods faster
 
 Put available goods first and alphabetize each group by the world's item names.

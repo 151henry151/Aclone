@@ -3182,3 +3182,52 @@ body:has(#modal-host:not(:empty)) #earthwork-guide {
 .mobile-ui .earthwork-confirm {
   bottom: -20px;
 }
+
+/* Keep placement controls below a local ghost in the actual world. */
+.construction-preview-open #world-hud,
+.construction-preview-open .mobile-controls,
+.construction-preview-open .mobile-nav {
+  visibility: hidden;
+}
+.modal-backdrop.construction-world-preview {
+  background: transparent;
+  backdrop-filter: none;
+}
+.construction-world-preview .window {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(840px, calc(100vw - 24px));
+  max-height: 34vh;
+  padding: 10px 16px;
+}
+.construction-world-preview .window > :not(header):not(.build-designer),
+.construction-world-preview .build-designer > :not([data-world-preview-controls]) {
+  display: none;
+}
+.construction-world-preview .build-designer {
+  display: block;
+}
+[data-world-preview-controls] .button-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+[data-world-preview-controls] button {
+  flex: 1;
+  min-height: 44px;
+}
+[data-world-preview-controls] p {
+  margin: 8px 0;
+}
+@media (max-width: 650px) {
+  .construction-world-preview .window {
+    max-height: 42vh;
+    bottom: 6px;
+  }
+  [data-world-preview-controls] .button-row:first-of-type button {
+    flex-basis: 40%;
+  }
+}

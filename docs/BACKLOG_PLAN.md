@@ -11564,3 +11564,48 @@ production build pass. SQLite backup:
 Verify the bot announcement and screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569738119174029323
 Receipts remain excluded in output/item-order/release/.
+
+Construction ghost completion criteria (before production):
+
+- Add `tests/construction-ghost.test.ts`; run with `node --import tsx --test` and
+  confirm failure before implementation. Use real building models to verify the
+  preview's coordinates, foundation level, rotation and size; use translucent
+  materials without modifying live models. Verify cached geometry between status
+  updates, visible invalid tint, camera restoration and resource cleanup.
+- Add `tests/browser/construction-ghost.spec.ts`; run with `TEST_GPU=1 npm run
+test:e2e -- tests/browser/construction-ghost.spec.ts`. From Build, choose a
+  warehouse design and size, choose Preview in world, see its ghost on the actual
+  ground with compact controls, turn the view/building, return to the designer
+  without losing choices, and cancel without payment or a server building.
+- On desktop and phone, place the chosen design through the existing action;
+  verify actual building position/design/rotation and cash charge. Reopen at the
+  occupied site: show the refusal, disable confirmation and preserve cash. Closing
+  or leaving the world removes the local preview and restores the normal camera.
+  Inspect screenshots for visible ground, building and reachable controls.
+- Keep one placement calculation for designer and ghost, including snapped pump
+  intake and foundation. Run existing shoreline/designer browser flows to retain
+  waterfront success/failure coverage. Add no arbitrary gameplay limits or second
+  copies of world rules. No preview assets or scene data enter shared world state.
+- Use the existing renderer, rebuild geometry only when the design/site changes,
+  and do no ghost work while closed. Verify relevant construction/model tests,
+  TypeScript, Prettier and prefixed production build; update player docs and release
+  separately, then push, deploy and announce with a local-world screenshot.
+
+Additional Lightmun feedback received during the ghost slice: investigate the
+Spanner & Sons menu behaving erratically when all disclosures are collapsed,
+immediately after the ghost release. Reproduce its scroll/refresh behavior with
+a realistic fleet before production changes; retain disclosure memory and verify
+desktop/phone keyboard/touch behavior. Schedule small emergency tool supplies
+later among independent economy items, after auditing existing import/export
+stock rules and selecting configurable defaults. No live stock grants are implied.
+
+Ghost verification: the new unit test fails on the absent preview module. The
+browser test initially waits for the missing button until its overall timeout;
+add a five-second presence assertion and confirm the specific “Preview in world”
+button is missing before production. The implementation shares the designer's
+calculation and existing renderer. All 38 relevant tests and five browser flows
+pass, including changing affordability while open, occupied-site refusals,
+cancellation, design persistence, phone controls and actual boathouse/spring-pump
+construction. Inspect valid desktop/phone and occupied-site images under excluded
+output/construction-ghost/. Final TypeScript, formatting/build and release checks
+remain pending for 0.144.0.

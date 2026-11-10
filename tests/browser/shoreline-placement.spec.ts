@@ -97,7 +97,9 @@ test('shoreline plan explains and shows water, jetty and intake before authorita
     await expect(page.locator('[data-waterfront-help]')).toContainText('desalination');
     expect(w.buildings).toHaveLength(0);
     await kind.selectOption('boathouse');
-    await place.click();
+    await page.getByRole('button', { name: 'Preview in world', exact: true }).click();
+    await expect(page.locator('[data-world-preview-status]')).toContainText('Site clear');
+    await page.getByRole('button', { name: 'Confirm foundation', exact: true }).click();
     await expect.poll(() => w.buildings.length).toBe(1);
     expect(w.buildings[0].kind).toBe('boathouse');
     expect(w.buildings[0].rotation).toBe(Math.PI);
@@ -131,7 +133,9 @@ test('shoreline plan explains and shows water, jetty and intake before authorita
     await page.locator('[data-build-site]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'output/shoreline-audit/pump-phone.png' });
     expect(p.cash).toBe(cash);
-    await place.click();
+    await page.getByRole('button', { name: 'Preview in world', exact: true }).click();
+    await expect(page.locator('[data-world-preview-status]')).toContainText('Site clear');
+    await page.getByRole('button', { name: 'Confirm foundation', exact: true }).click();
     await expect.poll(() => w.buildings.length).toBe(1);
     expect(w.buildings[0].waterSource?.spring).toBe('test-spring');
     expect(errors).toEqual([]);

@@ -1,3 +1,4 @@
+import { ConstructionGhost } from './construction-ghost';
 import { EarthworkGuide } from './earthwork-guide';
 import { earthworkDust } from '../shared/earthworks-work';
 import { changedEarthworkBounds } from '../shared/earthworks-ground';
@@ -191,6 +192,7 @@ export class GameScene {
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 80000);
+  readonly constructionGhost = new ConstructionGhost(this.scene, this.camera);
   private land = new T.Group();
   private actors = new T.Group();
   private space = new T.Group();
@@ -561,6 +563,7 @@ export class GameScene {
   setWorld(world: World, me: string) {
     const entering = this.lastWorld !== world.id;
     if (entering) {
+      this.constructionGhost.clear();
       this.ready = false;
       this.settling = undefined;
       this.onLoading?.('Preparing the parish…');
@@ -882,6 +885,7 @@ export class GameScene {
     }
   }
   setSpace() {
+    this.constructionGhost.clear();
     this.worldBuild?.return(undefined as never);
     this.worldBuild = undefined;
     this.snowJob?.return(undefined as never);
@@ -2143,6 +2147,7 @@ export class GameScene {
           this.camera.up.copy(view.up);
         }
         this.camera.lookAt(this.target);
+        this.constructionGhost.frame(this.container.clientWidth, this.container.clientHeight);
         this.camera.getWorldDirection(this.audioFacing);
         this.onView?.(pos, Math.atan2(this.audioFacing.x, this.audioFacing.z));
         this.audio.update(

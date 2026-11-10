@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.144.0 adds **in-world building previews**. In Build, choose your design
+and **Preview in world** to see it on the actual ground. Turn the building or
+camera, check the site and confirm the foundation; closing cancels for free.
+Only you see the preview. See [the building designer](docs/PLAYING.md#appearance-and-property).
+
 Version 0.143.2 makes inventory lists put available goods first, with alphabetical names in each group.
 Shop buying uses shop stock; selling uses your cargo. Stockrooms put goods held
 in either store first, and empty choices remain available for planning.

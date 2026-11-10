@@ -2370,6 +2370,11 @@ function renderPanel() {
         send(action);
         closePanel();
       },
+      {
+        show: (b, w, refusal) => scene.constructionGhost.show(b, w, refusal),
+        clear: () => scene.constructionGhost.clear(),
+        turn: (angle) => scene.constructionGhost.turn(angle),
+      },
     );
     return;
   }

@@ -22,7 +22,7 @@ import { waterworksSite } from '../shared/shoreline';
 import { onFarmLand } from '../shared/farm-land';
 import { makeBuilding, money } from '../shared/simulation';
 import { roomCount } from '../shared/lodging';
-import type { World, Player, Action } from '../shared/types';
+import type { World, Player, Action, Building } from '../shared/types';
 import { BuildPreview } from './build-preview';
 const esc = (s: unknown) =>
   String(s).replace(
@@ -50,6 +50,14 @@ export function buildMenuHtml(settings: Partial<ConstructionRules> = {}) {
     <p class="note">0° faces south; 90° east; 180° north; 270° west. Rotation turns the building, not the camera. Use the slider for fine adjustment or the buttons for 15° turns.</p><p class="note" data-waterfront-help hidden></p></div>
     <div><div class="build-preview" data-build-preview></div><canvas class="build-site" data-build-site width="440" height="190" aria-label="Site plan, north up, cut and fill survey"></canvas><p class="note" data-slope-legend></p></div>
     <div class="build-estimate" data-build-estimate aria-live="polite"></div>
+    <button type="button" data-preview-world>Preview in world</button>
+    <div data-world-preview-controls hidden>
+      <strong data-world-preview-name></strong><span data-world-preview-bearing></span>
+      <p data-world-preview-status role="status"></p>
+      <div class="button-row"><button type="button" data-world-turn="-15">Turn building left</button><button type="button" data-world-turn="15">Turn building right</button><button type="button" data-view-turn="-45">View from left</button><button type="button" data-view-turn="45">View from right</button></div>
+      <div class="button-row"><button type="button" data-preview-world>Back to designer</button><button type="button" class="primary" data-world-confirm>Confirm foundation</button></div>
+      <small>Only you see this preview. Close to cancel and walk to another site. Materials are delivered after placing the foundation.</small>
+    </div>
     <button type="button" class="primary" data-place-design>Place foundation</button>
   </div>`;
 }
@@ -57,6 +65,11 @@ export function mountBuildMenu(
   host: HTMLElement,
   getState: () => { w: World; p: Player },
   place: (action: Action) => void,
+  inWorld?: {
+    show: (b: Building, w: World, refusal: string) => void;
+    clear: () => void;
+    turn: (angle: number) => void;
+  },
 ) {
   const { w, p } = getState(),
     catalogue = worldBuildings(w);
@@ -92,12 +105,28 @@ export function mountBuildMenu(
       '3D preview unavailable on this device. Dimensions and site plan remain available below.';
   }
   let action: Action | undefined;
+  let worldPreview = false;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const backdrop = host.closest<HTMLElement>('.modal-backdrop');
+  const toggleWorld = (active: boolean) => {
+    worldPreview = active;
+    backdrop?.classList.toggle('construction-world-preview', active);
+    document.documentElement.classList.toggle('construction-preview-open', active);
+    host.querySelector<HTMLElement>('[data-world-preview-controls]')!.hidden = !active;
+    clearInterval(timer);
+    timer = undefined;
+    if (active) {
+      update(false);
+      timer = setInterval(() => update(false), 1000);
+    } else inWorld?.clear();
+  };
   function update(rebuild = true) {
     const { w, p } = getState(),
       def = worldBuildings(w)[draft.kind];
     const button = host.querySelector<HTMLButtonElement>('[data-place-design]')!;
     if (!def) {
       button.disabled = true;
+      if (worldPreview) toggleWorld(false);
       return;
     }
     const template = w.catalogue?.templates[draft.kind],
@@ -213,7 +242,19 @@ export function mountBuildMenu(
       rotation: b.rotation,
       ...(shell ? { style: draft.style, size: draft.size, architecture: draft.architecture } : {}),
     };
-    if (rebuild) preview?.show(b, w);
+    if (rebuild && !worldPreview) preview?.show(b, w);
+    if (worldPreview) {
+      inWorld?.show(b, w, refusal);
+      host.querySelector('[data-world-preview-name]')!.textContent = def.name;
+      host.querySelector('[data-world-preview-bearing]')!.textContent =
+        ` · ${draft.rotation}° · Foundation ${currency(q.price + tax)}`;
+      host.querySelector('[data-world-preview-status]')!.textContent =
+        refusal || 'Site clear. Ready to place this design.';
+      host
+        .querySelector('[data-world-preview-status]')!
+        .classList.toggle('build-refusal', !!refusal);
+      host.querySelector<HTMLButtonElement>('[data-world-confirm]')!.disabled = !!refusal;
+    }
     const waterfront = waterfrontPreview(w, b, p);
     const waterHelp = host.querySelector<HTMLElement>('[data-waterfront-help]')!;
     waterHelp.hidden = !waterfront;
@@ -320,11 +361,21 @@ export function mountBuildMenu(
   const click = (event: Event) => {
     const el = (event.target as HTMLElement).closest<HTMLElement>('button');
     if (!el) return;
-    if (el.dataset.turn) {
-      draft.rotation = (draft.rotation + Number(el.dataset.turn) + 360) % 360;
+    if (el.hasAttribute('data-preview-world')) {
+      toggleWorld(!worldPreview);
+      if (!worldPreview) update();
+      return;
+    }
+    if (el.dataset.viewTurn) {
+      inWorld?.turn((Number(el.dataset.viewTurn) * Math.PI) / 180);
+      return;
+    }
+    if (el.dataset.turn || el.dataset.worldTurn) {
+      draft.rotation =
+        (draft.rotation + Number(el.dataset.turn ?? el.dataset.worldTurn) + 360) % 360;
       update();
     }
-    if (el.hasAttribute('data-place-design')) {
+    if (el.hasAttribute('data-place-design') || el.hasAttribute('data-world-confirm')) {
       update(false);
       if (action && !(el as HTMLButtonElement).disabled) place(action);
     }
@@ -337,6 +388,7 @@ export function mountBuildMenu(
   host.addEventListener('click', click);
   update();
   return () => {
+    toggleWorld(false);
     host.removeEventListener('input', input);
     host.removeEventListener('change', change);
     host.removeEventListener('click', click);
