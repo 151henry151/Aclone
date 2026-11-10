@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.144.1] - 2026-11-10
+
+### Fixed
+
+- Keep garage dialogs, collapsed summaries and keyboard focus stable while owned vehicles or trailers move; update distances, storage availability and hitching controls locally, and render the tractor showroom only while it is open.
+
 ## [0.144.0] - 2026-11-10
 
 ### Added

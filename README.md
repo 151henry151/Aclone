@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.144.1 keeps **garage menus steady** when parked vehicles or trailers
+move. Collapsed sections retain focus and scroll; storage distances and available
+actions still update. The tractor showroom uses its 3D preview only while open.
+
 Version 0.144.0 adds **in-world building previews**. In Build, choose your design
 and **Preview in world** to see it on the actual ground. Turn the building or
 camera, check the site and confirm the foundation; closing cancels for free.

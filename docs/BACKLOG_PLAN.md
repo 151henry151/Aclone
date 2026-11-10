@@ -11620,3 +11620,26 @@ production build pass. SQLite backup:
 Verify both screenshot embeds in the bot announcement:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569741715160440982
 Excluded receipts: output/construction-ghost/release/.
+
+Garage menu stability criteria (before production): reproduce the collapsed
+Spanner & Sons menu with a realistic trailer fleet. Extend browser coverage to
+assert that background position updates do not replace the dialog or a focused
+summary, reopen disclosures, jump scroll or create a hidden tractor renderer.
+Open Vehicle storage and verify updated distances/availability and actual store/
+retrieve actions; open the showroom, choose a tractor, collapse/reopen and retain
+selection while disposing hidden preview work. Repeat keyboard and phone paths,
+and preserve the existing fleet/hangar flows. Run affected tests, TypeScript,
+Prettier and build before a separate patch release. Do not claim this identifies
+Lightmun's exact session without reproduction evidence.
+
+Garage verification: the new browser regression first fails because an ordinary
+owned-trailer position change disconnects the focused summary. Remove position
+changes from whole-dialog invalidation, update storage facts in place and mount
+the showroom only while expanded. Add a handling-range boundary assertion; it
+fails with the same focus loss. Move that refresh into the owned-trailer contents
+while retaining native summaries and panel memory. The strengthened regression
+and fleet flow pass, together with existing storage and desktop/phone tractor
+purchase flows (five distinct flows overall). All 33 relevant tests pass; inspect
+excluded output/fleet-menus/stable-phone.png. Prepare 0.144.1 after final TypeScript,
+format/build and release checks. The reproduced refresh defect is confirmed;
+Lightmun's precise original interaction remains unknown.

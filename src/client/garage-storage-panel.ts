@@ -76,3 +76,35 @@ export function garageStoragePanel(w: World, p: Player, b: Building) {
       .join('') || '<p>No other parked vehicles or trailers.</p>'
   }</div></details></section>`;
 }
+
+/** Refresh position-dependent facts without replacing the dialog or focused controls.
+ * Ownership/storage transitions still rebuild through the building access key. */
+export function refreshGarageStoragePanel(host: HTMLElement, w: World, p: Player, b: Building) {
+  const root = host.querySelector<HTMLElement>('[data-garage-storage]');
+  if (!root?.querySelector('details[open]')) return;
+  const html = garageStoragePanel(w, p, b);
+  if (root.dataset.rendered === html) return;
+  root.dataset.rendered = html;
+  const next = document.createElement('div');
+  next.innerHTML = html;
+  const rows = new Map(
+    [...next.querySelectorAll<HTMLElement>('[data-garage-unit]')].map((row) => [
+      row.dataset.garageUnit,
+      row,
+    ]),
+  );
+  for (const row of root.querySelectorAll<HTMLElement>('[data-garage-unit]')) {
+    const fresh = rows.get(row.dataset.garageUnit);
+    if (!fresh) continue;
+    const description = row.querySelector('p')!;
+    const text = fresh.querySelector('p')!.textContent;
+    if (description.textContent !== text) description.textContent = text;
+    row.querySelector('button')!.disabled = fresh.querySelector('button')!.disabled;
+    const note = row.querySelector('.note'),
+      freshNote = fresh.querySelector('.note');
+    if (note && freshNote) {
+      if (note.textContent !== freshNote.textContent) note.textContent = freshNote.textContent;
+    } else if (note) note.remove();
+    else if (freshNote) row.appendChild(freshNote);
+  }
+}

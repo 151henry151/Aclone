@@ -50,7 +50,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       html += `<section class="notice"><h4>${esc(d.name)}</h4><p>Stored in ${esc(w.buildings.find((b) => b.id === stored)?.name ?? 'tractor garage storage')} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight. Retrieve at the garage before hitching or handling cargo.</p></section>`;
       continue;
     }
-    html += `<section class="notice"><h4>${d.name}</h4><p>${Math.round(distance)}m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
+    html += `<section class="notice"><h4>${d.name}</h4><p><span data-trailer-distance="${esc(t.id)}">${Math.round(distance)}</span>m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
     if (distance > trailerHandlingReach(w, t)) {
       html += '</section>';
       continue;
@@ -108,4 +108,18 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
     html += '</section>';
   }
   return html + '</details>';
+}
+
+/** A change in handling reach changes available controls; ordinary movement changes only text. */
+export function trailerWithinReach(w: World, p: Player, id: string) {
+  const t = w.trailers?.[id];
+  return !!t && Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t);
+}
+export function refreshTrailerDistances(host: HTMLElement, w: World, p: Player) {
+  for (const el of host.querySelectorAll<HTMLElement>('[data-trailer-distance]')) {
+    const t = w.trailers?.[el.dataset.trailerDistance!];
+    if (!t) continue;
+    const text = String(Math.round(Math.hypot(t.x - p.x, t.z - p.z)));
+    if (el.textContent !== text) el.textContent = text;
+  }
 }

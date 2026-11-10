@@ -1225,6 +1225,12 @@ yards, fields, roads and protected geography remain excluded even with consent.
 
 ## Garage storage
 
+Fleet sections start collapsed. Open **Vehicle storage**, **Your trailers** or
+**Tractor showroom** when needed; keyboard users can focus a summary and press
+Enter. Position updates keep those summaries and your scroll position stable.
+Open storage rows show current distance and availability. Closing and reopening
+the showroom retains your selected tractor.
+
 Park land vehicles and trailers outside wherever you leave them, or bring them to
 Spanner & Sons (a tractor garage) and use **Vehicle storage → Store in garage**.
 Stop and step out first. By default, you and the vehicle must be within 30 metres

@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.144.1
+
+Deploy the approved backlog-implementation SHA with the usual database backup,
+build and restart; publish the matching website and verify health/version/SHA.
+Ask players to reload for stable garage updates and the on-demand showroom.
+No migration or manual changes to vehicle/trailer storage are required.
+
 ## Upgrade 0.144.0
 
 Deploy the approved backlog-implementation SHA with the usual database backup,

@@ -2,6 +2,22 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.144.1 — Keep the garage menu steady
+
+Stop rebuilding the whole building dialog for ordinary fleet-position updates.
+Refresh visible garage rows and trailer distances in place; when a trailer crosses
+handling reach, update its controls while retaining disclosure summaries, form
+drafts and scroll. Create the showroom renderer on expansion and dispose it on
+collapse, retaining the chosen tractor.
+
+Verify 33 relevant tests and five distinct browser flows covering collapsed-menu
+focus, movement across hitching reach, updated storage availability, actual store/
+retrieve, empty fleets, hangars, showroom lifecycle and desktop/phone purchases.
+Reproduce both ordinary-position and handling-boundary focus loss before their
+fixes. Inspect the phone screenshot. TypeScript, formatting and prefixed build
+must pass. This confirms a menu-refresh defect; Lightmun's exact original session
+was not captured. Reload clients; no saved-world migration is required.
+
 ## 0.144.0 — See your building before placing it
 
 Add a private translucent ghost in the existing world renderer. Show the chosen

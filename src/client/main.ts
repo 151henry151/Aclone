@@ -1,6 +1,6 @@
 import { itemEntries } from './item-order';
 import { earthworkGuidance } from '../shared/earthworks-work';
-import { garageStoragePanel } from './garage-storage-panel';
+import { garageStoragePanel, refreshGarageStoragePanel } from './garage-storage-panel';
 import { earthworksPanel, mountEarthworksPanel } from './earthworks-panel';
 import { isEarthmover } from '../shared/earthmoving-definitions';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
@@ -33,7 +33,7 @@ import { canoePanel } from './canoe-panel';
 import { fuelPanel } from './fuel-panel';
 import { alpineWeather } from '../shared/alpine-weather';
 import { tenderOf } from '../shared/boat-tender';
-import { trailerPanel } from './trailer-panel';
+import { trailerPanel, trailerWithinReach, refreshTrailerDistances } from './trailer-panel';
 import { towingPanel } from './towing-panel';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { hasMotor } from '../shared/vehicle-config';
@@ -1075,6 +1075,9 @@ function updateHud() {
   if (panel === 'building' && !shown) closePanel();
   if (shown) {
     if (buildingAccessSignature !== buildingAccessKey(shown)) buildingWindow(shown);
+    refreshTrailerReach(shown);
+    refreshGarageStoragePanel(app, world, me, shown);
+    refreshTrailerDistances(app, world, me);
     for (const summary of app.querySelectorAll('[data-farm-policy-status]'))
       summary.textContent = farmPolicySummary(world, shown);
     const assemblyPanel = app.querySelector<HTMLElement>('[data-manufacturing-panel]');
@@ -1361,6 +1364,35 @@ function drawMap() {
 }
 let storyPanelSignature = '';
 let caretakerBuilding = '';
+let trailerReachRoot: HTMLDetailsElement | null = null;
+let trailerReachSignature = '';
+function refreshTrailerReach(b: Building) {
+  if (!world || !me) return;
+  const root = app.querySelector<HTMLDetailsElement>(
+    'details[data-fleet-disclosure="owned-trailers"]',
+  );
+  const signature = JSON.stringify(
+    Object.values(world.trailers ?? {})
+      .filter((t) => t.owner === me!.id)
+      .map((t) => [t.id, trailerWithinReach(world!, me!, t.id)]),
+  );
+  if (root && root === trailerReachRoot && signature !== trailerReachSignature) {
+    const next = document.createElement('div');
+    next.innerHTML = trailerPanel(world, me, b);
+    const fresh = next.querySelector('details[data-fleet-disclosure="owned-trailers"]');
+    if (fresh) {
+      panelMemory.capture();
+      // Keep the native summary node and its focus; only reach-dependent content changes.
+      for (const child of [...root.childNodes])
+        if (!(child instanceof HTMLElement && child.tagName === 'SUMMARY')) child.remove();
+      for (const child of [...fresh.childNodes])
+        if (!(child instanceof HTMLElement && child.tagName === 'SUMMARY')) root.appendChild(child);
+      panelMemory.restore($('modal-host').dataset.viewKey!);
+    }
+  }
+  trailerReachRoot = root;
+  trailerReachSignature = signature;
+}
 let buildingAccessSignature = '';
 function buildingAccessKey(b: Building) {
   return JSON.stringify([
@@ -1376,10 +1408,10 @@ function buildingAccessKey(b: Building) {
       ? [
           Object.values(world.parkedVehicles ?? {})
             .filter((v) => v.owner === me!.id)
-            .map((v) => [v.slot, v.inside, v.x, v.z]),
+            .map((v) => [v.slot, v.inside]),
           Object.values(world.trailers ?? {})
             .filter((t) => t.owner === me!.id)
-            .map((t) => [t.id, t.storedAt, t.parkedWith, t.attached, t.x, t.z]),
+            .map((t) => [t.id, t.storedAt, t.parkedWith, t.attached]),
           world.settings.garageStorageEnabled,
           world.settings.garageStorageLimit,
           world.settings.garageStorageRange,

@@ -29,11 +29,7 @@ export function mountTractorShop(host: HTMLElement, w: World, p: Player, b: Buil
   if (!select || !previewHost) return;
   if (select.dataset.dirty !== 'true') select.value = String(returnTractor(p));
   let preview: TractorPreview | undefined;
-  try {
-    preview = new TractorPreview(previewHost);
-  } catch {
-    previewHost.textContent = '3D preview unavailable. Specifications and purchases still work.';
-  }
+  const disclosure = previewHost.closest<HTMLDetailsElement>('details');
   const update = () => {
     const slot = Number(select.value),
       base = vehicleDef(w, slot),
@@ -60,10 +56,30 @@ export function mountTractorShop(host: HTMLElement, w: World, p: Player, b: Buil
     preview?.show(slot, owned ? tractorPaint(vehiclePaint(p, slot))?.color : undefined);
     refreshActionVisibility(host, w, p);
   };
+  const toggle = () => {
+    if (disclosure?.open) {
+      if (!preview) {
+        try {
+          preview = new TractorPreview(previewHost);
+        } catch {
+          previewHost.textContent =
+            '3D preview unavailable. Specifications and purchases still work.';
+        }
+        update();
+      }
+    } else {
+      preview?.dispose();
+      preview = undefined;
+      previewHost.replaceChildren();
+    }
+  };
   select.addEventListener('change', update);
+  disclosure?.addEventListener('toggle', toggle);
   update();
+  toggle();
   return () => {
     select.removeEventListener('change', update);
+    disclosure?.removeEventListener('toggle', toggle);
     preview?.dispose();
   };
 }
