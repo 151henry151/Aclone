@@ -1,3 +1,4 @@
+import { toolImportFields, toolImportRules } from '../shared/tool-import-rules';
 import { automotiveEditor, automotiveForm } from './automotive-panel';
 import { bridgeRules, bridgeRuleFields } from '../shared/bridge-rules';
 import { nameTagFields, nameTagRules } from '../shared/name-tag-rules';
@@ -153,6 +154,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(landscapeRuleFields),
     ...Object.keys(communicationRuleFields),
     ...Object.keys(economyRuleFields),
+    ...Object.keys(toolImportFields),
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
     ...Object.keys(charterRuleFields),
@@ -623,6 +625,27 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below ${credit.creditScoreMaximum} divided by the score span, times the spread. Amount minimum cannot exceed maximum. Payment capacity uses the income share plus available liquidity divided by term and divisor, less current payments. Zero unsecured ceiling closes personal lending. Signed loans retain their rate, term and payment.</p></fieldset>`;
+  const toolRules = toolImportRules(settings);
+  const toolFields = `<fieldset class="boat-death-settings"><legend>Scarce tool imports</legend>${Object.entries(
+    toolImportFields,
+  )
+    .map(([key, spec]) => {
+      const value = toolRules[key as keyof typeof toolRules];
+      return 'min' in spec
+        ? field(
+            spec.label,
+            key,
+            value,
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : typeof value === 'string'
+          ? field(spec.label, key, value, 'text')
+          : `<label class="check"><input name="${key}" type="checkbox" ${value ? 'checked' : ''}>${esc(spec.label)}</label>`;
+    })
+    .join(
+      '',
+    )}<p>One public Harbour stores counter may buy a small shipment from its investment when tools are scarce across completed shops. Each check selects one eligible item; delivery is not guaranteed. Existing higher prices remain. Missing custom items are skipped. Offline catch-up considers only the latest check. Changing enable or interval starts a fresh wait.</p></fieldset>`;
   const economy = economyRules(settings);
   const economyFields = `<fieldset class="boat-death-settings"><legend>Economy and trade</legend>${Object.entries(
     economyRuleFields,
@@ -976,6 +999,7 @@ export function settingsFields(settings: Settings = defaults) {
     radioFields +
     survivalFields +
     economyFields +
+    toolFields +
     loanFields +
     creditFields +
     charterFields +

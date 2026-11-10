@@ -1,3 +1,5 @@
+import { toolImportShop } from '../shared/tool-imports';
+import { toolImportRules } from '../shared/tool-import-rules';
 import { itemEntries } from './item-order';
 import { earthworkGuidance } from '../shared/earthworks-work';
 import { garageStoragePanel, refreshGarageStoragePanel } from './garage-storage-panel';
@@ -2538,7 +2540,11 @@ function buildingWindow(b: Building) {
       }</p>`;
     }
     if (me.atHome && me.home === b.id) html += homeDepartureButtons();
-    if (Object.keys(b.sell).length || Object.keys(b.buy).length)
+    if (Object.keys(b.sell).length || Object.keys(b.buy).length) {
+      if (toolImportRules(world.settings).toolImports && toolImportShop(world)?.id === b.id) {
+        const imports = toolImportRules(world.settings);
+        html += `<p class="notice" data-tool-imports>Occasional tool deliveries: this Harbour stores counter checks for scarce tools every ${imports.toolImportInterval / 60} minutes (${Math.round(imports.toolImportChance * 100)}% chance). Small shipments need shop funds; availability is limited. Sold out? Check local workshops or return later. Buying the last tool does not trigger a refill.</p>`;
+      }
       html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<p class="note">Available goods first, then other listings; each group is alphabetical. Buy lists use shop stock; sell lists use what you carry.</p><div class="trade-columns">${(
         ['sell', 'buy'] as const
       )
@@ -2558,6 +2564,7 @@ function buildingWindow(b: Building) {
         .join(
           '',
         )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="${economyRules(world.settings).transactionItemLimit}" value="1"></label><p data-bulk-summary></p>`;
+    }
     if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false) {
       const quote = labourQuote(world, me!);
       html += `<p>Unskilled labour. A ${survivalRules(world.settings).labourShiftSeconds}-second task pays ${money(labourShiftPay(world))} for the first eight shifts in a row, then less until a ten-minute break or other work, up to ${money(labourDailyCap(world))} a game day. ${quote.reason ? `${quote.reason[0].toUpperCase()}${quote.reason.slice(1)}. ` : ''}Residents below ${money(survivalRules(world.settings).labourReliefMeans)} cash plus bank can receive ${money(survivalRules(world.settings).labourReliefPay)} relief at most once per ${survivalRules(world.settings).labourReliefCooldown / 60} minutes, and relief does not count toward the daily cap. You will be quite still while working.</p>${button(`Work a shift · ${money(quote.pay)}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;

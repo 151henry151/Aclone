@@ -11656,3 +11656,78 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15697446410
 Excluded receipt: output/garage-menu-stability/release/announcement-receipt.json.
 Small emergency tool supplies remain a later configurable economy item, recorded
 in BACKLOG.md by `873dd03c`; no live supplies or player possessions were granted.
+
+### Small emergency tool supplies — criteria before production, 2026-11-10
+
+Resume after 0.144.1. Insert this independent economy item before numbered item
+21 (snow ploughing), following the original smaller-independent-items-first rule.
+The inventory/ghost and garage feedback slices are complete. Snow ploughing is
+still unstarted; piloted spaceflight remains excluded.
+
+Audit: the relevant import/export counter is **Harbour stores** (`market`), not
+the spaceport's off-world exchange. Existing shortage shipments cover only bread,
+water and fuel. Tool shelves are finite and exports retain eight units, but no
+recurring tool import replaces an exhausted shelf. Default chainsaw catalogue
+value is 80d, Harbour retail 124d and its bid 82.40d. The garage's retail is 111d.
+Use a deliberately small supplement, paid from the public store's investment:
+one random scarce tool per successful half-hour check, 50% chance, at most two
+per item on that shelf, only while fewer than two are for sale across all completed
+shops. Eligible default pool: chainsaw, pickaxe, shovel. Existing possession,
+private storage and unfinished shops are not sale supply. Select one completed
+public Harbour stores deterministically; exclude Government necessities and
+privately owned shops. Default enabled; a world can disable it.
+
+Price policy: retail is the maximum of the existing quote, 150% of the world's
+item value and the highest public purchase bid plus 1d. Import cost is 80% of
+retail, at least that public bid plus 1d. Require positive retail margin and
+sufficient investment; log the paid import. Preserve private quotes. These are
+world rules, including enable/pool/interval/chance/quantity/cap/scarcity/premium/
+cost share/bid margin. Reject malformed pools, invalid amounts and unauthorized
+edits atomically. Custom catalogue items are eligible when explicitly configured.
+
+A persisted world-time cursor and seeded interval/item selection prevent rerolls
+on reload or repeated ticks. Initialize old saves at their current time (no
+retroactive deliveries). A long offline interval considers its latest due check
+only, never dumps a backlog of tools onto shelves. Rule timing/enable edits start
+a fresh interval; unchanged edits and reload retain the cursor. Empty or skipped
+checks advance the cursor. No immediate refill when someone buys the last tool.
+
+Completion commands: `node --import tsx --test tests/tool-imports.test.ts
+ tests/import-premium-rules.test.ts tests/export-rules.test.ts`; `TEST_GPU=1 npm run
+ test:e2e -- tests/browser/tool-imports.spec.ts`; `npx tsc --noEmit`; changed-path
+Prettier and prefixed production build. First add/run a failing integrated
+simulation assertion for a scheduled scarce chainsaw delivery before code.
+Cover all default/custom rules, local available stock, finite funds/capacity,
+zero chance, missing/private terminal, seed/reload/catch-up, purchase conservation,
+no guaranteed public re-export profit, settings summary/editor/design persistence.
+Browser: inspect clear limited-supply guidance at Harbour stores, buy a delivered
+tool, show exhausted stock/refusal without debit, pass an empty check, save and
+reopen changed World Builder rules; desktop and phone screenshots. Update playing,
+economy and world-builder guides, review README, then release and announce only
+after all gates pass. Do not claim the snow/plough programme is implemented.
+
+### Requested priority — Automatic third-person follow camera, 2026-11-10
+
+Henry requests a visible Manual camera / Auto follow toggle. In Auto follow,
+manual orbit remains available while stopped; walking or driving then smoothly
+returns the camera behind the controlled character at a useful third-person
+angle. Retain manual mode, zoom and the existing first-person/vehicle views.
+Schedule immediately after the scarce-tool slice already in verification and
+before snow ploughing. Record concrete camera/input/browser criteria and a red
+regression before implementation. This is a local player camera preference,
+not a per-world gameplay restriction. Include desktop/touch controls and inspect
+turning, stopping, reversing, manual orbit and view transitions for snapping or
+motion-induced lag. This request is recorded, not yet implemented.
+
+Scarce-tool verification: the integrated test first fails with no delivered
+chainsaw at the due boundary. Implement the finite paid shipment and ten world
+rules. A further red regression catches a rejected cross-field rule edit resetting
+the cursor; move that reset after validation. Twenty-five focused tests pass
+(tool imports, existing import premiums, exports and Government necessities).
+Four browser flows pass: desktop/phone delivery, actual purchase, sold-out refusal
+without debit, zero-chance interval and saved rules; plus existing shop trade
+feedback and bulk-selling controls. Inspect desktop and phone screenshots under
+excluded `output/tool-imports/`; use default 30-minute/50% guidance in the release
+image. TypeScript initially identifies an incorrectly typed resource fixture;
+correct it to the actual record shape. Prepare 0.145.0 pending final typecheck,
+format, build and live publication verification.

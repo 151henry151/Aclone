@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.145.0] - 2026-11-10
+
+### Added
+
+- Offer occasional, limited stocks of scarce tools at public Harbour stores, paid from shop funds with configurable delivery, scarcity and pricing rules; preserve local production and normal purchase checks.
+
 ## [0.144.1] - 2026-11-10
 
 ### Fixed

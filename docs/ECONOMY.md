@@ -408,3 +408,22 @@ Paid slaughter is a separate service: the farmer keeps ownership and pays an own
 Business meat menus make four portions per normal production cycle, including cooked Steak. Beef stew, pork supper and mutton pie start at 90d wholesale; roast chicken at 100d; café breakfast and pub meat pie at 95d. Retail bids and asks leave room for taxed supplier and retailer margins. New meals relieve 30,000 hunger, 6,000 thirst and restore 1,000 health before ordinary nutrition modifiers. Steak retains its existing nutrition and public listings.
 
 Unchilled raw meat expires after two game days. Cold stockrooms and chilled freight preserve it, but purchase and transport time still matter. Home cooking uses the same dish ingredients for one serving in 180 seconds and has no wage. Per-world rules control growth, breeding, service fees/yields, raw-edibility and spoilage, and home/business cooking yields; catalogue and premises recipes control prices, ingredients and staff wages. Existing operator prices and disabled bids survive the one-time listing migration.
+
+### Scarce-tool safety net
+
+Public Harbour stores may import one scarce chainsaw, pickaxe or shovel at a
+half-hour check with 50% probability. At most one public counter, selected by
+stable building ID, receives a shipment per check. Default per-item shelf cap
+and world-wide completed-shop sale-stock threshold are both two. Private storage,
+carried possessions and unfinished buildings do not count as available stock.
+An unfunded counter cannot import, and purchases do not trigger instant restocks.
+
+Retail is at least 150% of world catalogue value, the existing higher retail
+quote, and the highest public bid plus 1d. Landed cost is at least 80% of retail
+and that public bid plus 1d, deducted from shop investment and recorded as an
+import sink. Delivery requires a positive shop margin. The default chainsaw
+example costs the counter 99.20d and sells for 124d, above the 82.40d public bid
+and the garage's 111d retail. Buying and immediately re-exporting cannot guarantee
+profit. Normal taxes and transaction limits still apply. All supply and pricing
+terms are World Builder rules; explicit custom item pools use world catalogue
+values. Disabling imports leaves existing stock and posted prices intact.

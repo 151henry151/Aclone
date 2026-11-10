@@ -2257,3 +2257,32 @@ vehicle is stored automatically when `garageStorageEnabled` is on, using
 same rules as other garages. Disabling new deposits keeps existing retrieval
 available and falls back to outdoor arrival parking; hangars do not retrieve
 virtual spare tractors from another garage.
+
+### Scarce tool imports
+
+**Editor → Rules → Scarce tool imports** controls the small paid import safety
+net at one completed, treasury-owned public Harbour stores counter. Government
+necessities and privately owned stores are excluded. Default rules:
+
+- `toolImports`: true; disable without deleting stock or quotes.
+- `toolImportItems`: `chainsaw,pickaxe,shovel`; one to 32 unique comma-separated
+  built-in or `custom:` item IDs. Missing custom catalogue entries are skipped.
+- `toolImportInterval`: 1800 world-clock seconds (60–86400).
+- `toolImportChance`: 0.5 per check (0–1).
+- `toolImportQuantity`: 1 unit of one randomly selected eligible item (1–100).
+- `toolImportStockCap`: 2 units per item at the import counter (1–1000).
+- `toolImportScarcity`: deliver only below 2 units offered across completed
+  shops (1–1000); delivery cannot exceed that threshold or building capacity.
+- `toolImportPremium`: 50% above the world's item value (0–500%). Existing
+  higher quotes are preserved.
+- `toolImportCostShare`: 0.8 of retail (0.01–1). A delivery needs a positive
+  margin and enough shop investment; 1 prevents deliveries at zero margin.
+- `toolImportBidMargin`: 100 hundredths of a denarius, or 1d (1–1000000).
+  Both retail and landed cost exceed the highest public bid by at least this.
+
+The item/chance roll is seeded by world ID and the persisted due time. Successful,
+empty and skipped checks all advance the cursor, so reconnects cannot reroll.
+Long offline catch-up considers only the latest due check. Old worlds start from
+their current clock; changing enable/interval starts a fresh wait. Other edits
+and unchanged settings retain the cursor. Settings and custom catalogue entries
+travel with portable designs; delivery history belongs to the saved world.

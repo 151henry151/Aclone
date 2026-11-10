@@ -1,3 +1,4 @@
+import { toolImportRules } from './tool-import-rules';
 import { bridgeRules } from './bridge-rules';
 import { roadRules } from './road-rules';
 import { nameTagRules } from './name-tag-rules';
@@ -78,6 +79,7 @@ export const rulesets: Record<
   },
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
+  const tools = toolImportRules(w.settings);
   const roads = roadRules(w.settings);
   const bridges = bridgeRules(w.settings);
   const obstacles = obstacleRules(w.settings);
@@ -202,6 +204,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
       ? 'Qualified owners can operate their own businesses without wages.'
       : 'Owners cannot employ themselves.',
     `Death: ${s.loseSkillsOnDeath ? 'lose' : 'keep'} skills, ${s.loseInventoryOnDeath ? 'lose' : 'keep'} inventory, ${s.losePropertyOnDeath ? 'release' : 'keep'} property; retain ${Math.round(s.deathCashRetention * 100)}% cash and ${Math.round(s.deathBankRetention * 100)}% savings.`,
+    `Scarce tool imports: ${tools.toolImports ? 'enabled' : 'disabled'}; ${tools.toolImportItems}; check every ${tools.toolImportInterval}s, ${tools.toolImportChance * 100}% chance, ${tools.toolImportQuantity} units, shelf cap ${tools.toolImportStockCap}, below ${tools.toolImportScarcity} for sale. Retail premium ${tools.toolImportPremium}%; paid import share ${tools.toolImportCostShare * 100}%; public bid margin ${tools.toolImportBidMargin / 100}d.`,
     `Walking snow: ${walking.walkingSnow ? `enabled, field strength ${walking.walkingSnowScale}` : 'disabled'}. Bare-ground walking is unchanged.`,
     `Gathering scenery: ${gathering.gatheringScenery}, ${gathering.gatheringTownDistance} m beyond towns, ${gathering.gatheringRecentSeconds} s recent-use window.`,
     s.requireCaptainSkill ? 'Boats longer than the motorboat need the captain skill.' : '',

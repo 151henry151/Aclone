@@ -1,3 +1,5 @@
+import { importScarceTools } from './tool-imports';
+import { toolImportFields, toolImportRules, validToolImportPool } from './tool-import-rules';
 import {
   earthworkSpeedLimit,
   earthworkAction,
@@ -2536,6 +2538,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
+            Object.hasOwn(toolImportFields, key) ||
             Object.hasOwn(loanRuleFields, key) ||
             Object.hasOwn(creditRuleFields, key) ||
             Object.hasOwn(charterRuleFields, key) ||
@@ -2609,6 +2612,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const doorField = buildingDoorFields[key as keyof typeof buildingDoorFields];
         if (doorField && 'min' in doorField)
           num(v, doorField.min, doorField.max, doorField.step === 1);
+        const toolField = toolImportFields[key as keyof typeof toolImportFields];
+        if (toolField && 'min' in toolField)
+          num(v, toolField.min, toolField.max, toolField.step === 1);
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
         else if (parkingField && 'choices' in parkingField)
@@ -2631,6 +2637,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             vehicleCollisionModes.includes(v as any),
             'Choose off, stop-only, or glancing',
           );
+        else if (key === 'toolImportItems')
+          requireThat(validToolImportPool(v), 'Choose unique valid item IDs separated by commas');
         else if (key === 'loanTerms')
           requireThat(
             validLoanTerms(v),
@@ -2915,6 +2923,13 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         )
       )
         settleYoungGrowth(w);
+      const priorTools = toolImportRules(w.settings);
+      if (
+        (clean.toolImportInterval !== undefined &&
+          clean.toolImportInterval !== priorTools.toolImportInterval) ||
+        (clean.toolImports !== undefined && clean.toolImports !== priorTools.toolImports)
+      )
+        w.toolImportAt = w.time;
       Object.assign(w.settings, clean);
       if (
         clean.vehiclesPersist === true ||
@@ -4088,6 +4103,7 @@ export function advance(w: World, seconds: number) {
   tickRadio(w, seconds);
   exportShipments(w, end);
   harbourSupply(w, end);
+  importScarceTools(w, end, start);
   restockGovernmentStores(w);
   growRoads(w, start, end);
   tickTowns(w);

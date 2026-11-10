@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.145.0 lets public Harbour stores receive occasional **scarce-tool shipments** when local
+shelves are nearly empty. These are limited stocks bought with shop funds, not
+on-demand refills. World builders control the eligible tools, timing, scarcity
+and pricing. See [tool supplies](docs/PLAYING.md#occasional-tool-supplies).
+
 Version 0.144.1 keeps **garage menus steady** when parked vehicles or trailers
 move. Collapsed sections retain focus and scroll; storage distances and available
 actions still update. The tractor showroom uses its 3D preview only while open.

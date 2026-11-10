@@ -1,3 +1,4 @@
+import type { ToolImportRules } from './tool-import-rules';
 import type { Earthwork } from './earthworks-ground';
 import type { BridgeRules } from './bridge-rules';
 import type { NameTagRules } from './name-tag-rules';
@@ -383,6 +384,7 @@ export interface Settings
     Partial<AlpineRules>,
     Partial<ClimateRules>,
     Partial<EconomyRules>,
+    Partial<ToolImportRules>,
     Partial<LoanRules>,
     Partial<CreditRules>,
     Partial<CharterRules>,
@@ -555,6 +557,8 @@ export interface World {
   parishServices?: string[];
   publicParishVersion?: number;
   /** Last half-hour public shortage shipment, persisted across restarts. */
+  /** Last considered scarce-tool delivery check; retained even when no cargo arrives. */
+  toolImportAt?: number;
   harbourShipment?: number;
   exportShipment?: number;
   /** World time of the last processed export boundary, independent of rule changes. */

@@ -1297,3 +1297,19 @@ the tractor to retrieve the complete rig. Fuel, condition, paint and trailer car
 stay with it. Retrieval requires clear space outside. Storage limits and handling
 reach still apply; a refusal leaves your vehicle unchanged. If the world disables
 new garage storage, arrivals use ordinary outdoor parking instead.
+
+### Occasional tool supplies
+
+If a young economy has run out of chainsaws, pickaxes or shovels, check **Harbour
+stores**. This is the parish's ordinary import/export shop, separate from the
+spaceport exchange. When enabled, one public Harbour counter checks every 30
+world-clock minutes; half of those checks may bring one scarce tool. Deliveries
+need money in the shop till and stop when two of that item are available across
+completed shops, or the import shelf already holds two. Local workshops remain
+the reliable source when they have stock.
+
+Buy from the normal shop list at its posted price. These are finite supplies:
+buying the last tool does not refill the shelf, and a failed delivery check adds
+nothing. No supplies are granted to players. World owners may change the pool,
+chance, quantities and prices or switch imports off. After a long server absence,
+only the latest due check is considered; missed deliveries do not pile up.
