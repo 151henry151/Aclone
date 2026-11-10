@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
 import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation';
 import { creatorSchema } from '../../src/shared/creator';
+import { nameTagRules } from '../../src/shared/name-tag-rules';
 import { waitForWorld } from './fixtures/ready';
 test.use({ actionTimeout: 15000 });
 test('quiet contextual names and obvious boarding work in a crowded street on desktop and mobile', async ({
@@ -153,7 +154,7 @@ test('quiet contextual names and obvious boarding work in a crowded street on de
     await expect.poll(async () => (await names()).some((n) => n.id === p.id + ':39')).toBe(true);
     const checkNames = async () => {
       const visible = await names();
-      expect(visible.length).toBeLessThanOrEqual(w.settings.nameTagMaxVisible);
+      expect(visible.length).toBeLessThanOrEqual(nameTagRules(w.settings).nameTagMaxVisible);
       for (const n of visible) {
         expect(n.id).not.toMatch(/^distant/);
         expect(n.height).toBeLessThanOrEqual(18.01);
