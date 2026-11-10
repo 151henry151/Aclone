@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.141.1 keeps parish chat quieter: after one death notice, further deaths
+while a player remains offline stay silent until they return. Deaths and their
+consequences continue normally; World Builder can opt out of the quieter notices.
+
 Version 0.141.0 lets the server operator retain a device's saved login when
 retiring a duplicate pilot. Both devices resume the surviving character; only
 one connection can control it at a time. Password resets and global sign-out

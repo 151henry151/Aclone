@@ -415,6 +415,7 @@ export async function createApp(options: AppOptions) {
     leave(p);
     const me = addPlayer(w, p.account!.id, p.account!.name);
     me.online = true;
+    delete me.deathAnnouncedSinceVisit;
     p.world = id;
     for (const other of peers)
       if (other !== p && other.account?.id === p.account!.id) {

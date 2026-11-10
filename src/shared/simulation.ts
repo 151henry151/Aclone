@@ -3747,6 +3747,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     if (craft) Object.assign(craft, { x: p.x, z: p.z, heading: p.heading });
   }
 }
+function announceDeath(w: World, p: Player) {
+  return (
+    p.online || !p.deathAnnouncedSinceVisit || !survivalRules(w.settings).muteRepeatedOfflineDeaths
+  );
+}
 function kill(
   w: World,
   p: Player,
@@ -3858,11 +3863,13 @@ function kill(
         releaseEstate(w, b);
       }
     }
-    say(
-      w,
-      'Parish notice',
-      `${p.name} has begun a new life. This world ${w.settings.loseSkillsOnDeath ? 'clears' : 'preserves'} qualifications and ${w.settings.losePropertyOnDeath ? 'releases ordinary property' : 'preserves property'}.`,
-    );
+    if (announceDeath(w, p))
+      say(
+        w,
+        'Parish notice',
+        `${p.name} has begun a new life. This world ${w.settings.loseSkillsOnDeath ? 'clears' : 'preserves'} qualifications and ${w.settings.losePropertyOnDeath ? 'releases ordinary property' : 'preserves property'}.`,
+      );
+    p.deathAnnouncedSinceVisit = true;
   }
 }
 export function productionInterval(w: World, b: Building) {
@@ -4093,6 +4100,7 @@ export function advance(w: World, seconds: number) {
       p.age += seconds / calendarYearSeconds(w.settings);
       p.lastSeen = end;
       delete p.inactivityProcessed;
+      delete p.deathAnnouncedSinceVisit;
     }
     const absenceAt = p.lastSeen + w.settings.maxOfflineDays * 86400;
     const absenceDue =
@@ -4107,7 +4115,8 @@ export function advance(w: World, seconds: number) {
     advanceSurvival(w, p, start, boundary - start);
     if (absenceDue) {
       p.inactivityProcessed = p.lastSeen;
-      say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
+      if (announceDeath(w, p))
+        say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
       removeAbsentParking(w, p);
       kill(w, p, false, 'offline absence limit', boundary);
       advanceLoans(w, p, boundary, end);

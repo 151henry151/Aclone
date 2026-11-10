@@ -11261,3 +11261,35 @@ Excluded scripts and receipts: output/hankmobile-merge-2026-11-09/.
 Verify the general device-login announcement with its local test screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569540901905109136
 Microphone CB remains the next pending feature correction.
+
+### Requested priority — Quiet repeated offline deaths (2026-11-09)
+
+Before returning to microphone CB, announce the first ordinary death but suppress
+subsequent death/absence notices until that player returns online. Keep deaths,
+respawns, estate consequences, ledger and personal history unchanged. Persist the
+announcement state across saves/restarts; joining and leaving between ticks must
+reset it. Keep arena/comic knockouts unchanged. Add world rule
+`muteRepeatedOfflineDeaths`, default true, in Survival and needs; false preserves
+the previous public-notice behavior. Legacy players without the marker get their
+next death announced; do not infer their attendance from total deaths.
+
+Before production, run `node --import tsx --test tests/death-announcements.test.ts`
+and confirm failure on duplicate notices. Cover multiple offline deaths, one long
+catch-up, per-player isolation, online deaths, save/load, the disabled rule and
+absence-limit notices. Compare consequences with the unmuted control world.
+Run affected death/survival/store tests, `npx tsc --noEmit`, and Prettier on changed
+files. In a local two-player browser world, observe one public death notice for an
+offline player despite two deaths, reconnect that player and disconnect before a
+tick, then verify the next death appears. Check the World Builder switch and take
+a real chat screenshot for the release announcement. Commit/push/deploy the
+finished fix and verify live health/version before announcing. CB remains pending.
+
+Quiet-death validation: the new tests first fail on repeated notices and the
+missing world switch. All 41 focused death/survival/report/combat tests now pass.
+Compare muted and unmuted players and ledgers exactly after three deaths; retain
+every personal death event. Verify save/load, long catch-up, legacy players,
+per-player isolation, online deaths and absence penalties. The browser passes
+reconnect-and-leave without any simulation tick, public chat counts and changing
+the World Builder switch. TypeScript completes successfully; Prettier runs.
+Inspect the local chat screenshot under excluded output/death-announcements/.
+Release 0.141.1 is ready; microphone CB remains pending after this priority fix.

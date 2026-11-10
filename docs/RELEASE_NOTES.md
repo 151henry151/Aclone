@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.141.1 — Quiet repeated offline deaths
+
+Announce the first ordinary death, then suppress later public death and absence
+notices until that player returns online. Preserve every death, estate consequence
+and personal history event. Save the notice marker with the player, reset it on
+world entry, and retain online and arena notices. World Builder can disable the
+default-on rule in Survival and needs.
+
+Verify 41 focused tests, a browser reconnect between simulation ticks, the editable
+rule, TypeScript and formatting. Old saves announce their next death once; no
+historical attendance is guessed from a player’s accumulated death count.
+
 ## 0.141.0 — Retain device logins for retired duplicate pilots
 
 Add operator-provisioned, hashed device keys that resolve to the current surviving

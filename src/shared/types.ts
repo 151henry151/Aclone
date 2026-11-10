@@ -249,6 +249,8 @@ export interface Player {
   online: boolean;
   lastSeen: number;
   inactivityProcessed?: number;
+  /** Ordinary death already announced since this player last participated online. */
+  deathAnnouncedSinceVisit?: boolean;
   lastFood?: string;
   repeats: number;
   nutrition?: number;

@@ -395,6 +395,11 @@ Buttons explain blockers; the server rechecks on receipt and saves transfers. Ow
 
 ## Journal and statements
 
+Repeated deaths while you are away still have their normal consequences and appear
+in your personal history. By default, parish chat announces the first death and
+stays quiet about further deaths until you return online. Online deaths continue
+to be announced. World owners can change this in Survival and needs.
+
 Open **World/F9 → Journal & reports** for your last return report and recent personal history. It explains deaths, released properties, trades, jobs and qualifications. Your report compares cash, savings and still-owned businesses across a disconnect.
 
 A building’s **Statement** tab shows current production blockers. Owners and world caretakers also see operating cash flow, capital movements, traded goods and completed automatic batches. It updates as business activity arrives. Accounts begin with this upgrade; old transactions are not reconstructed.

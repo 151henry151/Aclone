@@ -264,6 +264,13 @@ Visitors download models/textures automatically through the game's hosting prefi
 
 ## Survival and death rules
 
+**Mute repeated deaths until the player returns online**
+(`muteRepeatedOfflineDeaths`, default on) suppresses later public death and
+absence-limit notices during the same absence. Deaths, estate rules and personal
+history continue unchanged. Returning to this world resets the notice, even for
+a brief connection; online deaths remain announced. Turn the rule off to announce
+every ordinary death. Arena knockouts keep their existing notices.
+
 At world creation or **Editor → Rules**, set hunger/thirst rates to zero for worlds without survival needs. Independently untick `loseSkillsOnDeath`, `loseInventoryOnDeath`, `loseJobOnDeath` or `losePropertyOnDeath` to retain those possessions/status. Keeping skills also keeps a course in progress; keeping a job retains its existing shift expiry. Ordinary death still respawns and restores the character's needs; arena knockouts keep their existing separate rules.
 
 The **Boats and death** group independently controls boats. **Lose all owned boats

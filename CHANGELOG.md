@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.141.1] - 2026-11-09
+
+### Fixed
+
+- Suppress repeated offline death notices until the player returns online, while preserving every death and its consequences; allow world builders to retain all notices.
+
 ## [0.141.0] - 2026-11-09
 
 ### Added

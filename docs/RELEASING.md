@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.141.1
+
+Deploy the approved backlog-implementation SHA with the normal backup and build,
+then publish the matching website and verify health/version/SHA. Missing world
+rules receive the default `muteRepeatedOfflineDeaths: true`. The optional player
+marker persists on subsequent saves; legacy players announce their next ordinary
+death once. No death counters, penalties, assets or history are rewritten.
+
 ## Upgrade 0.141.0
 
 Deploy the approved backlog-implementation SHA with the usual backup and build.

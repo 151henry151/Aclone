@@ -2,6 +2,7 @@
 import defaults from '../../data/settings.json';
 import type { World, Player } from './types';
 export const survivalRuleFields = {
+  muteRepeatedOfflineDeaths: { label: 'Mute repeated deaths until the player returns online' },
   needsAutoFeedThreshold: { label: 'Automatic meal threshold', min: 1000, max: 1000000, step: 1 },
   needsDamageThreshold: {
     label: 'Starvation / dehydration threshold',

@@ -52,6 +52,7 @@
   "deathCashRetention": 1,
   "deathBankRetention": 1,
   "maxOfflineDays": 0,
+  "muteRepeatedOfflineDeaths": true,
   "parishOrders": false,
   "parishOrderBudget": 120000,
   "resetScriptOnDeath": true,
