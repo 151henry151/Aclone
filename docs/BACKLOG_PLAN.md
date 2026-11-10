@@ -11784,3 +11784,16 @@ pass; the final browser runner exits 0. TypeScript exits 0. Changed-file Prettie
 and diff checks are clean. Capture and inspect the actual desktop following view
 and unobscured phone Actions toggle under `output/camera-follow/`. Prepare release
 0.146.0; commit/deploy only after the prefixed production build passes.
+
+Automatic follow camera done: commit/push `0ef54040`, deploy **0.146.0** and
+verify the exact server SHA, active service, public health and website version.
+All seven focused camera tests, four browser flows (exit 0), TypeScript (exit 0),
+changed-file Prettier, diff check and prefixed production build pass. Database
+backup: `/var/lib/aclone/backups/pre-deploy-20261110-134719.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261110-134839.tar.gz`. Verify the bot announcement
+and both actual screenshot embeds:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569785890509684878
+Receipts remain excluded in `output/camera-follow/release/`. Manual remains the
+default, the preference is browser-local, and no world/player state migration
+is needed. Next numbered backlog item remains 21, Snow ploughing; no partial
+snow implementation is included in this release.
