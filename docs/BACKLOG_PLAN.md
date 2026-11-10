@@ -11076,3 +11076,13 @@ After contextual boarding/labels, address Henry's two follow-ups as separate fix
    Use the existing storage/parking rules rather than duplicate limits. Verify the
    real browser drive-in → enter → board plane → return → retrieve flow and empty/
    failure states, then relevant tests, TypeScript, formatting, docs and release.
+
+Contextual boarding/labels done: release 0.140.1, deployed SHA 2c1a7096.
+85 relevant tests and the final desktop/mobile browser flow pass. The first deploy
+correctly stopped before restart on an optional-setting type in the new browser
+test; resolve it through nameTagRules, rerun TypeScript to completion, then redeploy
+successfully. Back up at `/var/lib/aclone/backups/pre-deploy-20261109-200825.sqlite`;
+website backup `/var/backups/aclone-website/site-20261109-200931.tar.gz`.
+Verify public health 0.140.1, deployed SHA and the two screenshot bot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569519489303711775
+Proceed with collapsible fleet menus, then hangar parking.
