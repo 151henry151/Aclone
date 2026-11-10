@@ -1597,12 +1597,12 @@ let charterSignature = '';
 let expeditionSignature = '';
 function refreshTradingPrices() {
   if (world && me)
-    for (const panel of app.querySelectorAll('.canoe-panel')) {
-      const html = canoePanel(world, me),
+    for (const canoeRoot of app.querySelectorAll('.canoe-panel')) {
+      const html = canoePanel(world, me, panel === 'inventory'),
         wrapper = document.createElement('div');
       wrapper.innerHTML = html;
-      if (panel.outerHTML !== wrapper.firstElementChild!.outerHTML)
-        panel.replaceWith(wrapper.firstElementChild!);
+      if (canoeRoot.outerHTML !== wrapper.firstElementChild!.outerHTML)
+        canoeRoot.replaceWith(wrapper.firstElementChild!);
     }
 
   if (world && me && panel === 'building') {
@@ -1656,7 +1656,15 @@ function refreshTradingPrices() {
     }
   }
   if (panel === 'inventory' && world && me) {
-    refreshSpringPanel(app.querySelector('[data-spring-panel]'), world, me);
+    refreshSpringPanel(app.querySelector('[data-spring-panel]'), world, me, true);
+    const boating = app.querySelector<HTMLElement>('[data-inventory-boating]');
+    if (boating) {
+      const html = boatControls();
+      if (boating.dataset.rendered !== html) {
+        boating.innerHTML = html;
+        boating.dataset.rendered = html;
+      }
+    }
     const host = app.querySelector('[data-boarding-panel]'),
       html = boardingPanel(world, me);
     if (host && (host !== boardingRoot || boardingSignature !== html)) {
@@ -2223,7 +2231,7 @@ function renderPanel() {
             )
             .join(
               '',
-            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${springPanel(world, me)}${canoePanel(world, me)}${trailerPanel(world, me)}${earthmovingControls()}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Find tractor', 'find-tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div>${Object.values(me.inventory).some((n) => n > 0) ? '<p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>' : "<p>You're not carrying any items.</p>"}${springPanel(world, me, true)}${canoePanel(world, me, true)}${trailerPanel(world, me)}${earthmovingControls()}<div data-inventory-boating>${boatControls()}</div>${me.vehicle !== 5 ? button('Switch to walking', 'walk') : ''}${me.vehicle === 5 ? button('Return to tractor', 'tractor') : ''}${button('Find tractor', 'find-tractor')}${me.crowBody || (me.inventory.rc ?? 0) > 0 ? button(me.crowBody ? 'Return to body' : 'Launch robocrow', 'crow') : ''}`
         : `<p>${skillSlotsUsed(world, me)} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -4182,6 +4190,7 @@ function boatControls(building?: string) {
   if (!world || !me || me.vehicle === CANOE) return '';
   const dock = boatLanding(world, me, boatSlot(me.vehicle, world), building);
   const rescue = world.boatRescues?.[me.id];
+  if (!dock && !boatSlot(me.vehicle, world) && !rescue) return '';
   const navigation = boatNavigationRules(world.settings);
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html =

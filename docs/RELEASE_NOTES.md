@@ -2,6 +2,19 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.140.4 — Inventory that fits your surroundings
+
+Reveal spring, canoe and boating actions only when they relate to nearby services,
+carried equipment or an ongoing rescue. Keep nearby blocked-action explanations,
+empty-bag feedback and the shared collapsible trailer list. Reuse existing world
+interaction ranges and update relevant sections while Inventory remains open.
+
+Verify empty and near-spring menus, drinking/cooldown, configured/disabled ranges,
+carried and nearby canoes, trailer count/open-state retention, keyboard and phone
+layout. Preserve boat refuelling and rescue controls. Reload clients; no world
+migration or global skill-limit change runs. Hank's separate testing grant is
+recorded in the backlog plan.
+
 ## 0.140.3 — Keep the aircraft apron clear
 
 Entering an aircraft hangar in a land vehicle stores it and its complete rig there,

@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.140.4 keeps Inventory focused on what you carry and can use nearby.
+Spring, canoe and boating actions appear in context; trailer lists stay collapsed
+until opened. Reload to get the cleaner menu.
+
 Version 0.140.3 stores your arriving tractor and trailer inside the aircraft
 hangar, keeping the apron free for boarding. Return to that hangar and expand
 **Vehicle storage** to retrieve the rig with its fuel and cargo intact.

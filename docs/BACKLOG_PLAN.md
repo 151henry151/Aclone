@@ -11176,3 +11176,17 @@ no duplicates and healthy 0.140.3. Audit key:
 `/var/lib/aclone/backups/pre-hank-skills-2026-11-10T013428-369Z.sqlite`.
 Local receipts and scripts remain excluded under output/hank-skills-2026-11-09/.
 This is a one-time testing grant, not an automatic grant of future skills.
+
+Contextual Inventory validation ready for release 0.140.4: 53 focused inventory,
+fleet, spring, canoe and storm-safety tests pass; final fixture/disclosure rerun
+passes 4/4. New unit tests fail before the fix on irrelevant headings, and the
+browser reproduces the distant spring. Correct the canoe refresh's shadowed panel
+variable and supply complete typed canoe fixtures. TypeScript finishes cleanly;
+Prettier runs on changed code/docs. Final browser checks both pass: Inventory
+empty/proximity/drinking/cooldown/configured-range/disabled/canoe/disclosure/phone
+flow, plus existing rescue-boat refuelling and world fuel settings. An earlier
+boat run times out during development-page navigation while TypeScript competes
+for CPU; rerun unchanged after TypeScript exits and pass. Keep the timeout and
+all gameplay assertions unchanged. Inspect quiet-inventory and near-spring
+screenshots under excluded output/inventory-context/. No CB voice implementation
+is included in this release; that correction remains the next feature task.

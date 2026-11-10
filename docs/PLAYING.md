@@ -362,6 +362,20 @@ Puddlewick's public **town centre** is a fountain with benches. Its missing star
 
 Startup preserves purchased/custom properties, skips blocked sites and retries pending placements later. Completed additions are recorded: demolition/depletion does not recreate/refill them. Other worlds are untouched. The one-time 0.21.2 cleanup and exact removal scope are in [release notes](RELEASE_NOTES.md#puddlewick-cleanup-scope); owners retain prices/stock/wages. No catalog building type is banned.
 
+## Contextual inventory
+
+Open **Inventory (I / Bag)** for what you carry and useful actions nearby. Spring
+drinking appears only within the world's drinking range; approach on foot and
+stop to drink. A cooldown explains when you can drink again. Canoe controls appear
+when carrying one, paddling, near a set-down/moored canoe, at a vendor, or by a home
+with a canoe in storage. Boating controls appear aboard, near a landing, or during
+a rescue. Other explanations remain in Activities and these guides.
+
+**Your trailers (count)** starts collapsed in Inventory as well as building menus.
+Click or tap its heading (or focus it and press Enter) to expand it. The menu
+remembers your choice across updates and reopening. An empty bag says so without
+a discard warning; robocrow controls appear when you carry one or are piloting it.
+
 ## Helping other players
 
 Click an online player's name or **World/F9 → Players & roadside help** (**Actions** on mobile). Includes NPCs and private chat.

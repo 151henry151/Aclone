@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.140.4] - 2026-11-09
+
+### Fixed
+
+- Show Inventory's spring, canoe and boating actions only when relevant to nearby facilities or carried equipment; hide empty-bag warnings and unavailable controls, and retain compact trailer lists with their open state.
+
 ## [0.140.3] - 2026-11-09
 
 ### Fixed

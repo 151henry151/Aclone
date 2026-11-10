@@ -8,9 +8,30 @@ import { CANOE, canoeRules } from '../shared/canoe-rules';
 import { canCarry, money, withinBuildingRange } from '../shared/simulation';
 const hidden = (key: string, value: string) =>
   `<input type="hidden" name="${key}" value="${value.replace(/[&<>"']/g, '')}">`;
-export function canoePanel(w: World, p: Player) {
+export function canoePanel(w: World, p: Player, contextual = false) {
   const r = canoeRules(w.settings),
     c = p.carrying && w.smallCraft?.[p.carrying];
+  const nearby = Object.values(w.smallCraft ?? {}).filter(
+    (c) =>
+      ['setDown', 'moored'].includes(c.state) &&
+      (c.landing
+        ? boatLandings(w).some((d) => d.id === c.landing && withinBoatLanding(w, p, d, false))
+        : Math.hypot((c.land?.x ?? c.x) - p.x, (c.land?.z ?? c.z) - p.z) <= r.canoeRange),
+  );
+  const services = w.buildings.filter((b) => !b.construction && withinBuildingRange(w, p, b));
+  if (
+    contextual &&
+    p.vehicle !== CANOE &&
+    !c &&
+    !p.inventory.canoe &&
+    !nearby.length &&
+    !services.some(
+      (b) =>
+        ['carpenter', 'boathouse'].includes(b.kind) ||
+        (b.kind === 'home' && b.owner === p.id && (b.stock.canoe ?? 0) > 0),
+    )
+  )
+    return '<section class="canoe-panel" hidden></section>';
   const stopped =
     p.vehicle === 5 &&
     !p.task &&
@@ -50,13 +71,6 @@ export function canoePanel(w: World, p: Player) {
   if (!stopped) html += '<p>Stop on foot and finish your activity to handle a canoe.</p>';
   if (c) html += form('setDown', 'Set canoe down', !stopped || p.atHome) + launch();
   else if (p.inventory.canoe) html += form('carry', 'Lift inventory canoe', !stopped || p.atHome);
-  const nearby = Object.values(w.smallCraft ?? {}).filter(
-    (c) =>
-      ['setDown', 'moored'].includes(c.state) &&
-      (c.landing
-        ? boatLandings(w).some((d) => d.id === c.landing && withinBoatLanding(w, p, d, false))
-        : Math.hypot((c.land?.x ?? c.x) - p.x, (c.land?.z ?? c.z) - p.z) <= r.canoeRange),
-  );
   if (!nearby.length && !c) html += '<p>No set-down canoe within reach.</p>';
   for (const hull of nearby) {
     html +=
@@ -81,7 +95,7 @@ export function canoePanel(w: World, p: Player) {
       } else html += launch(hull.id);
     }
   }
-  for (const b of w.buildings.filter((b) => !b.construction && withinBuildingRange(w, p, b))) {
+  for (const b of services) {
     if (['carpenter', 'boathouse'].includes(b.kind)) {
       html += form(
         'buy',

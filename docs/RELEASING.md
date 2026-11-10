@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.140.4
+
+Deploy the approved backlog-implementation SHA with the normal backup, prefixed
+build and restart; publish the matching website and verify health/version/SHA.
+Reload clients for contextual Inventory. Existing world interaction ranges and
+per-menu disclosure state apply. No saved-world migration runs.
+
 ## Upgrade 0.140.3
 
 Deploy client and server together from the approved backlog-implementation SHA,

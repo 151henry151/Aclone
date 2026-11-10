@@ -3,20 +3,26 @@ import type { World, Player } from '../shared/types';
 import { waterSourceRules } from '../shared/water-source-rules';
 const esc = (s: string) =>
   s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
-export function springPanel(w: World, p: Player) {
+export function springPanel(w: World, p: Player, contextual = false) {
+  const hidden = '<section data-spring-panel hidden></section>';
   const r = waterSourceRules(w.settings);
   if (!r.springsEnabled || !r.springDrinkingEnabled)
-    return '<section data-spring-panel><h3>Natural springs</h3><p>Spring drinking is disabled in this world.</p></section>';
+    return contextual
+      ? hidden
+      : '<section data-spring-panel><h3>Natural springs</h3><p>Spring drinking is disabled in this world.</p></section>';
   const spring = [...(w.springs ?? [])].sort(
     (a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z),
   )[0];
   if (!spring)
-    return '<section data-spring-panel><h3>Natural springs</h3><p>No springs have been surveyed in this world.</p></section>';
+    return contextual
+      ? hidden
+      : '<section data-spring-panel><h3>Natural springs</h3><p>No springs have been surveyed in this world.</p></section>';
   const distance = Math.hypot(spring.x - p.x, spring.z - p.z),
     remaining = Math.max(
       0,
       Math.ceil(r.springDrinkCooldown - (w.time - (p.lastSpringDrink ?? -Infinity))),
     );
+  if (contextual && distance > r.springDrinkRange) return hidden;
   const reason =
     distance > r.springDrinkRange
       ? `Stand within ${r.springDrinkRange} m of a spring (${Math.round(distance)} m to the nearest).`
@@ -29,11 +35,12 @@ export function springPanel(w: World, p: Player) {
 }
 
 /** Update cooldown text without replacing the dialog or a button under the pointer. */
-export function refreshSpringPanel(root: Element | null, w: World, p: Player) {
+export function refreshSpringPanel(root: Element | null, w: World, p: Player, contextual = false) {
   if (!root) return;
   const wrapper = document.createElement('div');
-  wrapper.innerHTML = springPanel(w, p);
+  wrapper.innerHTML = springPanel(w, p, contextual);
   const next = wrapper.firstElementChild!;
+  root.toggleAttribute('hidden', next.hasAttribute('hidden'));
   for (const selector of ['h3', 'p', 'button']) {
     const prior = root.querySelector(selector),
       value = next.querySelector(selector);

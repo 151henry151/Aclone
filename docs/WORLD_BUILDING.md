@@ -1798,6 +1798,11 @@ rowboats remain saved-world state, not design templates.
 
 ## Springs and water production
 
+Inventory reveals drinking within `springDrinkRange` and hides it when springs or
+spring drinking are disabled. Canoe handling uses `canoeRange` or the existing
+landing reach, and vendors use the same building range as the server. These UI
+contexts reuse authoritative world rules; there is no separate UI distance limit.
+
 **F10 → Rules → Springs and water production** exposes the complete water-source
 rules. **F10 → Springs** places, moves, changes flow or deletes individual saved
 sources by stable `spring-…` ID. Exports include the edited survey and building
