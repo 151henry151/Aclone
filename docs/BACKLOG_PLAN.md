@@ -11731,3 +11731,14 @@ excluded `output/tool-imports/`; use default 30-minute/50% guidance in the relea
 image. TypeScript initially identifies an incorrectly typed resource fixture;
 correct it to the actual record shape. Prepare 0.145.0 pending final typecheck,
 format, build and live publication verification.
+
+Scarce-tool supplies done: commit/push `fe637c09`, deploy **0.145.0**, verify
+matching server SHA, active service, public health and website version. All 25
+relevant tests, four browser flows, TypeScript (exit 0), changed-file Prettier,
+diff check and prefixed production build pass. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261110-133351.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261110-133517.tar.gz`.
+Verify bot post and actual screenshot embed:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569782631631949964
+Receipts remain excluded in `output/tool-imports/release/`. No player supplies
+were directly granted. Next: Henry's requested automatic-follow camera.
