@@ -11554,3 +11554,13 @@ selection, empty inventory and cargo restrictions. Inspect shop and phone images
 in excluded output/item-order/. TypeScript exits 0. Leave historical accounting
 reports in their existing order; they are transaction summaries, not inventories.
 Prepare 0.143.2; final format/build, publication and verification remain pending.
+
+Inventory ordering done: push and deploy `9367a412` as 0.143.2. Public health,
+server SHA, active service and matching website are verified. Fifty relevant
+tests, four browser flows, TypeScript, Prettier, diff checks and the prefixed
+production build pass. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261110-103724.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261110-103827.tar.gz`.
+Verify the bot announcement and screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569738119174029323
+Receipts remain excluded in output/item-order/release/.
