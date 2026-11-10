@@ -11643,3 +11643,16 @@ purchase flows (five distinct flows overall). All 33 relevant tests pass; inspec
 excluded output/fleet-menus/stable-phone.png. Prepare 0.144.1 after final TypeScript,
 format/build and release checks. The reproduced refresh defect is confirmed;
 Lightmun's precise original interaction remains unknown.
+
+Garage stability done: push and deploy `44e672e9` as 0.144.1. Public health,
+matching server SHA, active service and website version are verified. Thirty-three
+relevant tests, five distinct browser flows (including the final strengthened
+range-boundary regression), TypeScript, Prettier, diff checks and the prefixed
+production build pass. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261110-110301.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261110-110426.tar.gz`.
+Verify the bot announcement and phone screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569744641010700328
+Excluded receipt: output/garage-menu-stability/release/announcement-receipt.json.
+Small emergency tool supplies remain a later configurable economy item, recorded
+in BACKLOG.md by `873dd03c`; no live supplies or player possessions were granted.
