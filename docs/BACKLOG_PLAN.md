@@ -11293,3 +11293,13 @@ reconnect-and-leave without any simulation tick, public chat counts and changing
 the World Builder switch. TypeScript completes successfully; Prettier runs.
 Inspect the local chat screenshot under excluded output/death-announcements/.
 Release 0.141.1 is ready; microphone CB remains pending after this priority fix.
+
+Quiet repeated offline deaths done: release 0.141.1, committed/pushed/deployed
+`a78df0ba`. Verify healthy public 0.141.1, matching server SHA and published website.
+All 41 relevant tests, the reconnect/settings browser flow, TypeScript and
+Prettier pass. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261109-222110.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261109-222216.tar.gz`.
+Verify the bot announcement and its local browser screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569552822947680357
+Resume microphone CB next.
