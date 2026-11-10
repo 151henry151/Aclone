@@ -11086,3 +11086,30 @@ website backup `/var/backups/aclone-website/site-20261109-200931.tar.gz`.
 Verify public health 0.140.1, deployed SHA and the two screenshot bot announcement:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569519489303711775
 Proceed with collapsible fleet menus, then hangar parking.
+
+### Requested correction — Microphone CB radio (2026-11-09)
+
+Henry clarifies that the CB must carry actual microphone audio while a control is
+held, rather than typed messages. This overrides the original backlog's separate
+text-channel wording. Address after collapsible menus and hangar parking.
+Before production, establish failing tests for microphone capture and delivery to
+an eligible second client, no audio before hold or after release, channel/range/
+squelch/volume rules, concurrent transmissions and existing world limits. Handle
+permission denied, absent microphone, disconnected transport, release while
+permission is pending, lost focus and phone touch cancellation. Keep capture and
+network work bounded and world-configurable; do not retain voice recordings.
+Use two browser clients with deterministic audio input to verify real audio
+transport/playback, not merely signalling or a transcript. Verify touch/keyboard
+controls, error/empty states and configuration. Run relevant tests, TypeScript and
+Prettier, update player/world-builder documentation and announce the tested release.
+
+### Requested live refuelling — Hank (2026-11-09)
+
+Fill Hank's 18 owned motor-vehicle tanks to their world-configured capacity,
+including stored machines, boats and the biplane. Preserve locations, cargo,
+condition, ownership and other players. Dry-run the scoped transformation, assert
+idempotence and all non-fuel state unchanged, stop the service, back up and apply
+transactionally, restart and verify health. Audit key:
+`grant:hank-romp-fuel:2026-11-09`; backup:
+`/var/lib/aclone/backups/pre-hank-fuel-2026-11-10T011411-145Z.sqlite`.
+Evidence is excluded under output/hank-fuel-2026-11-09/.
