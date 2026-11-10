@@ -11509,3 +11509,15 @@ cover all 360 bearings fitting the plan and help using custom world rules.
 TypeScript exits 0. Prepare patch 0.143.1; final formatting/build, push/deployment
 and announcement verification remain pending. The exact reported site remains
 unidentified; do not describe this as a confirmed placement-rule repair.
+
+Shoreline guidance done: push and deploy `ad552839` as 0.143.1. Verify public
+health 0.143.1, matching server SHA, active service and website version. All 40
+focused tests, three browser flows, TypeScript, Prettier, diff checks and the
+prefixed production build pass. Preserve siting rules and existing property.
+SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261110-100928.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261110-101054.tar.gz`.
+Verify the bot announcement and both desktop/phone screenshot attachments:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569731192910258328
+Excluded receipts: output/shoreline-audit/release/. Investigation of Lightmun's
+particular site still requires its location/refusal; no general placement-rule
+defect was reproduced in this audit. Other backlog items retain their order.
