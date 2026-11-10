@@ -11113,3 +11113,15 @@ transactionally, restart and verify health. Audit key:
 `grant:hank-romp-fuel:2026-11-09`; backup:
 `/var/lib/aclone/backups/pre-hank-fuel-2026-11-10T011411-145Z.sqlite`.
 Evidence is excluded under output/hank-fuel-2026-11-09/.
+
+Collapsible fleet menus done: release 0.140.2, pushed/deployed c2467611.
+28 relevant tests and clean TypeScript pass. Browser checks cover the eleven-trailer
+menu at both venues, open/closed-state retention, empty lists, keyboard and phone
+controls; garage store/retrieve/refusal/construction and desktop/phone showroom
+purchase/paint/recall also pass. Retain live-update scroll assertions with retries
+when a server acknowledgement replaces the menu DOM. A screenshot rerun interrupted
+by a package-version edit is discarded; the stable final rerun passes.
+Website backup: `/var/backups/aclone-website/site-20261109-201741.tar.gz`.
+Verify healthy 0.140.2 and screenshot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569521595180130325
+Proceed to the requested hangar parking correction, then microphone CB.
