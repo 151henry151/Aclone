@@ -11125,3 +11125,38 @@ Website backup: `/var/backups/aclone-website/site-20261109-201741.tar.gz`.
 Verify healthy 0.140.2 and screenshot announcement:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569521595180130325
 Proceed to the requested hangar parking correction, then microphone CB.
+
+Hangar parking done: release 0.140.3, pushed/deployed 7b0a8df5. All 33 relevant
+hangar, garage-storage, arrival, airfield and fleet-disclosure tests pass, as do
+TypeScript and Prettier. Browser verification drives to the hangar, enters with
+Ctrl, stores the loaded rig, boards the plane, returns and retrieves the rig with
+fuel/cargo preserved. Failure tests preserve state on limits, foreign ownership
+and blocked exits. Public health reports 0.140.3; remote SHA matches. Backups:
+`/var/lib/aclone/backups/pre-deploy-20261109-202302.sqlite` and
+`/var/backups/aclone-website/site-20261109-202406.tar.gz`. Verify bot screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569523803229524059
+
+### Requested priority — Contextual inventory (2026-11-09)
+
+Handle this follow-up to the compact menus before the pending microphone CB
+correction; CB remains unfinished. Keep carrying information and nearby boarding
+visible. In Inventory, show springs only within the world's springDrinkRange when
+drinking is enabled. Show canoes when aboard, carrying/owning an inventory canoe,
+within the existing canoe/landing handling range, at a canoe vendor, or at home
+with a canoe to retrieve. Preserve nearby blocked-action explanations. Hide
+boating instructions unless aboard, at a usable landing or handling a rescue.
+Hide empty-item discard warnings, redundant walking buttons and unavailable
+robocrow controls. Use existing world rules rather than a second distance limit.
+The shared trailer disclosure already covers Inventory: verify its collapsed
+initial state, count, pointer/keyboard opening, retention and empty-list state.
+
+Before production: add failing unit assertions in tests/inventory-context.test.ts
+and a browser flow in tests/browser/inventory-context.spec.ts. Run the former with
+`node --import tsx --test tests/inventory-context.test.ts`, confirming the failure
+is irrelevant sections appearing far from any action. After implementation run
+this plus spring/canoe/fleet tests. Run `TEST_GPU=1 npm run test:e2e --
+tests/browser/inventory-context.spec.ts`: inspect empty Inventory, walk to/from a
+spring, drink and observe cooldown, custom ranges/disabled springs, carried and
+nearby canoe states, trailer disclosure and mobile layout. Confirm approaching
+and leaving updates the open menu without a reload. Check TypeScript to completion
+and format touched files; update docs, release and announce a real screenshot.
