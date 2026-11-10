@@ -11363,3 +11363,46 @@ Next priority is the expanded earthworks usability request: a complete guided
 survey-to-finished-work flow, clear proximity validation before confirmation, and
 a work-area overlay plus actionable progress guidance visible only to the local
 earthmover driver. This replaces the narrower survey-distance-only scope.
+
+### Requested priority — Make earthworks understandable from survey to driving
+
+Before production edits, reproduce the missing proximity warning and missing
+outside-menu work guidance with browser assertions. Add shared tests for local
+operator-only targeting, rotated boundaries, completed/abandoned/permission
+states, engine/implement/speed/fuel/licence/fill/storage guidance, and custom world
+limits. Run `node --import tsx --test tests/earthworks-work.test.ts` and the new
+`tests/browser/earthworks-guidance.spec.ts`; record the expected red failures.
+
+Completion criteria: the menu explains survey → confirm → operate, standalone
+land levelling, cut/fill and shoulder in plain language. Default to the current
+position, offer Centre on me and ground-level targeting, label the player on the
+plan, and show exact distance/reach before confirmation. Invalid or distant
+surveys cannot submit; moving or changing world rules updates the warning. Keep
+precise coordinates and contract/material controls available without making them
+the first thing a new operator has to understand.
+
+After confirmation, offer a direct return-to-machine action. While driving a
+backhoe or bulldozer, show only that client's selected/nearest permitted work
+area on the ground, including its inner working boundary and blended shoulder.
+Show direction/distance, progress, a clear next action, implement and engine
+controls, and explanations for missing fill, full storage, wrong speed, missing
+licence, permission, paused and finished work. No overlay for pedestrians,
+ordinary vehicles, other players' private sites or other clients. Keep the
+geometry bounded and cache it between terrain changes; do not add per-frame
+terrain-grid scans. Use existing world rules for all gameplay limits.
+
+Browser verification: survey too far away then recenter and confirm; leave the
+menu and inspect the outline from a backhoe; operate with real keyboard/button
+input until complete; test no sites, unavailable work, fill shortage and its
+resolution, mobile layout, dozer, walking and unauthorized observer states.
+Rerun affected earthworks work/contracts/machine browser flows, relevant shared
+tests, TypeScript and Prettier. Inspect real screenshots, then commit/push/deploy
+and announce only after all criteria pass. Leave unrelated backlog items pending.
+
+Microphone CB done: commit/push/deploy `984f0d16`, release 0.142.0. Verify live
+health/version, matching server SHA, active service and public same-origin
+worklet JavaScript (HTTP 200 with the existing CSP). Website published. Backup:
+`/var/lib/aclone/backups/pre-deploy-20261109-225041.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261109-225149.tar.gz`.
+Verify the bot announcement and local browser screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569560503045586978
