@@ -11909,3 +11909,16 @@ passed. Prepare patch release 0.146.2 and run final TypeScript/format/build chec
 All 69 arrival/parking/door/mount/storage unit tests and 11 camera unit tests pass.
 Final TypeScript exits 0; changed-file Prettier and diff checks pass; the prefixed
 production build passes. Release 0.146.2 contains only the completed arrival fix.
+
+Arrival routing/facing done: commit/push `1213a4e1`, deploy **0.146.2** and verify
+the exact server SHA, active service, public health, prefixed JavaScript asset
+and website version. All 80 relevant unit tests pass; all three affected browser
+flows pass, including the camera regression without weakening its assertion.
+TypeScript exits 0; changed-file Prettier, diff check and prefixed build pass.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261110-194858.sqlite`;
+website backup: `/var/backups/aclone-website/site-20261110-195017.tar.gz`.
+Verify the bot announcement and both actual 1440×900 screenshot embeds:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569876911633727639
+Release receipts remain excluded under `output/arrival-route/release/`. No live
+player grants or data edits. Resume the preserved, unreleased item 21 foundation;
+road snow is not enabled or announced by this release.
