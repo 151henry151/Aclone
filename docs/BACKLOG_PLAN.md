@@ -11839,3 +11839,16 @@ All 48 focused unit tests and TypeScript pass, and changed-file Prettier and dif
 checks are clean. Prepare 0.146.1 with the player/world-builder documentation;
 release only after the prefixed build passes. No live player data changes are
 needed: existing worlds use the canonical true default when the rule is absent.
+
+Walking entry done: commit/push `84591c30`, deploy **0.146.1** and verify exact
+server SHA, active service, public health, HTTP 200 JavaScript asset and website
+version. The deployment script's first request caught a transient restart 502;
+the subsequent live checks pass without another deployment. All 48 focused unit
+tests, the new walking-entry browser flow and the corrected full parking browser
+flow pass; TypeScript, changed-file Prettier, diff check and prefixed build pass.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261110-192654.sqlite`;
+website backup: `/var/backups/aclone-website/site-20261110-192852.tar.gz`.
+Verify the bot post and actual screenshot embed:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569871457821921291
+Evidence remains excluded in `output/walk-in-entry/release/`. No player data
+changes. The next numbered backlog item remains 21, Snow ploughing.
