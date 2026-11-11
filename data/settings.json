@@ -82,6 +82,7 @@
   "parkingSearchRange": 30,
   "parkingMountSeconds": 1.6,
   "arrivalAnimation": "full",
+  "arrivalWalkIn": true,
   "arrivalQuickSeconds": 1,
   "arrivalMinSeconds": 2,
   "arrivalMaxSeconds": 4,

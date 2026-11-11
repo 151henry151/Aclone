@@ -990,7 +990,14 @@ nearby-building control (also in the mobile actions menu) to keep your current
 vehicle and hitch. Existing range and cargo checks still apply; a nearby parked
 hitched trailer remains available to its owner for shop trades. Close
 the building panel or press Escape to walk back outside. Mounting and dismounting take 1.6 seconds
-at defaults, with movement held during the sequence. Full building arrivals take
+at defaults, with movement held during the sequence.
+
+On foot, press **Ctrl/E** as you walk up within the building's interaction range:
+you can keep walking or running until entry takes over, without waiting to stop.
+The existing walk-in animation brings you to the door and opens the menu. Finish
+other activities first; when driving, slow to a stop before entering. World
+builders can turn off **Allow building entry while walking** to restore the old
+stop-first rule. Full building arrivals take
 2–4 seconds; the owner can select quick or immediate arrivals. Home and booked
 lodging offer **Depart on foot** and **Depart in tractor**. If your tractor has
 been moved, walk to its current marker instead.

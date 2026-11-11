@@ -40,6 +40,7 @@ export const parkingFields = {
     max: 10,
     step: 0.1,
   },
+  arrivalWalkIn: { label: 'Allow building entry while walking' },
   arrivalAnimation: { label: 'Arrival animations', choices: ['full', 'quick', 'off'] },
   arrivalQuickSeconds: { label: 'Quick arrival duration (seconds)', min: 0.1, max: 10, step: 0.1 },
   arrivalMinSeconds: { label: 'Shortest full arrival (seconds)', min: 0.1, max: 30, step: 0.1 },

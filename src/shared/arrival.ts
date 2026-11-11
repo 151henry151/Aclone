@@ -47,7 +47,16 @@ export function arrivalPosition(p: Player, time: number) {
   };
 }
 export function approachBuilding(w: World, p: Player, b: Building, home = false) {
-  if (p.task || p.hitch || p.crowBody || p.game || p.inside || p.atHome || Math.abs(p.speed) >= 0.5)
+  const walkingIn = p.vehicle === 5 && parkingRules(w.settings).arrivalWalkIn;
+  if (
+    p.task ||
+    p.hitch ||
+    p.crowBody ||
+    p.game ||
+    p.inside ||
+    p.atHome ||
+    (!walkingIn && Math.abs(p.speed) >= 0.5)
+  )
     throw Error('Stop outside and finish your activity before entering');
   if (boatSlot(p.vehicle, w)) throw Error('Disembark at a boathouse before entering a building');
   if (b.construction) throw Error('Supply the construction materials first');

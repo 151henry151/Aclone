@@ -11797,3 +11797,45 @@ Receipts remain excluded in `output/camera-follow/release/`. Manual remains the
 default, the preference is browser-local, and no world/player state migration
 is needed. Next numbered backlog item remains 21, Snow ploughing; no partial
 snow implementation is included in this release.
+
+### Walk straight into buildings — criteria before production
+
+Henry reports that Ctrl refuses entry until walking momentum has fully stopped.
+Allow an on-foot player in approach range to press Ctrl/E while walking or
+running and immediately begin the existing authoritative entry, clearing speed
+as that transition starts. Apply in full, quick and off animation modes and
+home arrival. Keep activity/game/hitch/inside, construction, range, boat and
+airborne-vehicle refusals atomic; retain the existing stop requirement for
+vehicles. Add canonical world rule `arrivalWalkIn: true` with an editor checkbox,
+validation, saved rules and summary; false restores the previous walking check.
+
+Before implementation, extend `tests/arrival.test.ts` with moving pedestrians,
+mode/default/override coverage, immutable refused states and moving vehicles;
+run `node --import tsx --test tests/arrival.test.ts` red on the walking refusal.
+Run affected arrival, parking and rule tests green. Browser: in a real local
+world hold W, verify walking speed exceeds the old threshold, tap Ctrl without
+releasing W, observe entry/door progress then the building menu; verify no
+stop/activity error and that held movement cannot drive through the transition.
+Exit, exercise the disabled rule's refusal and save/reopen its editor checkbox.
+Capture actual entry/menu evidence. TypeScript, changed-file Prettier, diff check
+and prefixed build must pass before commit/push/deploy and screenshot announcement.
+
+Walking-entry verification: reproduce the exact stop/activity refusal with a
+moving pedestrian; separately reproduce the unknown-setting failure before
+adding the canonical opt-out. All 48 relevant arrival, parked-vehicle and
+parking-UI unit tests pass. The new browser flow passes: hold W, press Ctrl while
+moving, observe authoritative entry and the shop menu, then save/reopen the
+world-rule opt-out and verify its refusal while moving and success when stopped.
+The broader pre-existing parking browser flow reaches its later reboarding step
+but uses the obsolete “Board vehicle” label; update only that test's locators to
+the shipped “Get in Puddle tractor” label, retaining its full behavior assertions,
+and rerun it before release. Inspect actual entry and shop-menu screenshots.
+The same legacy browser test also assumed an expanded tractor showroom; add its
+real summary click before selecting a tractor. Preserve all parking, door,
+arrival, exit, mounting and garage-drive-out assertions.
+Both affected browser flows now pass, including the complete existing parking,
+entry, exit, reboarding and garage-drive-out sequence; its final runner exits 0.
+All 48 focused unit tests and TypeScript pass, and changed-file Prettier and diff
+checks are clean. Prepare 0.146.1 with the player/world-builder documentation;
+release only after the prefixed build passes. No live player data changes are
+needed: existing worlds use the canonical true default when the rule is absent.

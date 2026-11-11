@@ -166,3 +166,65 @@ test('the person crosses only while the arrival door is open', async () => {
     true,
   );
 });
+
+test('moving pedestrians can enter without waiting, across animation modes and legacy settings', () => {
+  for (const mode of ['full', 'quick', 'off'] as const) {
+    for (const speed of [1.5, 5, -2]) {
+      const { w, p, b } = setup();
+      w.settings.arrivalAnimation = mode;
+      delete w.settings.arrivalWalkIn;
+      Object.assign(p, { vehicle: 5, speed });
+      const from = { x: p.x, y: p.y, z: p.z };
+      act(w, p.id, { type: 'approach', building: b.id });
+      assert.equal(p.speed, 0);
+      if (mode !== 'off') {
+        assert.equal(p.task?.kind, 'entering');
+        assert.deepEqual(p.task!.arrival!.from, from);
+        move(w, p, { throttle: 1, steer: 1, boost: true }, 0.2);
+        assert.equal(p.speed, 0);
+        assert.deepEqual({ x: p.x, y: p.y, z: p.z }, from);
+        advance(w, p.task!.end - w.time);
+      }
+      assert.equal(p.inside, b.id);
+    }
+  }
+  const { w, p, b } = setup();
+  b.kind = 'home';
+  b.owner = p.id;
+  Object.assign(p, { vehicle: 5, speed: 4 });
+  act(w, p.id, { type: 'home', building: b.id });
+  assert.equal(p.speed, 0);
+  advance(w, p.task!.end - w.time);
+  assert.equal(p.atHome, true);
+});
+
+test('walk-in opt-out and vehicle speeds retain stop checks without changing refused state', () => {
+  for (const vehicle of [0, 5]) {
+    const { w, p, b } = setup();
+    w.settings.arrivalWalkIn = vehicle !== 5;
+    Object.assign(p, { vehicle, speed: 2 });
+    const before = JSON.stringify(w);
+    assert.throws(() => act(w, p.id, { type: 'approach', building: b.id }), /Stop outside/);
+    assert.equal(JSON.stringify(w), before);
+    p.speed = 0;
+    act(w, p.id, { type: 'approach', building: b.id });
+    assert.equal(p.task?.kind, 'entering');
+  }
+});
+
+test('moving pedestrians still respect activities, range and construction atomically', () => {
+  for (const block of ['task', 'game', 'hitch', 'inside', 'home', 'range', 'construction']) {
+    const { w, p, b } = setup();
+    Object.assign(p, { vehicle: 5, speed: 4 });
+    if (block === 'task') p.task = { kind: 'labour', end: w.time + 20 };
+    if (block === 'game') p.game = 'combat';
+    if (block === 'hitch') p.hitch = 'other-player';
+    if (block === 'inside') p.inside = 'other-building';
+    if (block === 'home') p.atHome = true;
+    if (block === 'range') p.x = 100;
+    if (block === 'construction') b.construction = { required: {}, supplied: {} } as any;
+    const before = JSON.stringify(w);
+    assert.throws(() => act(w, p.id, { type: 'approach', building: b.id }));
+    assert.equal(JSON.stringify(w), before);
+  }
+});

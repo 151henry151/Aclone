@@ -1958,7 +1958,11 @@ Arrival controls are `arrivalAnimation` (**full**, **quick**, **off**),
 `arrivalMinSeconds: 2`, `arrivalMaxSeconds: 4`, `arrivalRange: 18` metres and
 `arrivalDoorDegrees: 90`. Minimum duration cannot exceed maximum duration.
 Full arrivals scale with approach distance, quick mode uses its configured
-short duration, and off skips animation. Boarding and entry stay server checked.
+short duration, and off skips animation. `arrivalWalkIn: true` (**Allow building
+entry while walking**) lets an on-foot approach begin immediately while moving,
+then clears walking speed as the entry sequence takes over. False restores the
+stop-first walking requirement. Vehicles still need to stop, and range, activity,
+construction and disembark/landing checks remain. Boarding and entry stay server checked.
 The same controls apply to keyboard, touch and controller input; NPC parking can
 be disabled independently. Existing door schedules and interior-detail settings
 still apply; an entrance opens for a crossing and occupied rooms light up.

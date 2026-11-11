@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.1] - 2026-11-10
+
+### Fixed
+
+- Let pedestrians press Ctrl/E while walking up to a building and continue directly into its entry animation; retain activity and vehicle checks and offer a world-builder stop-first override.
+
 ## [0.146.0] - 2026-11-10
 
 ### Added

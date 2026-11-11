@@ -163,8 +163,10 @@ test('a real approach parks the tractor, swings the door, opens the panel after 
     // below are triggered through the real player controls.
     const parked = app.worlds.get(w.id)!.parkedVehicles![`${p.id}:0`];
     Object.assign(current(), { x: parked.x - 1.4, y: parked.y, z: parked.z });
-    await expect(page.getByRole('button', { name: 'Board vehicle', exact: true })).toBeEnabled();
-    await page.getByRole('button', { name: 'Board vehicle', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }),
+    ).toBeEnabled();
+    await page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }).click();
     await expect.poll(() => current().task?.kind, { intervals: [50] }).toBe('mounting');
     await expect
       .poll(
@@ -182,8 +184,10 @@ test('a real approach parks the tractor, swings the door, opens the panel after 
     await page.getByRole('button', { name: 'Switch to walking', exact: true }).click();
     await expect.poll(() => current().task?.kind, { intervals: [50] }).toBe('dismounting');
     await expect.poll(() => current().task).toBeUndefined();
-    await expect(page.getByRole('button', { name: 'Board vehicle', exact: true })).toBeEnabled();
-    await page.getByRole('button', { name: 'Board vehicle', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }),
+    ).toBeEnabled();
+    await page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }).click();
     await expect.poll(() => current().task?.kind, { intervals: [50] }).toBe('mounting');
     await expect.poll(() => current().task).toBeUndefined();
     await expect.poll(() => current().vehicle).toBe(0);
@@ -203,6 +207,7 @@ test('a real approach parks the tractor, swings the door, opens the panel after 
     await expect.poll(() => page.evaluate(() => (globalThis as any).__parkingScene.me.x)).toBe(50);
     await page.keyboard.press('e');
     await expect.poll(() => current().inside).toBe(garage.id);
+    await page.locator('details[data-fleet-disclosure="tractor-shop"] summary').click();
     await expect(page.locator('#tractor-choice')).toBeVisible();
     await page.locator('#tractor-choice').selectOption('24');
     await page.getByRole('button', { name: 'Drive this tractor', exact: true }).click();

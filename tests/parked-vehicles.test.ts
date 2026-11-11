@@ -141,6 +141,7 @@ test('parking controls validate atomically and survive editor, save and design r
     parkingSearchRange: 45,
     parkingMountSeconds: 2,
     arrivalAnimation: 'quick',
+    arrivalWalkIn: false,
     arrivalQuickSeconds: 1.5,
     arrivalMinSeconds: 3,
     arrivalMaxSeconds: 5,
@@ -154,6 +155,7 @@ test('parking controls validate atomically and survive editor, save and design r
     { parkingTowFee: Infinity },
     { parkingNpcs: 1 },
     { arrivalAnimation: 'invalid' },
+    { arrivalWalkIn: 'yes' },
     { arrivalMinSeconds: 6, arrivalMaxSeconds: 4 },
   ]) {
     const before = JSON.stringify(w);
@@ -163,6 +165,7 @@ test('parking controls validate atomically and survive editor, save and design r
   const html = settingsFields(w.settings);
   for (const key of Object.keys(parkingFields)) assert.ok(html.includes(`name="${key}"`), key);
   assert.match(rulesSummary(w), /Parking.*12.*3456/);
+  assert.match(rulesSummary(w), /walking entry false/);
   const dest = createWorld('copy', 'Copy', p.id);
   applyDesign(dest, exportDesign(w));
   const store = new Store(':memory:');
