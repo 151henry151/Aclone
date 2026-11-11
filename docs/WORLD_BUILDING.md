@@ -1957,7 +1957,11 @@ Arrival controls are `arrivalAnimation` (**full**, **quick**, **off**),
 `parkingMountSeconds: 1.6`, `arrivalQuickSeconds: 1`,
 `arrivalMinSeconds: 2`, `arrivalMaxSeconds: 4`, `arrivalRange: 18` metres and
 `arrivalDoorDegrees: 90`. Minimum duration cannot exceed maximum duration.
-Full arrivals scale with approach distance, quick mode uses its configured
+Full arrivals follow a checked route around rotated building walls, with
+`arrivalWallClearance: 0.45` metres for pedestrian clearance (editable from 0.1
+to 2 m). A blocked doorway refuses entry before parking. Exits keep the final
+walking direction and the outside camera angle. Full arrivals scale with route
+distance, quick mode uses its configured
 short duration, and off skips animation. `arrivalWalkIn: true` (**Allow building
 entry while walking**) lets an on-foot approach begin immediately while moving,
 then clears walking speed as the entry sequence takes over. False restores the

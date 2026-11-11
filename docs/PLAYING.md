@@ -994,7 +994,10 @@ at defaults, with movement held during the sequence.
 
 On foot, press **Ctrl/E** as you walk up within the building's interaction range:
 you can keep walking or running until entry takes over, without waiting to stop.
-The existing walk-in animation brings you to the door and opens the menu. Finish
+The walk-in animation goes around building walls to the door and opens the menu,
+including when you approach from behind. On leaving, you keep facing the way you
+walked out; press forward to continue away from the door. If another building
+blocks the entrance completely, move to a clear approach before entering. Finish
 other activities first; when driving, slow to a stop before entering. World
 builders can turn off **Allow building entry while walking** to restore the old
 stop-first rule. Full building arrivals take

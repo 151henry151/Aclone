@@ -12,7 +12,7 @@ import { nameTagRules } from '../shared/name-tag-rules';
 import { withinBuildingRange } from '../shared/simulation';
 import { VehicleMountScene } from './vehicle-mount-animation';
 import { animateArrivalDoors } from './arrival-animation';
-import { arrivalPosition, arrivalVisible } from '../shared/arrival';
+import { arrivalPose, arrivalVisible } from '../shared/arrival';
 import { ParkedVehicleScene } from './parked-vehicle-scene';
 import { batchInteriorProps } from './interior-batching';
 import { buildingDoorRules } from '../shared/building-doors';
@@ -1762,10 +1762,7 @@ export class GameScene {
           mesh.visible =
             !arriving.atHome && !arriving.inside && arrivalVisible(arriving, motionTime);
         if (arriving?.task?.arrival) {
-          const a = arriving.task.arrival;
-          Object.assign(pose, arrivalPosition(arriving, motionTime), {
-            heading: Math.atan2(a.to.x - a.from.x, a.to.z - a.from.z),
-          });
+          Object.assign(pose, arrivalPose(arriving, motionTime));
         }
         const travel =
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
@@ -2054,6 +2051,14 @@ export class GameScene {
         this.chase += diff * (1 - Math.exp(-dt * 3));
         if (local.userData.snapCamera) this.chase = facing;
         const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
+        if (!arriving && this.arrivalCamera && this.cameraMode === 0) {
+          // The character keeps the last walking direction. Retain the outside
+          // camera angle instead of swinging it behind that new facing through
+          // the building; auto-follow resumes normally when the player moves.
+          this.chase = facing;
+          this.orbit =
+            Math.atan2(pos.x - this.arrivalCamera.x, pos.z - this.arrivalCamera.z) - facing;
+        }
         if (
           this.autoFollow &&
           this.cameraMode === 0 &&
@@ -2100,7 +2105,7 @@ export class GameScene {
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, { position: cam, near: this.camera.near });
         if (
-          (p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
+          (walking || p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
           !arriving &&
           this.cameraMode === 0
         )
@@ -2133,7 +2138,7 @@ export class GameScene {
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, this.camera);
         if (
-          (p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
+          (walking || p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
           !arriving &&
           this.cameraMode === 0
         )

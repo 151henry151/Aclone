@@ -11852,3 +11852,60 @@ Verify the bot post and actual screenshot embed:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569871457821921291
 Evidence remains excluded in `output/walk-in-entry/release/`. No player data
 changes. The next numbered backlog item remains 21, Snow ploughing.
+
+### Building arrival facing and rear approaches — criteria before production
+
+Henry reports a half-turn after exiting and asks that rear approaches walk around
+walls to the actual entrance. Interrupt item 21 for this focused player fix;
+keep its unreleased foundation patch/tests in excluded `output/snow-ploughing/wip/`
+and restore them after this release. No snow work belongs in this release.
+
+Before production, extend arrival tests to reproduce the exit heading reset and
+the current straight line through a building from behind. Cover rotated buildings,
+side/rear approaches, inset/multiple-volume facades, nearby buildings, cancellation
+mid-approach, animation full/quick/off, zero-length and legacy saved arrivals.
+Expected: the visible path never crosses solid building volumes, each visible
+segment faces its direction of travel, and the final authoritative heading
+matches the last animated segment (including immediate forward movement).
+Keep existing timing/door/menu/parking semantics and refusals; a genuinely blocked
+route refuses before parking or changing player state. Add a canonical configurable
+pedestrian wall-clearance value rather than copying a gameplay distance.
+
+Run `node --import tsx --test tests/arrival.test.ts` red first, then arrival/parking/
+door/mount and any new routing tests green. Browser: actual rear Ctrl entry,
+side path around walls and front doorway/menu, Escape exit with stable facing
+before/after completion and W moving away, plus cancelled approach. Capture
+actual rear-route and outward-facing screenshots and inspect them. Require clean
+TypeScript, Prettier, diff check and prefixed build; update player/world-builder
+help, README and changelog, then commit/push/deploy and announce this fix with
+actual screenshots before restoring snow work.
+
+Arrival regressions reproduce both defects before production: exit completion
+sets pi when the visible final direction is zero; rear entry samples cross the
+market's solid footprint. Implement a one-time visibility route over rotated
+building volumes, shared path position/direction, and preflight checks before
+parking/storage mutations. Add canonical `arrivalWallClearance: 0.45` metres.
+All 69 affected arrival/parking/door/mount/garage unit tests pass, including
+rotation, neighboring walls, cancellation, legacy/zero-length paths, immediate
+animation and validated/exported rules. A separate catalog audit finds valid
+front entry/exit paths for all 331 catalog/architecture combinations.
+
+The new actual browser rear-entry/exit/cancellation flow passes and screenshots
+show the character taking the side of the shop. The existing parking browser
+then catches a related camera regression: the new correct outward heading
+moves the chase camera through the house (z -1.53 instead of outside above 6).
+Retain this assertion. Preserve the captured outside angle when an arrival ends,
+and reuse structural camera clearance for pedestrians; rerun this failed flow
+and the new rear-route flow before release. The ordinary moving Ctrl-entry
+browser flow already passes with the routing changes. Do not release until the
+camera regression passes as well.
+
+Final arrival browser verification passes: the rear Ctrl-entry/exit/cancellation
+flow and complete existing parking/entry/re-entry/mount/garage-drive-out flow
+both exit 0. Preserve the original outside-camera assertion. Inspect actual
+screenshots of walking around the shop and facing outward outside its door;
+use these for the announcement. The normal moving Ctrl-entry regression also
+passed. Prepare patch release 0.146.2 and run final TypeScript/format/build checks.
+All 69 arrival/parking/door/mount/storage unit tests and 11 camera unit tests pass.
+Final TypeScript exits 0; changed-file Prettier and diff checks pass; the prefixed
+production build passes. Release 0.146.2 contains only the completed arrival fix.

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.2] - 2026-11-10
+
+### Fixed
+
+- Keep the character facing outward after leaving a building; route rear and side approaches around walls to the door, including cancelled approaches, and keep the outside camera clear of the building.
+
 ## [0.146.1] - 2026-11-10
 
 ### Fixed

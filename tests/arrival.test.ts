@@ -228,3 +228,143 @@ test('moving pedestrians still respect activities, range and construction atomic
     assert.equal(JSON.stringify(w), before);
   }
 });
+
+test('exit preserves the last animated direction instead of turning back toward the door', async () => {
+  const { arrivalPosition } = await import('../src/shared/arrival');
+  for (const rotation of [0, 0.7, Math.PI, -1.3]) {
+    const { w, p, b } = setup();
+    b.rotation = rotation;
+    p.vehicle = 5;
+    act(w, p.id, { type: 'approach', building: b.id });
+    advance(w, p.task!.end - w.time);
+    act(w, p.id, { type: 'exitBuilding' });
+    const a = p.task!.arrival!;
+    const before = arrivalPosition(p, a.end - 0.01);
+    const expected = Math.atan2(a.to.x - before.x, a.to.z - before.z);
+    advance(w, a.end - w.time);
+    assert.ok(
+      Math.abs(Math.atan2(Math.sin(p.heading - expected), Math.cos(p.heading - expected))) < 1e-8,
+      `exit facing ${p.heading} must match animated direction ${expected}`,
+    );
+  }
+});
+
+test('rear and side approaches go around the rotated solid building footprint', async () => {
+  const { arrivalPosition } = await import('../src/shared/arrival');
+  const { blocksBuilding, buildingPlan, buildingBounds } =
+    await import('../src/shared/building-shapes');
+  for (const rotation of [0, 0.7, Math.PI / 2]) {
+    for (const kind of ['market', 'school', 'home']) {
+      const { w, p, b } = setup();
+      b.kind = kind;
+      b.rotation = rotation;
+      w.settings.arrivalRange = 50;
+      const bounds = buildingBounds(buildingPlan(b));
+      const z = bounds.minZ - 2;
+      Object.assign(p, {
+        vehicle: 5,
+        x: b.x + z * Math.sin(rotation),
+        z: b.z + z * Math.cos(rotation),
+      });
+      act(w, p.id, { type: 'approach', building: b.id });
+      const a = p.task!.arrival!;
+      for (let i = 0; i <= 200; i++) {
+        const pos = arrivalPosition(p, a.start + ((a.end - a.start) * i) / 200);
+        assert.equal(
+          blocksBuilding(b, pos.x, pos.z, 0, 0),
+          false,
+          `${kind}, rotation ${rotation}: visible walk crosses wall at ${JSON.stringify(pos)}`,
+        );
+      }
+    }
+  }
+});
+
+test('routing faces each segment, avoids neighbouring walls and safely cancels from behind', async () => {
+  const { arrivalPose, arrivalPosition } = await import('../src/shared/arrival');
+  const { blocksBuilding } = await import('../src/shared/building-shapes');
+  const { w, p, b } = setup();
+  const neighbour = makeBuilding('neighbour', 'home', 8, -12);
+  w.buildings.push(neighbour);
+  Object.assign(p, { vehicle: 5, x: 0, z: -22, y: 0 });
+  act(w, p.id, { type: 'approach', building: b.id });
+  const a = p.task!.arrival!;
+  assert.ok(a.path!.length > 2);
+  for (let i = 1; i < 70; i++) {
+    const time = a.start + ((a.end - a.start) * i) / 100;
+    const pos = arrivalPose(p, time),
+      later = arrivalPosition(p, time + 0.000001);
+    for (const building of w.buildings)
+      assert.equal(blocksBuilding(building, pos.x, pos.z, 0, 0), false);
+    const direction = Math.atan2(later.x - pos.x, later.z - pos.z);
+    assert.ok(
+      Math.abs(Math.atan2(Math.sin(pos.heading - direction), Math.cos(pos.heading - direction))) <
+        1e-6,
+    );
+  }
+  advance(w, (a.end - a.start) * 0.2);
+  const before = arrivalPosition(p, w.time);
+  act(w, p.id, { type: 'exitBuilding' });
+  assert.deepEqual(arrivalPosition(p, w.time), before, 'cancelling must not teleport to the door');
+  const exit = p.task!.arrival!;
+  for (let i = 0; i <= 100; i++) {
+    const pos = arrivalPosition(p, exit.start + ((exit.end - exit.start) * i) / 100);
+    for (const building of w.buildings)
+      assert.equal(blocksBuilding(building, pos.x, pos.z, 0, 0), false);
+  }
+  advance(w, exit.end - w.time);
+  assert.equal(p.inside, undefined);
+});
+
+test('blocked doorway refuses atomically, and stale home parking does not teleport a pedestrian', () => {
+  const { w, p, b } = setup();
+  Object.assign(p, { vehicle: 5, x: 0, z: -22 });
+  const obstruction = makeBuilding('blocked-door', 'home', 0, -7);
+  w.buildings.push(obstruction);
+  const before = JSON.stringify(w);
+  assert.throws(() => act(w, p.id, { type: 'approach', building: b.id }), /clear walking route/);
+  assert.equal(JSON.stringify(w), before);
+  w.buildings = [b];
+  p.homeParking = { building: b.id, slot: 0 };
+  const start = { x: p.x, y: p.y, z: p.z };
+  act(w, p.id, { type: 'approach', building: b.id });
+  assert.deepEqual(p.task!.arrival!.from, start);
+});
+
+test('legacy paths, zero-length arrivals and disabled animations retain final facing', async () => {
+  const { arrivalPose, finishArrival } = await import('../src/shared/arrival');
+  const { buildingEntry } = await import('../src/shared/parking-site');
+  const { w, p, b } = setup();
+  const from = { x: 0, y: 0, z: 0 },
+    to = { x: 2, y: 0, z: 3 };
+  p.task = { kind: 'exiting', end: 2, arrival: { building: b.id, start: 0, end: 2, from, to } };
+  const heading = arrivalPose(p, 2).heading;
+  finishArrival(w, p);
+  assert.equal(p.heading, heading);
+  p.heading = 1.25;
+  p.task = { kind: 'exiting', end: 2, arrival: { building: b.id, start: 0, end: 2, from: to, to } };
+  finishArrival(w, p);
+  assert.equal(p.heading, 1.25);
+  for (const mode of ['full', 'quick', 'off']) {
+    Object.assign(w.settings, { arrivalAnimation: mode });
+    Object.assign(p, buildingEntry(b), { vehicle: 5, y: 0, inside: b.id });
+    act(w, p.id, { type: 'exitBuilding' });
+    if (p.task) advance(w, p.task.end - w.time);
+    assert.ok(Math.abs(p.heading - b.rotation) < 1e-8);
+  }
+});
+
+test('arrival wall clearance uses validated world defaults and survives rule export', async () => {
+  const { configureRules, exportDesign, applyDesign } = await import('../src/server/world-design');
+  const { parkingRules } = await import('../src/shared/parking-rules');
+  const { w, p } = setup();
+  assert.equal(parkingRules(w.settings).arrivalWallClearance, 0.45);
+  delete w.settings.arrivalWallClearance;
+  assert.equal(parkingRules(w.settings).arrivalWallClearance, 0.45);
+  configureRules(w, { arrivalWallClearance: 0.8 });
+  const target = createWorld('clearance', 'Clearance', 'owner');
+  applyDesign(target, exportDesign(w));
+  assert.equal(target.settings.arrivalWallClearance, 0.8);
+  for (const value of [0, 3, NaN, 'wide'])
+    assert.throws(() => act(w, p.id, { type: 'settings', patch: { arrivalWallClearance: value } }));
+});

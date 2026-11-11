@@ -52,7 +52,12 @@ function checkDeposit(
   );
 }
 /** Validate the whole arriving rig before parking or changing the active vehicle. */
-export function storeHangarArrival(w: World, p: Player, b: Building) {
+export function storeHangarArrival(
+  w: World,
+  p: Player,
+  b: Building,
+  beforeStore: () => void = () => {},
+) {
   if (
     !b.aircraftHangar ||
     !storageGarage(b) ||
@@ -68,6 +73,7 @@ export function storeHangarArrival(w: World, p: Player, b: Building) {
     'Only your own trailers may be stored with this vehicle',
   );
   checkDeposit(w, p, b, p, 1 + rig.length);
+  beforeStore();
   const slot = p.vehicle;
   parkCurrentVehicle(w, p, b.id).garageStored = true;
   switchVehicle(p, 5, true, w);

@@ -83,6 +83,7 @@
   "parkingMountSeconds": 1.6,
   "arrivalAnimation": "full",
   "arrivalWalkIn": true,
+  "arrivalWallClearance": 0.45,
   "arrivalQuickSeconds": 1,
   "arrivalMinSeconds": 2,
   "arrivalMaxSeconds": 4,

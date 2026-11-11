@@ -1,3 +1,4 @@
+import { arrivalRoute, arrivalPathLength, arrivalPathPose, type WalkPoint } from './arrival-route';
 import { boatSlot } from './boats';
 import { storeHangarArrival } from './garage-storage';
 import { beginVehicleMount } from './vehicle-mount';
@@ -14,6 +15,7 @@ import {
 import { buildingEntry } from './parking-site';
 import { travelHeight } from './dock';
 export interface Arrival {
+  path?: WalkPoint[];
   mount?: import('./vehicle-mount').VehicleMount;
   building: string;
   start: number;
@@ -33,19 +35,20 @@ export function arrivalDuration(w: World, distance: number) {
       : r.arrivalMinSeconds +
         (r.arrivalMaxSeconds - r.arrivalMinSeconds) * Math.min(1, distance / r.arrivalRange);
 }
-export function arrivalPosition(p: Player, time: number) {
+export function arrivalPose(p: Player, time: number) {
   const a = p.task?.arrival;
-  if (!a) return { x: p.x, y: p.y, z: p.z };
+  if (!a) return { x: p.x, y: p.y, z: p.z, heading: p.heading };
   const duration = a.end - a.start;
   const start = a.fromInside ? a.start + duration * arrivalDoorOpen : (a.mount?.end ?? a.start);
   const end = p.task?.kind === 'entering' ? a.start + duration * arrivalDoorClose : a.end;
   const f = Math.max(0, Math.min(1, (time - start) / (end - start || 1)));
-  return {
-    x: a.from.x + (a.to.x - a.from.x) * f,
-    y: a.from.y + (a.to.y - a.from.y) * f,
-    z: a.from.z + (a.to.z - a.from.z) * f,
-  };
+  return arrivalPathPose(a.path ?? [a.from, a.to], f, p.heading);
 }
+export function arrivalPosition(p: Player, time: number) {
+  const { x, y, z } = arrivalPose(p, time);
+  return { x, y, z };
+}
+
 export function approachBuilding(w: World, p: Player, b: Building, home = false) {
   const walkingIn = p.vehicle === 5 && parkingRules(w.settings).arrivalWalkIn;
   if (
@@ -64,25 +67,37 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     throw Error(`Move within ${parkingRules(w.settings).arrivalRange} metres of this building`);
   const original = { x: p.x, y: p.y, z: p.z };
   const previousVehicle = p.vehicle;
-  if (!storeHangarArrival(w, p, b)) parkAtHome(w, p, b);
-  // ParkAtHome finds the safe kerb; the visible walk starts at its driver side.
-  const from =
-    p.homeParking?.building === b.id
-      ? (() => {
-          const v = w.parkedVehicles?.[`${p.id}:${p.homeParking!.slot}`];
-          const offset = parkingRules(w.settings).parkingDoorOffset;
-          return v
-            ? {
-                x: v.x - Math.cos(v.heading) * offset,
-                z: v.z + Math.sin(v.heading) * offset,
-                y: v.y,
-              }
-            : original;
-        })()
-      : original;
   const entry = buildingEntry(b),
     to = { ...entry, y: travelHeight(w, entry.x, entry.z) };
-  const end = w.time + arrivalDuration(w, Math.hypot(to.x - from.x, to.z - from.z));
+  const offset = parkingRules(w.settings).parkingDoorOffset;
+  const driverSide = (v: { x: number; z: number; heading: number }) => ({
+    x: v.x - Math.cos(v.heading) * offset,
+    z: v.z + Math.sin(v.heading) * offset,
+    y: travelHeight(w, v.x - Math.cos(v.heading) * offset, v.z + Math.sin(v.heading) * offset),
+  });
+  let path = arrivalRoute(w, b, original, to, true);
+  if (
+    !storeHangarArrival(w, p, b, () => {
+      path = arrivalRoute(w, b, driverSide(p), to, true);
+    })
+  )
+    parkAtHome(w, p, b, (point) => {
+      try {
+        path = arrivalRoute(w, b, driverSide(point), to, true);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  // ParkAtHome finds the safe kerb; the visible walk starts at its driver side.
+  const from =
+    previousVehicle !== 5 && p.homeParking?.building === b.id
+      ? (() => {
+          const v = w.parkedVehicles?.[`${p.id}:${p.homeParking!.slot}`];
+          return v ? driverSide(v) : original;
+        })()
+      : original;
+  const end = w.time + arrivalDuration(w, arrivalPathLength(path));
   Object.assign(p, from, { speed: 0 });
   const parked = w.parkedVehicles?.[`${p.id}:${previousVehicle}`];
   const mount = parked
@@ -93,7 +108,7 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     kind: 'entering',
     building: b.id,
     end,
-    arrival: { building: b.id, start: w.time, end, from, to, home, mount },
+    arrival: { building: b.id, start: w.time, end, from, to, path, home, mount },
   };
   if (end === w.time) finishArrival(w, p);
 }
@@ -112,7 +127,8 @@ export function exitBuilding(w: World, p: Player, departTractor = false) {
     z: entry.z + Math.cos(b.rotation) * r.parkingDoorOffset,
     y: travelHeight(w, entry.x, entry.z),
   };
-  const end = w.time + arrivalDuration(w, Math.hypot(to.x - from.x, to.z - from.z));
+  const path = arrivalRoute(w, b, from, to);
+  const end = w.time + arrivalDuration(w, arrivalPathLength(path));
   const home = p.atHome || p.task?.arrival?.home,
     fromInside = !!(p.inside || p.atHome);
   delete p.inside;
@@ -122,7 +138,17 @@ export function exitBuilding(w: World, p: Player, departTractor = false) {
     kind: 'exiting',
     building: b.id,
     end,
-    arrival: { building: b.id, start: w.time, end, from, to, home, departTractor, fromInside },
+    arrival: {
+      building: b.id,
+      start: w.time,
+      end,
+      from,
+      to,
+      path,
+      home,
+      departTractor,
+      fromInside,
+    },
   };
   if (end === w.time) finishArrival(w, p);
 }
@@ -130,11 +156,13 @@ export function finishArrival(w: World, p: Player, time = w.time) {
   const task = p.task,
     a = task?.arrival;
   if (!a) return false;
-  Object.assign(p, a.to, { speed: 0 });
+  Object.assign(p, a.to, {
+    speed: 0,
+    heading: arrivalPathPose(a.path ?? [a.from, a.to], 1, p.heading).heading,
+  });
   delete p.task;
   const b = w.buildings.find((b) => b.id === a.building && !b.construction);
   if (!b) return true;
-  p.heading = b.rotation + Math.PI;
   if (task!.kind === 'entering') {
     p.inside = b.id;
     if (a.home) {

@@ -2,6 +2,9 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.146.2 keeps your character facing the way they walked when leaving a building.
+Rear and side approaches walk around walls to the door, and the camera keeps a clear outside view.
+
 Version 0.146.1 lets you walk up to a building and press **Ctrl/E** without waiting for your walking
 momentum to stop. Entry takes over naturally; other activities must still finish
 first, and vehicles still need to stop. World builders can restore stop-first entry.

@@ -40,6 +40,12 @@ export const parkingFields = {
     max: 10,
     step: 0.1,
   },
+  arrivalWallClearance: {
+    label: 'Arrival pedestrian wall clearance (metres)',
+    min: 0.1,
+    max: 2,
+    step: 0.05,
+  },
   arrivalWalkIn: { label: 'Allow building entry while walking' },
   arrivalAnimation: { label: 'Arrival animations', choices: ['full', 'quick', 'off'] },
   arrivalQuickSeconds: { label: 'Quick arrival duration (seconds)', min: 0.1, max: 10, step: 0.1 },

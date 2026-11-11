@@ -284,7 +284,12 @@ export function migrateParkedVehicles(w: World) {
   }
   return changed;
 }
-export function parkAtHome(w: World, p: Player, b: Building) {
+export function parkAtHome(
+  w: World,
+  p: Player,
+  b: Building,
+  accepts: (point: { x: number; z: number; heading: number }) => boolean = () => true,
+) {
   if (!persistentVehicles(w, p)) return;
   if (parkableVehicle(w, p.vehicle)) {
     const trailers = Object.values(w.trailers ?? {}).filter(
@@ -302,8 +307,14 @@ export function parkAtHome(w: World, p: Player, b: Building) {
           heading: t.heading + angle,
         };
       });
-    const point = kerbParking(w, b, p.vehicle, parkedKey(p.id, p.vehicle), (point) =>
-      movedRig(point).every((t) => clearParkingTrailer(w, t, parkedKey(p.id, p.vehicle))),
+    const point = kerbParking(
+      w,
+      b,
+      p.vehicle,
+      parkedKey(p.id, p.vehicle),
+      (point) =>
+        movedRig(point).every((t) => clearParkingTrailer(w, t, parkedKey(p.id, p.vehicle))) &&
+        accepts(point),
     );
 
     if (!point) throw Error('No safe clear parking place by this building');
