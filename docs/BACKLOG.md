@@ -8,6 +8,68 @@ of truth across simulation, UI and NPCs. Test changed values as well as defaults
 and preserve existing saved state when policies change. Client graphics quality
 and technical performance controls remain in their appropriate layer.
 
+## Planned — Taking off from the runway
+
+Full throttle for the length of the runway, then pulling up, leaves the airplane on the ground.
+
+**What happens now.** The biplane is mode 2. `fly` in `src/shared/flight.ts` stays grounded until all of these are true at once: ground speed at least `FLIGHT.rotationSpeed` (19 m/s, about 42 mph), nose above about 4° (`pitch > 0.07`), upward acceleration above 0.4 m/s², and the wheel brake not held. On the ground the nose is clamped to roughly −2° through +17°, and with the stick released it settles toward level as speed rises. Pull-up authority on the ground is only `pitchInput * 0.55 * authority`, and authority itself scales with speed over 22 m/s. Puddlewick's marked strip is 240 m (220 m on a smaller parish). "Make a landing possible" records that takeoff already works; a full-length full-throttle run that never leaves the pavement shows that it does not.
+
+**What to change.** Find why that run never meets the lift-off gate, and make a takeoff something a pilot can do: full throttle along the public runway, then pull up, and the wheels leave the ground before the pavement ends. A moderate load may lengthen the run; it must not make the public strip impossible. Keep the crash rules for a wing, a building, the water and a dive. Do not weaken the landing work in "Make a landing possible" in order to get airborne, and do not add an automatic rotate. The stick pull is what raises the nose.
+
+**Per-world.** Rotation speed, the pitch and lift needed to unstick, and the public runway length stay world rules. The default, including on Puddlewick, is a takeoff that fits the public strip.
+
+**Tests.** On the real graded runway, full throttle from one threshold and a pull-up once the tail is flying leaves the ground before the far threshold, and the same run with the stick neutral stays down. A short strip that is genuinely too short still stays down. Water, a building and a steep bank still destroy the airframe.
+
+## Planned — A real highway tractor, and a gradual step off the pavement
+
+The on-road tractor-trailer is too simple, and leaving the pavement throws it from road speed down to a walk.
+
+**What happens now.** `createHighwayTractor` in `src/client/highway-model.ts` builds the unit from boxes: two frame rails, a cab of separate panels, a fifth-wheel disc, and three unmarked cream discs whose needles track speed, fuel and condition. Parts do not read as one truck. Frame, axles, tanks, steps, bumper and cab have gaps, so pieces look disconnected or hung in the air. The cab has a wheel and three needles, not a gauge cluster a driver can read. `highwaySurface` calls the rig a field the instant any body sample is off both pavement and dirt road, and returns `offRoadSpeed` from `data/automotive.json`, **1.4 m/s (about 3 mph)**. `move` then sets `p.speed` to that cap in one step (`src/shared/simulation.ts`). A rig doing about 40 mph becomes a 3 mph crawl in a single tick. The paved top is about 65 mph and a dirt road stays about 45 mph; only the open field is the 3 mph cliff. Semitrailers are the same family of simple geometry in `createSemitrailer`.
+
+**What to change.**
+
+1. **The truck.** Look at photographs of a conventional tractor unit and at a render of this model (side, front, rear, underside and the driver's seat). Rebuild it so the frame, axles, springs, tanks, steps, bumper, mudguards, cab and fifth wheel actually meet. Nothing that should be bolted to the frame may float. Fill in the missing frame and running gear rather than adding ornaments on top of the gaps. Do the same for the semitrailer that couples to it: landing gear, frame, floor and rear doors have to connect.
+2. **The cluster.** Replace the three discs with a readable cluster in the cab: a speedometer in mph, a fuel gauge, and the condition instrument the needles already track, each with a scale and a needle driven by the live value. The same numbers must be right from the driver's seat and wrong from nowhere else. Follow the biplane's gauge approach in `src/client/biplane.ts` where it already solves a readable face.
+3. **Leaving the road.** Stepping off the pavement slows the rig with its brakes, toward a field pace of about **12 mph (about 5.4 m/s)**, instead of snapping from road speed to 3 mph. Regaining the pavement uses ordinary acceleration back up, not a snap either. A dirt road keeps its present dirt-road pace. The whole rig, tractor and semitrailer, shares one answer.
+
+**Per-world.** Field pace stays `driving.offRoadSpeed`, default about 12 mph, including on Puddlewick. Dirt-road pace stays `dirtSpeed`. Braking rate stays the highway braking rule. A world can still choose a slower field.
+
+**Tests.** A rig at about 40 mph that puts a wheel onto the field is still well above 3 mph on the next tick, and it reaches about 12 mph by braking rather than in one step. Sitting fully off the pavement, the cap is about 12 mph. A dirt road is still about 45 mph, and pavement is still about 65 mph. A render of the tractor and a coupled semitrailer shows the frame, axles, tanks, steps and fifth wheel meeting, and the seated view shows three marked gauges whose needles match speed, fuel and condition.
+
+## Planned — Hovercraft turns should drift
+
+A hovercraft currently corners like a wheeled tractor. Turning the nose should not instantly turn the direction of travel.
+
+**What happens now.** The Marsh Courier is mode 4. In `move`, modes 0, 1 and 4 share one steering step: heading changes by `v.turn`, and the next position is `sin(heading) * speed` along that new heading. There is no sideways velocity. A full lock at speed pivots the path with the nose. The model, skirt and fan in `src/client/hovercraft.ts` are unchanged by this item.
+
+**What to change.** Keep a velocity that does not have to point along the nose. Yaw still follows the stick, with less authority at low speed so it can spin up and dock. The old direction of travel persists and bleeds off, so a turn at speed slides outward and the nose leads the path. Stopping, or holding the new heading, lets the drift die and the craft run true again. Reverse stays a slow controlled shove, not a slide across the map. Boats, tractors and the truck do not gain this drift.
+
+**Per-world.** A hovercraft drift setting, default on for the Marsh Courier, including on Puddlewick. It scales how long the old direction hangs on. Zero restores today's pivot.
+
+**Tests.** At speed, a sustained turn leaves part of the velocity along the old heading for a noticeable interval, and the path is wider than the same turn with drift off. Coming out of the turn, the velocity settles back along the nose. A tractor given the same stick does not drift. Drift off matches the current pivot.
+
+## Planned — Pull into a marked bay to store a vehicle at Spanner & Sons
+
+Parking outside the garage rewrites the vehicle into a neat spot facing away from the building. Storing it should mean driving into a marked bay, then one button.
+
+**What happens now.** Spanner & Sons is the parish tractor garage. `kerbParking` in `src/shared/parking-site.ts` searches beside the door and places a vehicle with `heading` equal to the building's rotation, so an arrival at an angle, or nose-in toward the building, is moved and turned to face away along that kerb. Storage itself is **Vehicle storage → Store in garage** inside the garage menu, after stopping and stepping out, with driver and vehicle inside the handling range (30 m by default). See `src/shared/garage-storage.ts` and `src/client/garage-storage-panel.ts`.
+
+**What to change.** Paint a bay on concrete or pavement outside Spanner & Sons: a yellow dashed rectangle, large enough for the biggest land vehicle or complete rig the garage can store (the highway tractor plus its longest semitrailer), plus enough spare room that lining up is not a precision trick. The vehicle stays where the driver put it. It is stored only when it is stopped inside that rectangle. As soon as it is, a **Store vehicle** button is on screen. The driver does not open the garage menu first. Choosing it stores the vehicle and the rig the way garage storage already does, removes them from the yard, and opens the garage menu. Leaving the building, the player is on foot. Retrieval still uses **Retrieve outside** and still needs a clear space; it must not drop the vehicle back on top of someone using the bay. The player's own vehicle-storage garage can use the same bay later; this item is Spanner & Sons.
+
+**Per-world.** Bay margin, and whether the marked bay is required, are world rules. The default, including on Puddlewick, is the marked bay and the immediate button. A world can keep today's menu-only storage.
+
+**Tests.** An angled stop outside the dashes does not move or rotate the vehicle, and no store button is shown. Stopped inside the dashes, the button is shown before the garage menu opens. Using it removes the vehicle from the yard, opens the menu, and the player walks out on foot. A rig longer than the bay without the margin does not count as inside; the bay with the margin accepts the longest stored rig. Retrieval still refuses a blocked exit.
+
+## Planned — A backhoe that reads as a backhoe
+
+The backhoe is the right machine and the wrong picture. Compare it with photographs and repair the model.
+
+**What happens now.** The backhoe and the bulldozer share `createEarthmover` in `src/client/earthmoving-model.ts`. The backhoe branch is boxes and cylinders: a slab chassis, a glass cab on posts, four wheels, a front loader of two floating links, a rear boom and stick, a bucket of plates, and two stabiliser posts. Joints are cylinders drawn between points, so a link that does not land on the arm looks hung in the air. There is no continuous frame under the cab, and the loader arms, boom and chassis do not read as one welded machine.
+
+**What to change.** Render the current backhoe from the side, the front, the rear and the operator's seat, and put those next to photographs of a backhoe loader. Fix what the comparison shows: arms and rams that do not meet their pivots, a cab or boom with no frame under it, a bucket that does not close, wheels without an axle, and stabilisers that do not reach the ground when lowered. Keep the loader at the front and the excavator at the rear, and keep the implement motion the earthworks already drive. Do not restyle it into an excavator or a tractor. The bulldozer stays as it is unless a shared part is visibly broken on both.
+
+**Tests.** A side and rear render shows the loader arms, boom, stick, bucket, rams and stabilisers meeting the chassis. Lowering the stabilisers reaches the ground. The earthworks implement still raises and lowers, and the bulldozer's blade and tracks are unchanged.
+
 ## Ideas — more vehicles
 
 Recorded so they are not forgotten. These are not designs: no slot, price, model or rule until a later entry specifies one. A planned section that already covers part of the idea stays the specification.
