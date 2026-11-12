@@ -10,6 +10,7 @@ import { exportDesign, applyDesign } from '../src/server/world-design';
 import { drivePlan } from '../src/server/npc/travel';
 import { householdBudget } from '../src/server/npc/household';
 import { worldItems } from '../src/shared/world-catalogue';
+import type { Player } from '../src/shared/types';
 
 function setup() {
   const w = createWorld('fuel-sales', 'Fuel sales', 'owner');
@@ -63,6 +64,17 @@ const pump = (id: string, quantity = 1) => ({
 });
 const buy = (id: string, quantity = 1) => ({ type: 'fuelTrailer', operation: 'buy', id, quantity });
 
+test('a fuel tanker names the activity that blocks it instead of telling an outside player to stop outside', () => {
+  const { w, buyer, t } = setup();
+  buyer.task = { kind: 'labour' } as Player['task'];
+  assert.throws(
+    () => act(w, buyer.id, buy(t.id)),
+    /Finish your current activity before using a fuel tanker/,
+  );
+  delete buyer.task;
+  buyer.atHome = true;
+  assert.throws(() => act(w, buyer.id, buy(t.id)), /Leave the building before using a fuel tanker/);
+});
 test('tanker pumping consumes whole Fuel, caps the tank and pays only for consumed items', () => {
   const { w, buyer, owner, t } = setup();
   buyer.fuel = fuelCapacity(buyer, w) - 3;

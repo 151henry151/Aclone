@@ -36,7 +36,10 @@ Buy fuel cans and drive the motorboat to your stranded vessel. Reboarding appear
 
 Tractors automatically illuminate the rear hitch and ground while reversing with
 the engine running, even if the headlights are off. Back toward the drawbar, stop,
-then choose **Inventory → Your trailers → Hitch trailer**. The reversing beam
+then choose **Inventory → Your trailers → Hitch trailer**. That row states the refusal:
+still moving, indoors, a passenger, another activity, or another trailer parked
+across the tongue. Move the named trailer clear, then reverse the rear hitch onto
+the drawbar at the front of the one you want. The reversing beam
 switches off when stopped, moving forward or the engine is off. World builders can
 disable it or adjust brightness and reach under **Rules → Vehicle running costs
 and reversing lights**. Nearby reversing tractors share a bounded light pool.

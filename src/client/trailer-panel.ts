@@ -9,6 +9,8 @@ import { fuelPanel } from './fuel-panel';
 import type { World, Player, Building } from '../shared/types';
 import {
   trailerHandlingReach,
+  trailerHandlingReason,
+  hitchRefusal,
   trailerDefs,
   trailerDef,
   trailerAccepts,
@@ -55,7 +57,9 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       html += '</section>';
       continue;
     }
-    html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', t.attached ? 'unhitch' : 'hitch')}<button>${t.attached ? 'Unhitch here' : 'Hitch trailer'}</button></form>`;
+    const handling = trailerHandlingReason(p),
+      hitchReason = t.attached ? handling : hitchRefusal(w, p, t);
+    html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', t.attached ? 'unhitch' : 'hitch')}<button${hitchReason ? ' disabled' : ''}>${t.attached ? 'Unhitch here' : 'Hitch trailer'}</button></form>${hitchReason ? `<p>${esc(hitchReason)}</p>` : ''}`;
     html += `<p>${
       itemEntries(t.cargo, items, t.cargo)
         .filter(([, n]) => n > 0)
@@ -90,7 +94,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
         ([id, n]) => n > 0 && (operation === 'unload' || trailerAccepts(w, t, id, 1)),
       );
       if (choices.length)
-        html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', operation)}${storage}<label>${label} ${b?.owner === p.id ? 'building stock' : 'inventory'}<select name="item">${choices.map(([id, n]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} (${n})</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="10000" value="1" required></label><button>${label}</button></form>`;
+        html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', operation)}${storage}<label>${label} ${b?.owner === p.id ? 'building stock' : 'inventory'}<select name="item">${choices.map(([id, n]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} (${n})</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="10000" value="1" required></label><button${handling ? ' disabled' : ''}>${label}</button></form>`;
     }
     if (b && b.owner !== p.id && t.attached === p.id) {
       for (const direction of ['buy', 'sell']) {

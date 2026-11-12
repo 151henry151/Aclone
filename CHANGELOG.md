@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.4] - 2026-11-12
+
+### Fixed
+
+- State the exact reason a trailer hitch or load is refused, and name a neighboring trailer parked across the drawbar.
+- State the exact reason a fuel tanker cannot be used.
+
 ## [0.146.3] - 2026-11-12
 
 ### Added

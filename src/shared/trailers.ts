@@ -202,11 +202,77 @@ export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; h
   }
   return true;
 }
-export function trailerAction(w: World, p: Player, a: Action) {
-  need(
-    !p.atHome && !p.hitch && !p.task && !p.game && Math.abs(p.speed) < 0.5,
-    'Stop outside before handling a trailer',
+/** Why hitch, load, or unhitch must wait. Empty when the player may handle a trailer. */
+export function trailerHandlingReason(p: Player) {
+  if (p.atHome || p.inside) return 'Leave the building before handling a trailer';
+  if (p.hitch) return 'Leave the passenger seat before handling a trailer';
+  if (p.task || p.game) return 'Finish your current activity before handling a trailer';
+  if (Math.abs(p.speed) >= 0.5) return 'Come to a full stop before handling a trailer';
+}
+function drawbarNose(w: World, t: Trailer) {
+  const reach = trailerDef(w, t.kind).length / 2 + 1.4;
+  return { x: t.x + Math.sin(t.heading) * reach, z: t.z + Math.cos(t.heading) * reach };
+}
+/** Another trailer whose body covers the tongue the tractor has to reverse onto. */
+function trailerAcrossDrawbar(w: World, t: Trailer) {
+  const d = trailerDef(w, t.kind),
+    approach = {
+      x: t.x + Math.sin(t.heading) * (d.length / 2 + 1.75),
+      z: t.z + Math.cos(t.heading) * (d.length / 2 + 1.75),
+      hx: d.width / 2,
+      hz: 1.75,
+      axes: [
+        { x: Math.cos(t.heading), z: -Math.sin(t.heading) },
+        { x: Math.sin(t.heading), z: Math.cos(t.heading) },
+      ],
+    };
+  return Object.values(w.trailers ?? {}).find(
+    (other) =>
+      other.id !== t.id &&
+      !trailerStorage(w, other) &&
+      rectanglesOverlap(approach, trailerFootprint(other, w)),
   );
+}
+/** The hitch refusal the trailer panel shows before the player clicks. */
+export function hitchRefusal(w: World, p: Player, t: Trailer) {
+  const handling = trailerHandlingReason(p);
+  if (handling) return handling;
+  if (t.attached) return 'Unhitch this trailer from its current tractor first';
+  if (isSemitrailer(t.kind)) {
+    if (p.vehicle !== HIGHWAY_TRACTOR || attachedTrailer(w, p))
+      return 'Bring a compatible highway tractor with a free fifth wheel';
+    const rear = fifthWheel(w, p),
+      nose = kingpin(w, t),
+      r = automotiveConfig(w).driving;
+    if (Math.hypot(rear.x - nose.x, rear.z - nose.z) > r.hitchRange)
+      return 'Reverse the fifth wheel under the trailer kingpin';
+    if (Math.abs(angleDifference(p.heading, t.heading)) > (r.hitchAlignment * Math.PI) / 180)
+      return 'Align the highway tractor with the semitrailer';
+    const next = semitrailerPose(w, t, p, p);
+    if (
+      rectanglesOverlap(highwayCabRect(w, p), trailerFootprint({ ...t, ...next }, w)) ||
+      !clearTrailer(w, t, next)
+    )
+      return 'Clear the cab and semitrailer before coupling';
+    return;
+  }
+  if (!isTractor(p.vehicle))
+    return 'Use an agricultural tractor. A highway tractor couples only to a semitrailer.';
+  if (attachedTrailer(w, p)) return 'Unhitch the trailer already on this tractor';
+  const blocker = trailerAcrossDrawbar(w, t);
+  if (blocker)
+    return `The drawbar is at the front of this trailer, and your ${trailerDef(w, blocker.kind).name} is parked across it. Move that trailer clear before hitching.`;
+  const rear = { x: p.x - Math.sin(p.heading) * 2.7, z: p.z - Math.cos(p.heading) * 2.7 },
+    nose = drawbarNose(w, t),
+    gap = Math.hypot(rear.x - nose.x, rear.z - nose.z);
+  if (gap >= 2)
+    return `Reverse until the tractor's rear hitch meets the drawbar at the front of the trailer. The hitch is ${Math.max(1, Math.round(gap))} m from the drawbar.`;
+  if (Math.cos(p.heading - t.heading) <= 0.7)
+    return 'Point the tractor the same way as the trailer, then back onto the drawbar.';
+}
+export function trailerAction(w: World, p: Player, a: Action) {
+  const handling = trailerHandlingReason(p);
+  need(!handling, handling ?? '');
   const t = w.trailers?.[String(a.id)];
   if (a.operation === 'buy') {
     const kind = String(a.kind) as TrailerKind;
@@ -309,46 +375,12 @@ export function trailerAction(w: World, p: Player, a: Action) {
     return 'Trailer parked here with its cargo.';
   }
   if (a.operation === 'hitch') {
-    need(!t.attached, 'Unhitch this trailer from its current tractor first');
+    const reason = hitchRefusal(w, p, t);
+    need(!reason, reason ?? '');
     if (isSemitrailer(t.kind)) {
-      need(
-        p.vehicle === HIGHWAY_TRACTOR && !attachedTrailer(w, p),
-        'Bring a compatible highway tractor with a free fifth wheel',
-      );
-      const rear = fifthWheel(w, p),
-        nose = kingpin(w, t),
-        r = automotiveConfig(w).driving;
-      need(
-        Math.hypot(rear.x - nose.x, rear.z - nose.z) <= r.hitchRange,
-        'Reverse the fifth wheel under the trailer kingpin',
-      );
-      need(
-        Math.abs(angleDifference(p.heading, t.heading)) <= (r.hitchAlignment * Math.PI) / 180,
-        'Align the highway tractor with the semitrailer',
-      );
-      const next = semitrailerPose(w, t, p, p);
-      need(
-        !rectanglesOverlap(highwayCabRect(w, p), trailerFootprint({ ...t, ...next }, w)) &&
-          clearTrailer(w, t, next),
-        'Clear the cab and semitrailer before coupling',
-      );
-      Object.assign(t, next, { attached: p.id });
+      Object.assign(t, semitrailerPose(w, t, p, p), { attached: p.id });
       return 'Semitrailer coupled to the fifth wheel.';
     }
-    need(
-      isTractor(p.vehicle) && !attachedTrailer(w, p),
-      'Bring a compatible agricultural tractor with a free hitch',
-    );
-    const rear = { x: p.x - Math.sin(p.heading) * 2.7, z: p.z - Math.cos(p.heading) * 2.7 };
-    const nose = {
-      x: t.x + Math.sin(t.heading) * (trailerDef(w, t.kind).length / 2 + 1.4),
-      z: t.z + Math.cos(t.heading) * (trailerDef(w, t.kind).length / 2 + 1.4),
-    };
-    need(
-      Math.hypot(rear.x - nose.x, rear.z - nose.z) < 2,
-      'Reverse the tractor hitch to the trailer drawbar',
-    );
-    need(Math.cos(p.heading - t.heading) > 0.7, 'Align your tractor with the trailer');
     t.attached = p.id;
     return 'Trailer hitched.';
   }

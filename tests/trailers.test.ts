@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, makeBuilding, act, move, advance } from '../src/shared/simulation';
+import type { Player } from '../src/shared/types';
 import {
   trailerAction,
   trailerAccepts,
@@ -233,6 +234,99 @@ test('death parks the trailer and applies the configured inventory loss rule', (
     assert.equal(t.owner, p.id);
     assert.equal(t.cargo.bread, lose ? undefined : 10);
   }
+});
+test('trailer handling says which condition failed instead of one stop-outside line', () => {
+  const { w, p } = setup(),
+    t = trailer('box');
+  delete t.attached;
+  w.trailers = { t };
+  p.speed = 1;
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
+    /Come to a full stop before handling a trailer/,
+  );
+  p.speed = 0;
+  p.atHome = true;
+  assert.throws(
+    () =>
+      trailerAction(w, p, {
+        type: 'trailer',
+        operation: 'load',
+        id: t.id,
+        item: 'bread',
+        quantity: 1,
+      }),
+    /Leave the building before handling a trailer/,
+  );
+  p.atHome = false;
+  p.inside = 'cottage';
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
+    /Leave the building before handling a trailer/,
+  );
+  delete p.inside;
+  p.hitch = 'driver';
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
+    /Leave the passenger seat before handling a trailer/,
+  );
+  delete p.hitch;
+  p.task = { kind: 'labour' } as Player['task'];
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
+    /Finish your current activity before handling a trailer/,
+  );
+});
+test('a tractor beside a row of trailers is told the drawbar is blocked', () => {
+  const { w, p } = setup(),
+    box = trailer('box'),
+    hay = trailer('hay');
+  delete box.attached;
+  delete hay.attached;
+  hay.id = 'hay';
+  hay.z = -200.4;
+  w.trailers = { t: box, hay };
+  p.x = 5;
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: box.id }),
+    /drawbar is at the front of this trailer[\s\S]*Harvest hay wagon[\s\S]*Move that trailer clear/,
+  );
+  delete w.trailers.hay;
+  p.x = 0;
+  p.z = -197;
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: box.id }),
+    /rear hitch meets the drawbar at the front[\s\S]*m from the drawbar/,
+  );
+  const nose = box.z + trailerDefs.box.length / 2 + 1.4;
+  p.x = 2.7;
+  p.z = nose;
+  p.heading = Math.PI / 2;
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: box.id }),
+    /Point the tractor the same way as the trailer/,
+  );
+});
+test('the trailer panel shows the hitch reason before the player clicks', async () => {
+  const { trailerPanel } = await import('../src/client/trailer-panel');
+  const { w, p } = setup(),
+    box = trailer('box'),
+    hay = trailer('hay');
+  delete box.attached;
+  delete hay.attached;
+  hay.id = 'hay';
+  hay.z = -200.4;
+  w.trailers = { t: box, hay };
+  p.x = 5;
+  const blocked = trailerPanel(w, p);
+  assert.match(blocked, /disabled>Hitch trailer/);
+  assert.match(blocked, /Harvest hay wagon/);
+  delete w.trailers.hay;
+  p.x = 0;
+  p.z = -200;
+  const ready = trailerPanel(w, p);
+  assert.match(ready, /<button>Hitch trailer<\/button>/);
+  assert.doesNotMatch(ready, /disabled>Hitch trailer/);
 });
 test('a trailer cannot sweep through a building when the tractor has cleared it', () => {
   const { w, p } = setup(),

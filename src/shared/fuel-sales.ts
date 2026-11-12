@@ -26,10 +26,18 @@ function access(w: World, p: Player, t?: Trailer, publicSnapshot = false): asser
   const rules = fuelRules(w.settings);
   need(t?.kind === 'fuel', 'Choose a fuel tanker');
   need(!trailerStorage(w, t), 'Retrieve the fuel tanker from garage storage first');
-  need(
-    p.online && !p.atHome && !p.crowBody && !p.hitch && !p.game && !p.task,
-    'Finish activities and stop outside to use a fuel tanker',
-  );
+  const busy = !p.online
+    ? 'Reconnect before using a fuel tanker'
+    : p.atHome
+      ? 'Leave the building before using a fuel tanker'
+      : p.crowBody
+        ? 'Return to your own body before using a fuel tanker'
+        : p.hitch
+          ? 'Leave the passenger seat before using a fuel tanker'
+          : p.task || p.game
+            ? 'Finish your current activity before using a fuel tanker'
+            : '';
+  need(!busy, busy);
   const y = terrainHeight(w, t.x, t.z);
   need(
     Math.hypot(p.x - t.x, p.z - t.z) < rules.refuelRange && Math.abs(p.y - y) <= rules.refuelHeight,
