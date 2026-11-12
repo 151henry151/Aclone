@@ -10,6 +10,10 @@ All notable changes to Aclone are documented here. This project follows
 
 - Record runway takeoff, a rebuilt highway tractor with a gradual step off the pavement, hovercraft drift, a marked Spanner & Sons storage bay, and a backhoe model repair as the first backlog items.
 
+### Changed
+
+- Move shipped backlog entries into a completed section at the bottom of the backlog.
+
 ## [0.146.4] - 2026-11-12
 
 ### Fixed
