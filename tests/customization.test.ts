@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, advance } from '../src/shared/simulation.ts';
+import { siteAt } from './civics-helpers.ts';
 import { vehiclePaint } from '../src/shared/appearance.ts';
 import { Store } from '../src/server/store.ts';
 import { prepareFrame } from '../src/server/snapshots.ts';
@@ -10,8 +11,7 @@ import { buildingPlan } from '../src/shared/building-shapes.ts';
 test('cottage styles persist at construction and invalid styling never charges cash', () => {
   const w = createWorld('t', 'Test', 'p'),
     p = addPlayer(w, 'p', 'Painter');
-  p.x = 160;
-  p.z = 0;
+  Object.assign(p, siteAt(w, 160));
   p.cash = 1000000;
   const before = p.cash;
   assert.throws(() => act(w, p.id, { type: 'construct', kind: 'home', style: 'unknown' }));

@@ -3,11 +3,13 @@ import { creditRules } from './credit-rules';
 import { loanRules, loanTerms } from './loan-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings } from './catalog.ts';
-import { PROPERTY_YEAR, releaseEstate } from './property.ts';
+import { releaseEstate } from './property.ts';
 import { log } from './simulation.ts';
 import { say } from './messages.ts';
 import type { World, Player, Building, Action } from './types.ts';
-export const LOAN_MONTH = PROPERTY_YEAR / 12;
+// calendarYearSeconds(), not PROPERTY_YEAR: property.ts is still initializing when
+// a sale tag loads it through this module.
+export const LOAN_MONTH = calendarYearSeconds() / 12;
 export const bankMonth = (w: Pick<World, 'settings'>) => calendarYearSeconds(w.settings) / 12;
 /** Missing periods are legacy signed terms, never the world's current year. */
 export const loanPeriod = (loan: Loan) => loan.periodSeconds ?? LOAN_MONTH;

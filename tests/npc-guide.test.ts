@@ -100,7 +100,7 @@ test('guide is bounded, cites bundled sources and never treats a query as a path
 test('long memory excerpts and help fit the resident request budget together', async (t) => {
   const { Store } = await import('../src/server/store.ts');
   const { Universe } = await import('../src/server/universe.ts');
-  const { Residents } = await import('../src/server/npc/residents.ts');
+  const { Residents, RESIDENT_REQUEST_BYTES } = await import('../src/server/npc/residents.ts');
   const { npcConfigSchema } = await import('../src/server/npc/config.ts');
   const { observe, instructions } = await import('../src/server/npc/observation.ts');
   const { createWorld } = await import('../src/shared/simulation.ts');
@@ -133,9 +133,9 @@ test('long memory excerpts and help fit the resident request budget together', a
     const request = { instructions: instructions + 'P'.repeat(3000), observation };
     const requestBytes =
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
-    t.diagnostic(`Resident request: ${requestBytes} / 96000 bytes`);
+    t.diagnostic(`Resident request: ${requestBytes} / ${RESIDENT_REQUEST_BYTES} bytes`);
     assert.ok(
-      requestBytes < 96000,
+      requestBytes < RESIDENT_REQUEST_BYTES,
       `Request bytes: ${requestBytes}; ` +
         JSON.stringify(
           Object.fromEntries(

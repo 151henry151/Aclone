@@ -116,6 +116,7 @@ export class RadioConsole {
     this.root = undefined;
   }
   async unlock() {
+    if (!this.masterVolume()) return;
     try {
       await this.voice.unlock();
     } catch {

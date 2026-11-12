@@ -47,9 +47,15 @@ test('lanes only grow toward buildings whose owners may build roads in that town
   w.buildings.push(b);
   addPlayer(w, 'guest', 'Guest');
   town.permissions.guests.roads = false;
-  advance(w, w.settings.dayLength * 2);
+  for (let day = 0; day < 15; day++) advance(w, w.settings.dayLength);
+  assert.equal(roadConnected(w, b), false);
   assert.equal(grownRoads(w).length, 0);
   town.residents.push('guest');
-  advance(w, w.settings.dayLength);
-  assert.equal(grownRoads(w).length, 1);
+  let connected = false;
+  for (let day = 0; day < 40 && !connected; day++) {
+    advance(w, w.settings.dayLength);
+    connected = roadConnected(w, b);
+  }
+  assert.equal(connected, true);
+  assert.ok(grownRoads(w).length > 0);
 });

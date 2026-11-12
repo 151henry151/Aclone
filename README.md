@@ -2,6 +2,8 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.146.3 keeps sale signs loading, shows the automotive factory and butcher on the parish map, and leaves the radio silent while Sound is off.
+
 Version 0.146.2 keeps your character facing the way they walked when leaving a building.
 Rear and side approaches walk around walls to the door, and the camera keeps a clear outside view.
 

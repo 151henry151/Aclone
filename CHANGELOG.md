@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.3] - 2026-11-12
+
+### Added
+
+- Record aircraft carriers, warships, tanks, fighter jets, war helicopters, dirtbikes, ATVs, side-by-sides, excavators, snowmobiles, skis, snowboards, ski sleds and bicycles as backlog ideas.
+- Add parish-map icons for the automotive factory and the butcher.
+
+### Fixed
+
+- Compute a loan month from the calendar year so sale tags can load while the property module is still starting.
+- Raise the resident request limit from 96,000 to 100,000 bytes so a default world with a full memory fits.
+- Accept a spaceport access road of up to 512 points in an exported world design.
+- Leave the radio audio device closed while game sound is off.
+
 ## [0.146.2] - 2026-11-10
 
 ### Fixed

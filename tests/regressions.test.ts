@@ -1,5 +1,7 @@
 import vehicleData from '../data/vehicles.json';
 import { CANOE } from '../src/shared/canoe-rules';
+import { HIGHWAY_TRACTOR } from '../src/shared/highway-definitions';
+import { BACKHOE, BULLDOZER } from '../src/shared/earthmoving-definitions';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -91,7 +93,10 @@ test('construction observes zones and material completion', () => {
   assert.equal(p.inventory.wood, 0);
 });
 test('armour and five driving modes are finite and consume boosted fuel', () => {
-  assert.equal(vehicles.length, 36);
+  assert.equal(vehicles.length, 40);
+  assert.equal(vehicles[HIGHWAY_TRACTOR].name, 'Highway tractor unit');
+  assert.equal(vehicles[BULLDOZER].name, 'Bulldozer');
+  assert.equal(vehicles[BACKHOE].name, 'Backhoe');
   assert.deepEqual(
     vehicles.slice(0, 34),
     vehicleData,

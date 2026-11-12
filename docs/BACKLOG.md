@@ -8,6 +8,38 @@ of truth across simulation, UI and NPCs. Test changed values as well as defaults
 and preserve existing saved state when policies change. Client graphics quality
 and technical performance controls remain in their appropriate layer.
 
+## Ideas — more vehicles
+
+Recorded so they are not forgotten. These are not designs: no slot, price, model or rule until a later entry specifies one. A planned section that already covers part of the idea stays the specification.
+
+**Aircraft carriers.** A ship large enough to launch and recover aircraft at sea. It waits on a sea that can hold the hull, and on the piloted-flight and airstrip work.
+
+**Warships.** Armed ships, separate from the fishing fleet and the rescue tug. Guns and armour belong with the fighting-world rules.
+
+**Tanks.** A tracked fighting vehicle for worlds that allow combat. The bulldozer and backhoe stay civil plant.
+
+**Fighter jets.** A fast fixed-wing combat aircraft, beyond the biplane, the planned seaplane and the planned helicopter. It uses the flight-combat hardpoints once those exist, and it needs a longer strip than the parish runway.
+
+**War helicopters.** An armed helicopter, distinct from the planned utility helicopter that slings tractors, winches boaters and carries passengers. Weapons wait on the flight-combat section.
+
+**Dirtbikes.** A small off-road motorcycle, quicker than walking on a track, and poor in deep mud and snow.
+
+**ATVs.** A four-wheeled quad for one rider, for tracks and fields where a tractor is too large.
+
+**Side-by-sides.** A small open two-seat buggy, kin to the ATV, with room for a passenger and a little cargo.
+
+**Excavators.** A digging machine with a swinging house and a bucket, beside the planned bulldozer and backhoe. It is for trenches, foundations and loading spoil.
+
+**Snowmobiles.** A winter vehicle that is quick on snow and poor on bare ground, using the same snow depth that slows tractors and, in the walking entry, people on foot.
+
+**Skis.** Foot travel on snow that is faster than walking in a deep layer, and no use on bare ground.
+
+**Snowboards.** The same snow travel as skis, with a different stance and turn. One person, no cargo.
+
+**Sleds to pull behind skis.** A small sled a skier can tow, for a passenger or a light load.
+
+**Bicycles.** An unpowered land vehicle, faster than walking on a road and slower off it, with no fuel tank.
+
 ## Planned — Seaplanes
 
 An amphibian: one aircraft that lands on the runway and on open water. The pilot has two passenger seats, and the hold is large for an aircraft without becoming a freighter.

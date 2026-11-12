@@ -2,6 +2,38 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GameAudio } from '../src/client/audio';
+import { RadioConsole } from '../src/client/radio-console';
+
+test('a muted game does not open a radio audio device on an ordinary gesture', async () => {
+  let created = 0;
+  const previous = globalThis.AudioContext;
+  globalThis.AudioContext = class {
+    state = 'running';
+    destination = {};
+    constructor() {
+      created++;
+    }
+    createGain() {
+      return { connect() {}, gain: { value: 1 } };
+    }
+    resume() {
+      return Promise.resolve();
+    }
+  } as unknown as typeof AudioContext;
+  try {
+    const muted = new RadioConsole(
+      () => {},
+      () => {},
+      () => false,
+      () => 0,
+    );
+    await muted.unlock();
+    assert.equal(created, 0);
+  } finally {
+    globalThis.AudioContext = previous;
+  }
+});
+
 test('radio alerts scale with the vehicle volume and obey master mute and the shared voice budget', () => {
   const audio = Object.create(GameAudio.prototype) as GameAudio;
   const shots = new Map(),

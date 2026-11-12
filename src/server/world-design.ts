@@ -145,7 +145,7 @@ const designSchema = z.object({
       access: z
         .array(z.object({ x: coordinate, z: coordinate }))
         .min(2)
-        .max(128)
+        .max(512)
         .optional(),
     })
     .refine((s) => s.fence <= s.exclusion)

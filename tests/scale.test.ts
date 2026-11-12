@@ -28,7 +28,11 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
                 ? 36
                 : kind === 'haybarn'
                   ? 20
-                  : 15),
+                  : kind === 'automotiveFactory'
+                    ? 30
+                    : kind === 'vehicleStorage'
+                      ? 24
+                      : 15),
     );
     assert.ok(
       bounds.depth > 0 &&
@@ -39,7 +43,11 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
               ? 140
               : kind === 'boathouse'
                 ? 53
-                : 15),
+                : kind === 'automotiveFactory'
+                  ? 30
+                  : kind === 'vehicleStorage'
+                    ? 18
+                    : 15),
     );
     assert.ok(
       bounds.height > 0 &&

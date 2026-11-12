@@ -135,6 +135,8 @@ interface Resident extends ResidentOptions {
   ownerCheckAt?: number;
   exploreCheckAt?: number;
 }
+/** Default rules plus a full memory must fit. Custom catalogues that exceed this back off. */
+export const RESIDENT_REQUEST_BYTES = 100_000;
 export class Residents {
   readonly memory: NpcMemory;
   readonly budget: NpcBudget;
@@ -1802,7 +1804,7 @@ export class Residents {
       (r.config.provider === 'jev'
         ? 0
         : Buffer.byteLength(JSON.stringify(toolWithChatRules(turnTool, w.settings))));
-    if (!chatOnly && bytes > 96000) {
+    if (!chatOnly && bytes > RESIDENT_REQUEST_BYTES) {
       // Model availability is not a logout. Preserve visible presence and back off.
       residentOnline(w, p, !r.state.inSpace);
       p.speed = 0;
@@ -1978,7 +1980,7 @@ export class Residents {
             Buffer.byteLength(JSON.stringify(dialogueRequest)) +
             Buffer.byteLength(JSON.stringify(toolWithChatRules(conversationTool, w.settings)));
           const chatReservation =
-            chatBytes <= 96000
+            chatBytes <= RESIDENT_REQUEST_BYTES
               ? this.budget.reserve(
                   r.config.id,
                   chatBytes,
@@ -2359,7 +2361,7 @@ export class Residents {
     const bytes =
       Buffer.byteLength(JSON.stringify(request)) +
       Buffer.byteLength(JSON.stringify(toolWithChatRules(conversationTool, w.settings)));
-    if (bytes > 96000) return;
+    if (bytes > RESIDENT_REQUEST_BYTES) return;
     const reservation = this.budget.reserve(
       r.config.id,
       bytes,

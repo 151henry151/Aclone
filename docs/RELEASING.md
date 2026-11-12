@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.146.3
+
+Deploy the approved backlog-implementation SHA with the usual database backup,
+build and restart; publish the matching website and verify health/version/SHA.
+Ask players to reload for the factory and butcher map symbols and for sale
+signs. No migration or manual world changes are required. A resident request
+may now be up to 100,000 bytes, and an exported spaceport access road may
+contain up to 512 points.
+
 ## Upgrade 0.144.1
 
 Deploy the approved backlog-implementation SHA with the usual database backup,

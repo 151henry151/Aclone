@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { Store } from '../src/server/store.ts';
 import { Universe } from '../src/server/universe.ts';
-import { Residents } from '../src/server/npc/residents.ts';
+import { Residents, RESIDENT_REQUEST_BYTES } from '../src/server/npc/residents.ts';
 import { residentsEnvironment } from '../src/server/npc/config.ts';
 import { AnthropicBrain } from '../src/server/npc/anthropic.ts';
 import { observe, instructions } from '../src/server/npc/observation.ts';
@@ -82,7 +82,7 @@ try {
     };
     const bytes =
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
-    assert.ok(bytes <= 96000);
+    assert.ok(bytes <= RESIDENT_REQUEST_BYTES);
     const reservation = residents.budget.reserve(config.id, bytes, outputLimit, Date.now(), rates);
     assert.notEqual(reservation, undefined, 'Smoke budget exhausted');
     let result;

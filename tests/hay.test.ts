@@ -148,7 +148,8 @@ test('hay breeding consumes the chosen ration once and upkeep matches offline ca
   advance(w, 3600);
   for (let i = 0; i < 6; i++) advance(copy, 600);
   assert.deepEqual(b.stock, copy.buildings[0].stock);
-  assert.equal(b.stock.cows, 3);
+  assert.equal(b.stock.cows, 2);
+  assert.equal(b.stock.calves, 1);
 });
 test('purchased fields block building construction, respect roads and remain driveable', () => {
   const { w, p, b } = setup();

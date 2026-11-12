@@ -44,6 +44,8 @@ test('delta protocol sends full reconnect state and disconnect/restart preserves
     player.inventory.logs = 17;
     player.skills = ['miller'];
     player.x = 42;
+    player.vehicle = 5;
+    player.speed = 0;
     player.task = { kind: 'labour', end: world.time + 1 } as any;
     const mill = world.buildings.find((b) => b.kind === 'mill')!;
     mill.owner = player.id;

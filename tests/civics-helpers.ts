@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { addPlayer, terrainHeight } from '../src/shared/simulation.ts';
+import { addPlayer, makeBuilding, terrainHeight } from '../src/shared/simulation.ts';
+import { constructionSiteReason } from '../src/shared/construction-site.ts';
 import type { World } from '../src/shared/types.ts';
 
 /** A dry, open site at least `from` metres east of the parish centre. */
@@ -20,7 +21,8 @@ export function siteAt(w: World, d: number, cx = 0, cz = 0) {
       z = Math.round(cz + Math.sin(a) * d);
     if (
       terrainHeight(w, x, z) > w.settings.seaLevel + 2 &&
-      w.buildings.every((b) => Math.hypot(b.x - x, b.z - z) > 40)
+      w.buildings.every((b) => Math.hypot(b.x - x, b.z - z) > 40) &&
+      !constructionSiteReason(w, makeBuilding('site', 'home', x, z))
     )
       return { x, z };
   }

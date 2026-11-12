@@ -46,5 +46,7 @@ test('a border stops short of a neighbouring town', () => {
   const n = w.towns[1];
   Object.assign(n, { x: site.x * (600 / 290), z: site.z * (600 / 290), radius: 295 });
   build(w, p.id, site);
-  assert.ok(town.radius <= 305, `radius ${town.radius} overlaps the neighbour`);
+  const limit = Math.hypot(n.x - town.x, n.z - town.z) - n.radius;
+  assert.ok(town.radius <= limit, `radius ${town.radius} overlaps the neighbour at ${limit}`);
+  assert.ok(town.radius < 310, `radius ${town.radius} ignored the neighbour`);
 });
