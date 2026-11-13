@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.146.5
+
+Deploy the approved main SHA with the usual database backup, build and restart;
+publish the matching website and verify health/version/SHA. Ask players to reload
+so the trailer hitch row names the blocking activity. A player still seated in
+Ultrakricket while away from the pitch is released on the next tick.
+No migration or manual world changes are required.
+
 ## Upgrade 0.146.4
 
 Deploy the approved main SHA with the usual database backup, build and restart;

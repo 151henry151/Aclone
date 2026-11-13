@@ -2204,8 +2204,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         requireThat(!w.kricket.bowler || !w.kricket.batter, 'Pitch is full');
         if (!w.kricket.bowler) w.kricket.bowler = id;
         else w.kricket.batter = id;
-        p.x = 70;
-        p.z = -70;
+        p.x = KRICKET_PITCH.x;
+        p.z = KRICKET_PITCH.z;
         p.vehicle = 5;
       }
       p.speed = 0;
@@ -4056,6 +4056,22 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
   if (p.atHome && !shelter(w, p)) p.atHome = false;
 }
 
+const KRICKET_PITCH = { x: 70, z: -70 };
+const KRICKET_PITCH_RADIUS = 18;
+/** The pitch seat is only real while the player is on foot there. */
+function releaseAbandonedKricket(w: World, p: Player) {
+  if (p.game !== 'kricket') return;
+  const atPitch =
+    p.online &&
+    p.vehicle === 5 &&
+    !p.atHome &&
+    !p.inside &&
+    Math.hypot(p.x - KRICKET_PITCH.x, p.z - KRICKET_PITCH.z) <= KRICKET_PITCH_RADIUS;
+  if (atPitch) return;
+  delete p.game;
+  if (w.kricket.bowler === p.id) delete w.kricket.bowler;
+  if (w.kricket.batter === p.id) delete w.kricket.batter;
+}
 export function advance(w: World, seconds: number) {
   refreshPumpRecipes(w);
   ensurePastures(w);
@@ -4117,6 +4133,7 @@ export function advance(w: World, seconds: number) {
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
+    releaseAbandonedKricket(w, p);
     if (p.crowClass && (!w.settings.crowAbilities || !w.settings.fighting)) returnCrow(w, p);
     if (p.online) {
       p.age += seconds / calendarYearSeconds(w.settings);

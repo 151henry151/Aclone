@@ -206,8 +206,29 @@ export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; h
 export function trailerHandlingReason(p: Player) {
   if (p.atHome || p.inside) return 'Leave the building before handling a trailer';
   if (p.hitch) return 'Leave the passenger seat before handling a trailer';
-  if (p.task || p.game) return 'Finish your current activity before handling a trailer';
+  const activity = handlingActivity(p);
+  if (activity) return activity;
   if (Math.abs(p.speed) >= 0.5) return 'Come to a full stop before handling a trailer';
+}
+function handlingActivity(p: Player) {
+  if (p.game === 'kricket') return 'Leave Ultrakricket before handling a trailer';
+  if (p.game === 'fishing') return 'Stop fishing before handling a trailer';
+  if (p.game === 'hornball') return 'Leave hornball before handling a trailer';
+  if (p.game === 'race') return 'Leave the race before handling a trailer';
+  if (p.game === 'combat') return 'Leave combat before handling a trailer';
+  if (p.game) return 'Leave your current game before handling a trailer';
+  if (!p.task) return;
+  if (p.task.mount) return 'Finish getting in or out of the vehicle before handling a trailer';
+  if (p.task.arrival) return 'Finish walking to the door before handling a trailer';
+  const named: Record<string, string> = {
+    labour: 'Finish the labour shift before handling a trailer',
+    harvest: 'Finish the harvest before handling a trailer',
+    gather: 'Finish gathering before handling a trailer',
+    homeCook: 'Finish cooking before handling a trailer',
+    slaughter: 'Finish the slaughter before handling a trailer',
+    freight: 'Finish the freight transfer before handling a trailer',
+  };
+  return named[p.task.kind] ?? 'Finish your current task before handling a trailer';
 }
 function drawbarNose(w: World, t: Trailer) {
   const reach = trailerDef(w, t.kind).length / 2 + 1.4;

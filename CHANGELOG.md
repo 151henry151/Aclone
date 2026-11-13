@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.5] - 2026-11-12
+
 ### Added
 
 - Record runway takeoff, a rebuilt highway tractor with a gradual step off the pavement, hovercraft drift, a marked Spanner & Sons storage bay, and a backhoe model repair as the first backlog items.
@@ -13,6 +15,11 @@ All notable changes to Aclone are documented here. This project follows
 ### Changed
 
 - Move shipped backlog entries into a completed section at the bottom of the backlog.
+
+### Fixed
+
+- Name the labour shift, harvest, fishing, Ultrakricket and the other activities that block a trailer hitch.
+- Release an Ultrakricket pitch seat when that player is no longer on foot at the pitch.
 
 ## [0.146.4] - 2026-11-12
 

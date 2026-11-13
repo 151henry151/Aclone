@@ -274,7 +274,38 @@ test('trailer handling says which condition failed instead of one stop-outside l
   p.task = { kind: 'labour' } as Player['task'];
   assert.throws(
     () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
-    /Finish your current activity before handling a trailer/,
+    /Finish the labour shift before handling a trailer/,
+  );
+});
+test('leaving the Ultrakricket pitch frees the seat, and the hitch names the game while it is still on', () => {
+  const { w, p } = setup(),
+    t = trailer('box');
+  delete t.attached;
+  w.trailers = { t };
+  p.game = 'kricket';
+  p.vehicle = 26;
+  p.atHome = true;
+  p.online = false;
+  w.kricket.bowler = p.id;
+  advance(w, 0.1);
+  assert.equal(p.game, undefined);
+  assert.equal(w.kricket.bowler, undefined);
+  p.online = true;
+  p.atHome = false;
+  p.vehicle = 5;
+  p.x = 70;
+  p.z = -70;
+  p.y = terrainHeight(w, 70, -70);
+  p.game = 'kricket';
+  w.kricket.bowler = p.id;
+  t.x = 70;
+  t.z = -76;
+  advance(w, 0.1);
+  assert.equal(p.game, 'kricket');
+  assert.equal(w.kricket.bowler, p.id);
+  assert.throws(
+    () => trailerAction(w, p, { type: 'trailer', operation: 'hitch', id: t.id }),
+    /Leave Ultrakricket before handling a trailer/,
   );
 });
 test('a tractor beside a row of trailers is told the drawbar is blocked', () => {
