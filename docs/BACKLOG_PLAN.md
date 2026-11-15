@@ -11958,3 +11958,13 @@ network/reconnect tests. TypeScript, changed-file Prettier, diff checks and the
 prefixed production build pass. The live preflight identifies HANK_ROMP by the
 verified UUID with zero skills, 72 deaths and the unchanged normal limit of 3.
 Deployment and backed-up live grant follow; no production test death is performed.
+
+Completed and live in 0.146.6 from main commit `847c8720`. The server checkout is
+on `main` at that exact SHA; service active and public health/version/client build
+verified. Matching website deployed. Live transaction restored all 28 skills,
+set the persistent exception, and passed the post-restart idempotency check.
+Backup and scope are recorded in PLAYER_GRANTS.md. No announcement was sent.
+Henry's latest instruction supersedes the earlier branch workflow: all subsequent
+work, commits, pushes and production deployments use `main`. The unfinished snow
+foundation remains separate and unreleased; the other agent's 0.146.3–0.146.5
+fixes and backlog amendments are preserved.

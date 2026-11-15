@@ -39,4 +39,10 @@ remove them; future joins no longer grant skills. No client reset is necessary.
 
 Target: human account `f2a5f340-b270-4960-9a4e-da15c57c1313`, Puddlewick only.
 Audit key: `grant:hank-romp-persistent-skills:2026-11-15`.
-Apply/verification receipt to be recorded after deployment. No announcement.
+Applied and verified after restart on live 0.146.6: all 28 catalogue skills are
+present without duplicates; `operatorAllSkills` is true; normal world skill limit
+remains 3. The idempotency recheck confirms no further changes are needed.
+Backup: `/var/lib/aclone/backups/pre-hank-persistent-skills-2026-11-15T235756-332Z.sqlite`.
+The transaction asserts that no other player/world data changes; the service is
+active and healthy. No announcement was sent. Excluded maintenance script,
+dry-run, applied and verification receipts: `output/operator-skills-2026-11-15/`.
