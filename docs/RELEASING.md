@@ -2,6 +2,16 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.146.6
+
+Commit and push to main, then deploy the approved main SHA with the normal backup,
+build and restart. Publish the matching website and verify health/version/SHA.
+The optional player `operatorAllSkills` flag defaults to absent: deployment alone
+never grants an exemption. An explicitly authorized, backed-up maintenance grant
+can enable it for one verified human player in one world. Rejoining or dying then
+restores that world's full skill catalogue. See PLAYER_GRANTS.md for the specific
+audit. No Discord or in-game grant announcement is requested for this change.
+
 ## Upgrade 0.146.5
 
 Deploy the approved main SHA with the usual database backup, build and restart;

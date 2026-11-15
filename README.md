@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.146.6 preserves explicitly granted operator testing skills across deaths.
+This server-maintained exception does not change normal player progression; see
+[operator grant scope and revocation](docs/PLAYER_GRANTS.md).
+
 Version 0.146.5 names the activity blocking a trailer hitch, and leaves Ultrakricket when you are no longer on the pitch.
 
 Version 0.146.4 states why a trailer hitch or fuel tanker is refused, and names another trailer parked across the drawbar.

@@ -11922,3 +11922,39 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15698769116
 Release receipts remain excluded under `output/arrival-route/release/`. No live
 player grants or data edits. Resume the preserved, unreleased item 21 foundation;
 road snow is not enabled or announced by this release.
+
+## Operator testing skills — 2026-11-15
+
+Interrupt the backlog for Henry's explicit request: restore HANK_ROMP's full
+Puddlewick skill set and retain it through subsequent deaths. No announcement.
+Base this slice on released 0.146.5; preserve the separate, unfinished snow work.
+
+Completion criteria, before production changes:
+
+- `node --import tsx --test tests/operator-skills.test.ts`: a saved, explicitly
+  granted player flag restores all catalogue skills (including custom ones) on
+  joining and after ordinary/repeated offline death, without duplicate skills or
+  redundant lessons. SQLite save/load retains the exemption. An unflagged player,
+  even with the same display name or world-owner authority, follows normal rules.
+  Removing the flag restores normal skill loss. Cash, inventory and property
+  death consequences remain identical. Player actions cannot grant the flag.
+- Confirm the new death/join regressions fail before changing production code.
+  Run the related death-rule, death-announcement and network tests after the fix.
+- `npx tsc --noEmit`, Prettier on changed files, `git diff --check`, and
+  `BASE_PATH=/aclone/ npx vite build` must pass. No UI changes or browser flow
+  are introduced by this server-authorized save-field exception.
+- Back up live SQLite with the service stopped; verify the human account UUID
+  `f2a5f340-b270-4960-9a4e-da15c57c1313`, grant only that player's exception and
+  missing catalogue skills, and remove only a redundant lesson. Assert all other
+  player/world state is unchanged. Restart and verify the persisted flag, full
+  skill set and health/version. Test deaths in disposable local worlds only.
+- Per Henry’s updated instruction, commit/push/deploy on `main`, document the grant receipt in
+  PLAYER_GRANTS.md, and do not send a Discord or in-game grant announcement.
+
+Local verification: three new regressions failed for missing join grants and
+skills cleared on death; the unprivileged-action guard already passed. The fix
+passes all 14 operator/death-rule/death-announcement tests and all 3 real-server
+network/reconnect tests. TypeScript, changed-file Prettier, diff checks and the
+prefixed production build pass. The live preflight identifies HANK_ROMP by the
+verified UUID with zero skills, 72 deaths and the unchanged normal limit of 3.
+Deployment and backed-up live grant follow; no production test death is performed.

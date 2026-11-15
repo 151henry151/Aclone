@@ -114,6 +114,9 @@ export interface Player {
   credit?: import('./loans').CreditRecord;
   loans?: import('./loans').Loan[];
   loanSequence?: number;
+  /** Server-granted testing exception, scoped to this player in this world.
+   * Never accepted from a player action or inferred from a name/authority. */
+  operatorAllSkills?: boolean;
   /** Server-operated AI identity; no elevated permissions. */
   npc?: boolean;
   id: string;

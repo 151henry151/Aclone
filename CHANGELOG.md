@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.146.6] - 2026-11-15
+
+### Fixed
+
+- Preserve explicitly granted operator testing skills through deaths and reconnects without changing other players’ skill limits or death penalties.
+
 ## [0.146.5] - 2026-11-12
 
 ### Added

@@ -532,8 +532,17 @@ function parishSpawnPosition(w: World) {
   const point = parishSpawn(w.settings);
   return { x: point.x, y: travelHeight(w, point.x, point.z), z: point.z };
 }
+/** Refresh only explicitly granted testers; ordinary skill and death rules remain unchanged. */
+function restoreOperatorSkills(w: World, p: Player) {
+  if (p.operatorAllSkills !== true) return;
+  p.skills = [...new Set([...p.skills, ...worldSkills(w)])];
+  if (p.learning && p.skills.includes(p.learning.skill)) delete p.learning;
+}
 export function addPlayer(w: World, id: string, name: string): Player {
-  if (w.players[id]) return w.players[id];
+  if (w.players[id]) {
+    restoreOperatorSkills(w, w.players[id]);
+    return w.players[id];
+  }
   const p: Player = {
     id,
     name,
@@ -3847,7 +3856,7 @@ function kill(
     if (w.settings.resetScriptOnDeath) p.scriptState = {};
     queueCreatorScript(w, 'PlayerDeath', { id: p.id, cause, deaths: p.deaths });
     p.age = 18;
-    if (w.settings.loseSkillsOnDeath) {
+    if (w.settings.loseSkillsOnDeath && p.operatorAllSkills !== true) {
       p.skills = [];
       delete p.learning;
     }
@@ -3892,6 +3901,7 @@ function kill(
       );
     p.deathAnnouncedSinceVisit = true;
   }
+  restoreOperatorSkills(w, p);
 }
 export function productionInterval(w: World, b: Building) {
   if (b.kind === 'automotiveFactory')
