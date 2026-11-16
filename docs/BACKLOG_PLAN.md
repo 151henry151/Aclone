@@ -20,8 +20,8 @@ passes; do not create another Completed heading.
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
-2. A real highway tractor, and a gradual step off the pavement — acceptance passes;
-   prepare 0.147.1 release below.
+2. A real highway tractor, and a gradual step off the pavement — done/live 0.147.1;
+   verification and release below.
 3. Hovercraft turns should drift.
 4. Pull into a marked bay to store a vehicle at Spanner & Sons.
 5. A backhoe that reads as a backhoe.
@@ -12167,3 +12167,41 @@ diff and prefixed build gates precede the main commit and deployment.
 
 TypeScript rerun exits 0 after the narrowing fixes. Changed-file Prettier and diff
 checks pass; the final prefixed build is checked before the release commit.
+
+Highway item done/live: main commit `5ddf26fe62879c5bbdbd732cba07478ee2c3c879`
+is pushed and deployed as **0.147.1**. Verify main/exact SHA, active service,
+public health/client assets and matching website. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261115-201532.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261115-201859.tar.gz`.
+Verify the bot announcement and two actual 1440×900 model screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1571696083904499762.
+No live player or property edits. Continue hovercraft drift.
+
+### Hovercraft drift — criteria before production edits
+
+- Correct a stale source detail: the hovercraft is slot 4, **mode 5**, in the current
+  catalogue. Mode 4 is not the Marsh Courier. Apply the new behaviour to hovercraft
+  mode; preserve existing land/water height, model, fuel and collision handling.
+- Add `tests/hovercraft-driving.test.ts`: at cruise speed, a sustained turn retains
+  velocity along the old heading and reaches farther outside the legacy turning
+  arc. On releasing steering, velocity converges on the nose; releasing throttle
+  stops the craft without lingering lateral motion. Reverse stays within the
+  existing slow reverse cap and follows the nose. Low-speed yaw is weaker than
+  cruise yaw. Tractors and boats retain their existing movement.
+- Zero drift must match captured pre-change multi-step positions, heading and speed
+  exactly. Use an independent legacy baseline, not the new implementation as oracle.
+  Verify changed duration, collision stops, teleport/vehicle changes and isolated
+  client prediction without modifying authoritative state.
+- Add one canonical world setting `hovercraftDriftSeconds`, default 1.25 seconds,
+  allowed 0–5 seconds. This is the direction-response time constant; zero restores
+  legacy steering and movement. Test validation, missing old-save default, SQLite,
+  design export/import, rules summary and the world-builder field. No second default.
+- Commands: `node --import tsx --test tests/hovercraft-driving.test.ts
+tests/prediction.test.ts tests/ground-collisions.test.ts` plus affected existing
+  vehicle/motion suites. Browser: drive and turn the real hovercraft, release steering,
+  stop and reverse, edit the drift setting to zero and repeat. Check land and water,
+  blocked movement, and no-fuel state; capture actual game screenshots/video.
+- Record red failures before production changes. Finish only after relevant tests,
+  browser verification, clean TypeScript, changed-file Prettier and prefixed build.
+  Update player/world-builder docs, README, changelog and backlog in place; release
+  from main and announce real evidence under standing authorization.
