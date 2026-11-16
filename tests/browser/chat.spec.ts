@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { say } from '../../src/shared/simulation.ts';
+import { parkingBlocker } from '../../src/shared/ground-parking';
 
 test('chat scrollback survives updates, preserves privacy, and can jump back to live messages', async ({
   page,
@@ -100,6 +101,12 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
       .poll(() => Math.abs(pilotState.z - startingZ), { timeout: 15000 })
       .toBeGreaterThan(1);
     await page.keyboard.up('ArrowUp');
+    // The forward-input check ends in the protected arrival area. Back out before
+    // testing a quiet engine toggle; parking there is intentionally refused.
+    await page.keyboard.down('ArrowDown');
+    await expect.poll(() => parkingBlocker(w, pilotState), { timeout: 15000 }).toBeUndefined();
+    await page.keyboard.up('ArrowDown');
+    await expect.poll(() => Math.abs(pilotState.speed)).toBeLessThan(0.1);
     expect(await chat.evaluate((el) => el.scrollTop)).toBe(scrollBeforeDriving);
     await input.focus();
     const beforePage = await chat.evaluate((el) => el.scrollTop);

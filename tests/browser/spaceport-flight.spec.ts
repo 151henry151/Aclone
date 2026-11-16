@@ -47,6 +47,8 @@ test('an arriving client renders an ongoing launch and subsequent landing withou
     await page.keyboard.press('e');
     await expect(page.getByText(/Cargo ship: ascending/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
+    // Exit is animated; do not press Enter again halfway through leaving.
+    await expect.poll(() => !p.inside && !p.task).toBe(true);
     w.time = launch + 280;
     await page.waitForTimeout(1200);
     await page.keyboard.press('e');

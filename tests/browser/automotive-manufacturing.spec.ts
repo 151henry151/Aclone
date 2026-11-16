@@ -220,7 +220,7 @@ test('inspect empty factory, fund and staff assembly, preserve progress and edit
     await expect(page.locator('#parked-status')).toContainText('Highway tractor unit');
     await page
       .locator('#parked-status')
-      .getByRole('button', { name: 'Board vehicle', exact: true })
+      .getByRole('button', { name: 'Get in Highway tractor unit', exact: true })
       .click();
     await expect.poll(() => p.vehicle).toBe(37);
     await expect(page.locator('#driving')).toContainText('Highway tractor unit');
@@ -347,6 +347,7 @@ test('inspect empty factory, fund and staff assembly, preserve progress and edit
     const reefer = Object.values(w.trailers!).find((t) => t.kind === 'semiRefrigerated')!;
     Object.assign(p, { x: reefer.x + 3, z: reefer.z, speed: 0 });
     await page.keyboard.press('i');
+    await page.locator('[data-fleet-disclosure="owned-trailers"] > summary').click();
     const cooling = page.locator('section.notice').filter({
       has: page.getByRole('heading', { name: 'Refrigerated semitrailer', exact: true }),
     });
@@ -481,7 +482,7 @@ test('inspect empty factory, fund and staff assembly, preserve progress and edit
     await expect(page.locator('#parked-status')).toContainText('Highway tractor unit');
     await page
       .locator('#parked-status')
-      .getByRole('button', { name: 'Board vehicle', exact: true })
+      .getByRole('button', { name: 'Get in Highway tractor unit', exact: true })
       .click();
     await expect.poll(() => p.vehicle).toBe(37);
     await page.waitForTimeout(500);

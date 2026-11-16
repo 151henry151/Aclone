@@ -108,6 +108,11 @@ test('raise livestock, use the butcher, choose a kitchen menu and cook at home t
       page.getByRole('button', { name: 'Disable continuous breeding', exact: true }),
     ).toBeVisible();
     await page.screenshot({ path: 'output/livestock-meat/livestock-panel.png' });
+    const openTrailers = async () => {
+      const list = page.locator('[data-fleet-disclosure="owned-trailers"]');
+      if ((await list.getAttribute('open')) === null) await list.locator('summary').click();
+    };
+    await openTrailers();
     const load = page
       .locator('form[data-action="trailer"]')
       .filter({ has: page.locator('input[name="operation"][value="load"]') });
@@ -166,6 +171,7 @@ test('raise livestock, use the butcher, choose a kitchen menu and cook at home t
     expect(me().hunger).toBeLessThan(60000);
     const building = (id: string) => current().buildings.find((b) => b.id === id)!;
     await visit('farm');
+    await openTrailers();
     await load.locator('select[name="item"]').selectOption('cows');
     await load.getByRole('button', { name: 'Load', exact: true }).click();
     await expect.poll(() => current().trailers!.wagon.cargo.cows).toBe(1);

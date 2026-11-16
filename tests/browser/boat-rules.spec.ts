@@ -47,7 +47,8 @@ test('world editor exposes boat death, cargo lifetime and fuel rules and saves t
     await expect.poll(() => w.settings.autoConsumeHomeStock).toBe(false);
     await expect.poll(() => w.settings.homeNeedsMultiplier).toBe(0.5);
     p.inventory = {};
-    const home = makeBuilding('provisions-home', 'home', p.x, p.z);
+    // Seed the home ahead of the player, rather than enclosing them inside a new wall.
+    const home = makeBuilding('provisions-home', 'home', p.x, p.z - 12);
     home.owner = p.id;
     home.stock = { bread: 3, water: 8 };
     w.buildings.push(home);
@@ -60,7 +61,7 @@ test('world editor exposes boat death, cargo lifetime and fuel rules and saves t
     await page.screenshot({ path: 'test-results/home-provisions-status.png' });
     home.stock.water = 0;
     await expect(page.locator('[data-home-provisions]')).toContainText('out of drink');
-    await page.locator('[data-do="outside"]').click();
+    await page.getByRole('button', { name: 'Depart on foot', exact: true }).click();
     await expect(page.locator('[data-home-provisions]')).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {

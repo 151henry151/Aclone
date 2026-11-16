@@ -89,6 +89,11 @@ test('parked neighbours and a throttled internet link retain playable controls a
     await page.reload();
     await waitForWorld(page);
     await expect(page.locator('#player-count')).toHaveText('3', { timeout: 20000 });
+    // Reconnecting restores the parked seat with its engine off. Start it through
+    // the shaped link before measuring driving input and snapshot delivery.
+    await expect.poll(() => p.engine).toBe(false);
+    await page.locator('[data-do="engine"]').click();
+    await expect.poll(() => p.engine, { timeout: 10000 }).toBe(true);
     const initialZ = p.z;
     await page.keyboard.down('ArrowDown');
     await expect.poll(() => p.z, { timeout: 10000 }).toBeGreaterThan(initialZ + 2);

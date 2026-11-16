@@ -18,6 +18,10 @@ All notable changes to Aclone are documented here. This project follows
 - Keep unchanged charter controls in place during routine inventory updates so boarding invitations remain clickable on slower computers.
 - Restore distant business inspection from the parish directory while keeping transactions restricted to nearby players.
 
+### Changed
+
+- Update browser regression fixtures for current controls, parking and reconnect behavior while retaining their acceptance checks.
+
 ## [0.148.0] - 2026-11-15
 
 ### Added

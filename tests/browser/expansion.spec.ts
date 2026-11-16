@@ -65,6 +65,7 @@ test('cottage styles, garage paint and combat choices survive real server action
   await command(`*teleport ${id} -118 8`);
   await expect(page.locator('#target')).toContainText('Spanner & Sons');
   await page.keyboard.press('e');
+  await page.locator('[data-fleet-disclosure="tractor-shop"] > summary').click();
   await page.getByRole('button', { name: 'Harbour blue', exact: true }).click();
   // The current colour is hidden; only alternative paint choices are actionable.
   await expect(page.locator('[data-do="paint"][data-id="blue"]')).toBeHidden();

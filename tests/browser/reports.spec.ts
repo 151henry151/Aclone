@@ -14,6 +14,8 @@ test('a returning owner can read private history and a business statement', asyn
     const port = await app.listen();
     const { account, token } = app.universe.register('Bookkeeper');
     const w = app.worlds.get('puddlewick')!;
+    // This ledger fixture deliberately stops simulation time; entry must be instant too.
+    w.settings.arrivalAnimation = 'off';
     const p = addPlayer(w, account.id, account.name);
     const mill = w.buildings.find((b) => b.kind === 'mill')!;
     mill.owner = p.id;

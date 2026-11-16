@@ -7,7 +7,19 @@ import { createApp } from '../../src/server/app';
 import { createWorld, addPlayer } from '../../src/shared/simulation';
 import { creatorSchema } from '../../src/shared/creator';
 import { waitForWorld } from './fixtures/ready';
-test('Communication controls update chat and CB limits, preserve drafts and reject invalid settings', async ({
+import config from '../../playwright.config';
+
+test.use({
+  launchOptions: {
+    ...config.use?.launchOptions,
+    args: [
+      ...(config.use?.launchOptions?.args ?? []),
+      '--use-fake-device-for-media-stream',
+      '--use-fake-ui-for-media-stream',
+    ],
+  },
+});
+test('Communication controls update chat limits, preserve drafts and voice call signs, and reject invalid settings', async ({
   page,
 }) => {
   test.setTimeout(240000);
@@ -101,26 +113,33 @@ test('Communication controls update chat and CB limits, preserve drafts and reje
     await expect(radio).toContainText('No received traffic');
     await expect(
       radio.getByRole('button', { name: 'Hold to transmit', exact: true }),
-    ).toBeDisabled();
-    const draft = radio.getByLabel('Radio message', { exact: true });
-    await expect(draft).toHaveAttribute('maxlength', '80');
-    await draft.fill('Radio draft');
-    await draft.press('Tab');
+    ).toBeEnabled();
+    // CB now carries microphone audio. Chat length must not create a text-radio
+    // draft or disable push-to-talk. Keep the mute refusal and saved identity checks.
+    await expect(radio.getByLabel('Radio message', { exact: true })).toHaveCount(0);
+    const callSign = radio.getByLabel('Call sign', { exact: true });
+    await callSign.fill('Chat builder radio');
+    await callSign.press('Tab');
     w().settings.chatLocked = true;
+    // T is a gameplay shortcut, not a key typed into the focused volume slider.
+    await radio.getByRole('button', { name: 'Hold to transmit', exact: true }).focus();
     await page.keyboard.down('t');
     await expect(radio.locator('[data-radio-error]')).toContainText('muted');
     await page.keyboard.up('t');
-    w().settings.chatLocked = false;
     await close();
     await edit();
+    // Unmute through the same editor being saved, rather than changing the server
+    // behind a still-muted client snapshot and accidentally saving the lock again.
+    await page.locator('[name="chatLocked"]').uncheck();
     await group.locator('[name="chatMaxLength"]').fill('1600');
     await apply();
     await expect.poll(() => (w().settings as any).chatMaxLength).toBe(1600);
+    await expect.poll(() => w().settings.chatLocked).toBe(false);
     await close();
     await expect(chat).toHaveAttribute('maxlength', '1600');
     await page.getByRole('button', { name: 'CB radio', exact: false }).click();
-    await expect(draft).toHaveValue('Radio draft');
-    await expect(draft).toHaveAttribute('maxlength', String(w().settings.radioMaxLength));
+    await expect(callSign).toHaveValue('Chat builder radio');
+    await expect(radio.getByLabel('Radio message', { exact: true })).toHaveCount(0);
     await close();
     const long =
       'There is room for a proper story. '.repeat(38) + 'And this is the complete ending.';

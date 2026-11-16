@@ -125,6 +125,7 @@ test('economy rules reach price editing, capped sales, rejection and empty goods
       'max',
       '3',
     );
+    await page.locator('[data-fleet-disclosure="owned-trailers"] > summary').click();
     await page.locator('form[data-action="trade"] [name="quantity"]').fill('1');
     await page.getByRole('button', { name: 'Sell from trailer', exact: true }).click();
     await expect.poll(() => w().trailers?.test.cargo.flour ?? 0).toBe(0);

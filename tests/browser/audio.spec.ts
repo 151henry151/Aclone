@@ -45,14 +45,14 @@ test('audible engines, shared horns and supplied machinery through the real brow
         const probe: {
           contexts: AudioContext[];
           sources: { source: AudioBufferSourceNode; ended: boolean }[];
-          analyser?: AnalyserNode;
+          analysers: AnalyserNode[];
           peaks: number[];
           peak: number;
           ready: boolean;
         } = ((window as any).__audioProbe = {
           contexts: [],
           sources: [],
-          analyser: undefined,
+          analysers: [],
           peaks: [],
           peak: 0,
           ready: false,
@@ -62,8 +62,9 @@ test('audible engines, shared horns and supplied machinery through the real brow
           constructor(...args: ConstructorParameters<typeof AudioContext>) {
             super(...args);
             probe.contexts.push(this);
-            probe.analyser = this.createAnalyser();
-            probe.analyser.fftSize = 2048;
+            const analyser = this.createAnalyser();
+            analyser.fftSize = 2048;
+            probe.analysers.push(analyser);
             // Measure in the audio thread: a short horn can finish while software
             // WebGL blocks the main thread, between two AnalyserNode samples.
             const url = URL.createObjectURL(
@@ -92,7 +93,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
               meter.port.onmessage = ({ data }) => {
                 probe.peak = Math.max(probe.peak, data);
               };
-              probe.analyser!.connect(meter);
+              analyser.connect(meter);
               // The meter outputs silence; it observes rather than doubles playback.
               meter.connect(this.destination);
               probe.ready = true;
@@ -111,19 +112,26 @@ test('audible engines, shared horns and supplied machinery through the real brow
         const connect = AudioNode.prototype.connect;
         AudioNode.prototype.connect = function (this: AudioNode, ...args: any[]) {
           const result = (connect as any).apply(this, args);
+          const analyser = probe.analysers.find((node) => node.context === this.context);
           if (
             args[0] === this.context.destination &&
-            probe.analyser &&
+            analyser &&
             !(this instanceof AudioWorkletNode)
           )
-            (connect as any).call(this, probe.analyser);
+            (connect as any).call(this, analyser);
           return result;
         } as typeof connect;
         setInterval(() => {
-          if (!probe.analyser) return;
+          // Game sound and CB voice use separate contexts. Meter each context's
+          // actual output instead of switching the probe to the most recent one.
+          if (!probe.analysers.length) return;
           const samples = new Float32Array(2048);
-          probe.analyser.getFloatTimeDomainData(samples);
-          const rms = Math.sqrt(samples.reduce((sum, x) => sum + x * x, 0) / samples.length);
+          let energy = 0;
+          for (const analyser of probe.analysers) {
+            analyser.getFloatTimeDomainData(samples);
+            energy += samples.reduce((sum, x) => sum + x * x, 0) / samples.length;
+          }
+          const rms = Math.sqrt(energy);
           probe.peaks.push(rms);
           if (probe.peaks.length > 30) probe.peaks.shift();
         }, 20);

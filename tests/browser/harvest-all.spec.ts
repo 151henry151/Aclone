@@ -10,7 +10,9 @@ import { cropStatus } from '../../src/shared/farming.ts';
 
 test('harvest all names the stockroom share and starts the longer task', async ({ page }) => {
   const dir = mkdtempSync(join(tmpdir(), 'aclone-harvest-all-'));
-  const app = await createApp({ dataDir: dir, port: 0, dev: true });
+  // Inspect the start of the task on a fixed server clock; rendering speed must
+  // not consume its first two seconds before the duration assertion runs.
+  const app = await createApp({ dataDir: dir, port: 0, dev: true, tick: false });
   try {
     const { account, token } = app.universe.register('Harvest tester');
     const w = createWorld('harvest-all', 'Harvest Farm', account.id);
