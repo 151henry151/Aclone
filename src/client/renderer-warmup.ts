@@ -105,12 +105,48 @@ export function* uploadGeometrySteps(
   }
 }
 
+type ShaderCompiler = {
+  compile: T.WebGLRenderer['compile'];
+  properties: { get(material: T.Material): unknown };
+};
+
+/** Three's compileAsync looks up a material's program again after every yield.
+ * A live snapshot can dispose that material meanwhile, leaving its timer throwing
+ * and its promise pending forever. Stop waiting for explicitly disposed materials;
+ * keep checking every surviving program, and propagate genuine compilation errors. */
+export async function compileMaterials(
+  renderer: ShaderCompiler,
+  root: T.Object3D,
+  camera: T.Camera,
+  target?: T.Scene,
+) {
+  const pending = renderer.compile(root, camera, target);
+  const listeners = new Map<T.Material, () => void>();
+  for (const material of pending) {
+    const disposed = () => pending.delete(material);
+    listeners.set(material, disposed);
+    material.addEventListener('dispose', disposed);
+  }
+  try {
+    while (pending.size) {
+      for (const material of pending) {
+        const { currentProgram: program } = renderer.properties.get(material) as {
+          currentProgram?: { isReady(): boolean };
+        };
+        if (!program) throw Error('A live material lost its shader program during warmup');
+        if (program.isReady()) pending.delete(material);
+      }
+      if (pending.size) await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    }
+  } finally {
+    for (const [material, listener] of listeners) material.removeEventListener('dispose', listener);
+  }
+}
+
 /** compileAsync still visits/initializes every material synchronously before its
  * promise. Yield between objects while retaining the real object/shader variant. */
 export function* compileSceneSteps(
-  renderer: {
-    compileAsync: (object: T.Object3D, camera: T.Camera, target: T.Scene) => Promise<unknown>;
-  },
+  renderer: ShaderCompiler,
   root: T.Object3D,
   camera: T.Camera,
   target: T.Scene,
@@ -125,5 +161,5 @@ export function* compileSceneSteps(
     )
       objects.push(object);
   });
-  for (const object of objects) yield renderer.compileAsync(object, camera, target);
+  for (const object of objects) yield compileMaterials(renderer, object, camera, target);
 }

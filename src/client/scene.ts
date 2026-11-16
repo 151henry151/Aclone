@@ -100,6 +100,7 @@ import {
   uploadTextures,
   uploadGeometrySteps,
   compileSceneSteps,
+  compileMaterials,
   yieldFrame,
   finishGpuWork,
 } from './renderer-warmup';
@@ -855,7 +856,7 @@ export class GameScene {
             if (!current()) return;
             this.townLighting.group.visible = night;
             this.headlights.visible = beam;
-            await this.renderer.compileAsync(this.scene, this.camera);
+            await compileMaterials(this.renderer, this.scene, this.camera);
             if (!current()) return;
             // A compiled program can still defer GPU uploads/JIT until its first draw.
             this.townLighting.group.visible = night;

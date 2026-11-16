@@ -9,6 +9,7 @@ All notable changes to Aclone are documented here. This project follows
 ### Fixed
 
 - Preserve TCP byte order in the slow-network test harness when timer callbacks are delayed, preventing artificial corruption of compressed messages.
+- Finish graphics warmup safely when a live world update removes a material during shader compilation.
 
 ## [0.148.0] - 2026-11-15
 

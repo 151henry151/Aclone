@@ -87,11 +87,13 @@ test('shader warmup yields between objects and cancels without detaching the vis
   root.add(...sources);
   const compiled: T.Object3D[] = [];
   const renderer = {
-    compileAsync: async (object: T.Object3D, view: T.Camera, scene: T.Scene) => {
+    compile: (object: T.Object3D, view: T.Camera, scene?: T.Scene | null) => {
       assert.equal(view, camera);
       assert.equal(scene, target);
       compiled.push(object);
+      return new Set<T.Material>();
     },
+    properties: { get: () => ({}) },
   };
   const job = compileSceneSteps(renderer, root, camera, target);
   await job.next().value;
@@ -99,4 +101,51 @@ test('shader warmup yields between objects and cancels without detaching the vis
   job.return(undefined);
   assert.deepEqual(compiled, [sources[0]]);
   assert.ok(sources.every((o) => o.parent === root));
+});
+
+test('shader warmup stops waiting for disposed materials but still waits for live programs', async () => {
+  const { compileMaterials } = await import('../src/client/renderer-warmup.ts');
+  const removed = new T.MeshBasicMaterial(),
+    live = new T.MeshBasicMaterial();
+  let ready = false,
+    completed = false;
+  const properties = new Map<T.Material, object>([
+    [removed, { currentProgram: { isReady: () => false } }],
+    [live, { currentProgram: { isReady: () => ready } }],
+  ]);
+  removed.addEventListener('dispose', () => properties.delete(removed));
+  const renderer = {
+    compile: () => new Set([removed, live]),
+    properties: { get: (material: T.Material) => properties.get(material) ?? {} },
+  };
+  const pending = compileMaterials(renderer, new T.Group(), new T.PerspectiveCamera()).then(() => {
+    completed = true;
+  });
+  removed.dispose();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(completed, false, 'a disposed material must not finish another live program');
+  ready = true;
+  await pending;
+  assert.equal(completed, true);
+});
+
+test('shader warmup rejects genuine program failures instead of hiding them', async () => {
+  const { compileMaterials } = await import('../src/client/renderer-warmup.ts');
+  const material = new T.MeshBasicMaterial();
+  const renderer = {
+    compile: () => new Set([material]),
+    properties: {
+      get: () => ({
+        currentProgram: {
+          isReady: () => {
+            throw Error('GPU interrupted');
+          },
+        },
+      }),
+    },
+  };
+  await assert.rejects(
+    compileMaterials(renderer, new T.Group(), new T.PerspectiveCamera()),
+    /GPU interrupted/,
+  );
 });
