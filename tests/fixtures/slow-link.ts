@@ -39,6 +39,7 @@ export async function slowLink(
     ) => {
       let due = 0,
         index = 0;
+      const queue: { chunk: Buffer; ready: boolean }[] = [];
       source.on('data', (data) => {
         const now = performance.now();
         const ready =
@@ -48,12 +49,21 @@ export async function slowLink(
           const chunk = Buffer.from(data.subarray(offset, offset + 256));
           due = Math.max(due, ready) + (chunk.length / bytesPerSecond) * 1000;
           metrics.maxQueueMs = Math.max(metrics.maxQueueMs, due - now);
+          const entry = { chunk, ready: false };
+          queue.push(entry);
           const timer = setTimeout(
             () => {
               timers.delete(timer);
-              if (!target.destroyed) {
-                target.write(chunk);
-                metrics[direction] += chunk.length;
+              entry.ready = true;
+              // Due times can land in different timer buckets. After an event-loop
+              // stall callbacks need not run in byte-stream order. Only drain the
+              // ready prefix so the test link never corrupts compressed frames.
+              while (queue[0]?.ready) {
+                const next = queue.shift()!;
+                if (!target.destroyed) {
+                  target.write(next.chunk);
+                  metrics[direction] += next.chunk.length;
+                }
               }
             },
             Math.max(0, due - performance.now()),

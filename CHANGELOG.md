@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve TCP byte order in the slow-network test harness when timer callbacks are delayed, preventing artificial corruption of compressed messages.
+
 ## [0.148.0] - 2026-11-15
 
 ### Added
