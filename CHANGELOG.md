@@ -16,6 +16,7 @@ All notable changes to Aclone are documented here. This project follows
 - Keep delayed action replies from replacing a reopened menu or interrupting a newer draft.
 - Refresh trailer handling controls when trailers enter or leave reach without closing the inventory disclosure.
 - Keep unchanged charter controls in place during routine inventory updates so boarding invitations remain clickable on slower computers.
+- Restore distant business inspection from the parish directory while keeping transactions restricted to nearby players.
 
 ## [0.148.0] - 2026-11-15
 

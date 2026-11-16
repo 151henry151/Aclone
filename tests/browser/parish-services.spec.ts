@@ -15,7 +15,7 @@ test('default Puddlewick exposes its council and starter production services', a
     w.script = '';
     w.settings.dayLength = 0;
     w.settings.time = 43200;
-    const { token } = app.universe.register('Parish visitor');
+    const { token, account } = app.universe.register('Parish visitor');
     const port = await app.listen();
     await page.addInitScript((token) => {
       localStorage.setItem('aclone.pilot', token);
@@ -50,6 +50,15 @@ test('default Puddlewick exposes its council and starter production services', a
         .click();
       const panel = page.getByRole('dialog', { name: buildings[kind].name, exact: true });
       await expect(panel).toBeVisible();
+      // A directory entry is inspection, not a request to walk into a distant door.
+      expect(w.players[account.id].inside).toBeUndefined();
+      expect(w.players[account.id].task).toBeUndefined();
+      if (kind === 'mason') {
+        await expect(
+          panel.getByRole('button', { name: 'Take this job', exact: true }),
+        ).toBeDisabled();
+      }
+
       await expect(panel).toContainText(
         kind === 'town'
           ? 'Town of Puddlewick'

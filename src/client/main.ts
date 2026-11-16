@@ -3218,7 +3218,10 @@ app.addEventListener('click', async (e) => {
         break;
       case 'building':
         caretakerBuilding = '';
-        openInteraction(id!);
+        if (panel === 'directory') {
+          selected = id!;
+          openPanel('building');
+        } else openInteraction(id!);
         break;
       case 'land':
         send({ type: 'land', world: id });
