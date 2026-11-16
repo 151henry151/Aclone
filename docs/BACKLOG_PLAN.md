@@ -19,7 +19,7 @@ passes; do not create another Completed heading.
 
 Current remaining order (supersedes the historical numbered order):
 
-1. Taking off from the runway — acceptance verified; prepare 0.147.0 release below.
+1. Taking off from the runway — done/live 0.147.0; verification and release below.
 2. A real highway tractor, and a gradual step off the pavement — running gear,
    readable cluster, then continuous braking to configurable field pace.
 3. Hovercraft turns should drift.
@@ -12075,3 +12075,42 @@ landing cases pass after adding this guard coverage (43 relevant unit cases tota
 Final TypeScript exits 0; changed-file Prettier, diff checks and /aclone/ production
 build pass. Browser logs and screenshots are retained locally in
 output/runway-takeoff/. Release from main follows under standing authorization.
+
+Runway item done/live: main commit `707e47d490825b5891ec84e97ea54122f14c4646`
+is pushed and deployed as **0.147.0**. Verify main/exact SHA, active service,
+public health and client asset; matching website published. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261115-195344.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261115-195510.tar.gz`.
+Verify the bot announcement and 1440×900 keyboard screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1571690113786978394.
+No live player or parked-property edits. Continue highway tractor item.
+
+### Highway tractor and continuous field braking — criteria before production edits
+
+- Compare the existing model from side/front/rear/underneath/driver seat with the
+  manufacturer's [truck exterior and cab photographs](https://www.peterbilt.com/trucks/on-highway/589).
+  Repair the actual load-bearing connections: frame crossmembers, axles and springs,
+  tank/step brackets, bumper/cab supports and fifth-wheel mounting. Join semitrailer
+  floor/frame, axle suspension, landing legs and rear doors. Retain world dimensions,
+  steering/wheel/leg animation, lamp controls, coupling and lightweight geometry budgets.
+- Extend `tests/highway-models.test.ts` with geometric checks for missing axles and
+  support gaps, plus gauge live values/scales. Default and customized world dimensions
+  must still fit. Three marked gauges must be readable from the actual driver's seat:
+  speed in mph, fuel, condition. Scales and needles use the same conversion. Inspect
+  real browser renders, including empty and loaded/coupled trailers; no generated mockups.
+- Extend `tests/highway-driving.test.ts`: at 40 mph crossing a pavement edge, the next
+  tick remains well above 3 mph and loses no more than the configured braking impulse;
+  repeated ticks converge to 5.4 m/s (about 12 mph). Test trailer-only edge crossings,
+  steady field/dirt/paved paces, loaded/empty rigs, reverse/brake, regained-road ordinary
+  acceleration, custom slower pace/braking, and prediction/server agreement. The whole
+  rig retains one swept surface answer and collision refusals. Confirm red before edits.
+- Canonical field default is `data/automotive.json` driving.offRoadSpeed=5.4; reuse
+  existing dirtSpeed and braking rules, editor validation/save/portable design paths.
+  Preserve explicit custom world choices; verify Puddlewick uses the new default.
+- Relevant suites: highway-driving, highway-models, highway-haulage, automotive factory,
+  vehicle tuning and trailer tests as affected. Browser: actual drive off/onto road,
+  cockpit instruments at known speed/fuel/condition, rule edits, coupling and blocked
+  sweeps. Use local isolated worlds and capture before/after multi-angle evidence.
+- Complete only after relevant tests, browser flows, TypeScript, Prettier, diff checks
+  and prefixed build pass. Update BACKLOG.md in place, player/world-builder/model docs,
+  changelog/README; commit/push/deploy on main and announce actual screenshots.
