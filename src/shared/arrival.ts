@@ -12,7 +12,7 @@ import {
   homeDepartureVehicle,
   persistentVehicles,
 } from './parked-vehicles';
-import { buildingEntry } from './parking-site';
+import { buildingEntry, withinArrivalRange } from './parking-site';
 import { travelHeight } from './dock';
 export interface Arrival {
   path?: WalkPoint[];
@@ -63,7 +63,7 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     throw Error('Stop outside and finish your activity before entering');
   if (boatSlot(p.vehicle, w)) throw Error('Disembark at a boathouse before entering a building');
   if (b.construction) throw Error('Supply the construction materials first');
-  if (Math.hypot(p.x - b.x, p.z - b.z) > parkingRules(w.settings).arrivalRange)
+  if (!withinArrivalRange(w, p, b))
     throw Error(`Move within ${parkingRules(w.settings).arrivalRange} metres of this building`);
   const original = { x: p.x, y: p.y, z: p.z };
   const previousVehicle = p.vehicle;

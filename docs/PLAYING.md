@@ -1009,6 +1009,8 @@ at defaults, with movement held during the sequence.
 
 On foot, press **Ctrl/E** as you walk up within the building's interaction range:
 you can keep walking or running until entry takes over, without waiting to stop.
+The world's arrival reach applies at the actual door as well as the building
+centre, so large and offset entrances remain usable after you step outside.
 The walk-in animation goes around building walls to the door and opens the menu,
 including when you approach from behind. On leaving, you keep facing the way you
 walked out; press forward to continue away from the door. If another building

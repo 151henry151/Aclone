@@ -368,3 +368,45 @@ test('arrival wall clearance uses validated world defaults and survives rule exp
   for (const value of [0, 3, NaN, 'wide'])
     assert.throws(() => act(w, p.id, { type: 'settings', patch: { arrivalWallClearance: value } }));
 });
+
+test('a large building remains reachable at its actual door after exiting, including rotated doors and custom reach', async () => {
+  const { buildingEntry } = await import('../src/shared/parking-site');
+  const { withinBuildingRange } = await import('../src/shared/simulation');
+  for (const rotation of [0, Math.PI / 2, -0.8]) {
+    const { w, p } = setup();
+    const b = makeBuilding('port', 'starport', 0, 0);
+    b.rotation = rotation;
+    w.buildings = [b];
+    w.roads = [];
+    w.towns = [];
+    w.landscape = {
+      paths: [],
+      surfaces: [],
+      barriers: [],
+      scatter: [],
+      heightmap: Array(1089).fill(20),
+    };
+    w.settings.arrivalAnimation = 'off';
+    w.settings.arrivalRange = 2;
+    const entry = buildingEntry(b);
+    Object.assign(p, {
+      vehicle: 5,
+      x: entry.x + Math.sin(rotation) * 1.4,
+      z: entry.z + Math.cos(rotation) * 1.4,
+      y: 20,
+    });
+    assert.ok(Math.hypot(p.x - b.x, p.z - b.z) > w.settings.arrivalRange);
+    assert.equal(withinBuildingRange(w, p, b), true, 'HUD/server range must include the door');
+    act(w, p.id, { type: 'approach', building: b.id });
+    assert.equal(p.inside, b.id);
+    act(w, p.id, { type: 'exitBuilding' });
+    assert.equal(withinBuildingRange(w, p, b), true, 'exiting must leave the door reachable');
+    act(w, p.id, { type: 'approach', building: b.id });
+    assert.equal(p.inside, b.id);
+    act(w, p.id, { type: 'exitBuilding' });
+    p.x = entry.x + Math.sin(rotation) * 2.1;
+    p.z = entry.z + Math.cos(rotation) * 2.1;
+    assert.equal(withinBuildingRange(w, p, b), false, 'retain the custom world reach');
+    assert.throws(() => act(w, p.id, { type: 'approach', building: b.id }), /Move within 2 metres/);
+  }
+});

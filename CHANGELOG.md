@@ -11,6 +11,7 @@ All notable changes to Aclone are documented here. This project follows
 - Preserve TCP byte order in the slow-network test harness when timer callbacks are delayed, preventing artificial corruption of compressed messages.
 - Finish graphics warmup safely when a live world update removes a material during shader compilation.
 - Animate workshop and garage doors over their configured duration even when rendering runs slowly.
+- Keep large and rotated building entrances reachable after leaving, using the world's existing arrival range at the actual door as well as the building centre.
 
 ## [0.148.0] - 2026-11-15
 

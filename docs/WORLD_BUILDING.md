@@ -1978,6 +1978,8 @@ Arrival controls are `arrivalAnimation` (**full**, **quick**, **off**),
 `parkingMountSeconds: 1.6`, `arrivalQuickSeconds: 1`,
 `arrivalMinSeconds: 2`, `arrivalMaxSeconds: 4`, `arrivalRange: 18` metres and
 `arrivalDoorDegrees: 90`. Minimum duration cannot exceed maximum duration.
+Approach reach is measured from the building centre or its actual door, keeping
+large and offset entrances reachable with the same configured range.
 Full arrivals follow a checked route around rotated building walls, with
 `arrivalWallClearance: 0.45` metres for pedestrian clearance (editable from 0.1
 to 2 m). A blocked doorway refuses entry before parking. Exits keep the final

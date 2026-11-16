@@ -35,7 +35,7 @@ import { bridgeRuleFields, bridgeRulesError } from './bridge-rules';
 import { nameTagFields, nameTagRules } from './name-tag-rules';
 import { roadRuleFields } from './road-rules';
 import { beginVehicleMount } from './vehicle-mount';
-import { kerbParking } from './parking-site';
+import { kerbParking, withinArrivalRange } from './parking-site';
 import { approachBuilding, exitBuilding, finishArrival, animatedArrival } from './arrival';
 import { towExpiredParking } from './parking-tow';
 import { parkedFootprintBlocked, vehicleFootprint } from './vehicle-footprint';
@@ -626,7 +626,7 @@ export function withinBuildingRange(w: World, p: Player, b: Building) {
   return b.kind === 'boathouse'
     ? nearBoathouse(w, p, b)
     : persistentVehicles(w, p)
-      ? distance(p, b) <= parkingRules(w.settings).arrivalRange
+      ? withinArrivalRange(w, p, b)
       : distance(p, b) < 18;
 }
 export function nearby(w: World, p: Player, id: unknown) {

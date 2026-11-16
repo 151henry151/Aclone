@@ -39,6 +39,15 @@ export function buildingEntry(b: Building) {
     heading: b.rotation,
   };
 }
+/** Keep both the traditional centre approach and the actual entrance reachable.
+ * Large/offset facades can put the door beyond the centre's configured radius. */
+export function withinArrivalRange(w: World, p: { x: number; z: number }, b: Building) {
+  const range = parkingRules(w.settings).arrivalRange;
+  if (Math.hypot(p.x - b.x, p.z - b.z) <= range) return true;
+  const entry = buildingEntry(b);
+  return Math.hypot(p.x - entry.x, p.z - entry.z) <= range;
+}
+
 export function parkingRadius(w: World, slot: number) {
   const v = vehicleDef(w, slot),
     radius = v.collisionRadius ?? 1.3;
