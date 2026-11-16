@@ -16,7 +16,7 @@ test('inventory and shop sort by availability/name while trades and stockroom pr
   mkdirSync('output/item-order', { recursive: true });
   try {
     const { account, token } = app.universe.register('StockTester');
-    const w = createWorld('stock-test', 'Ordered inventories', 'owner'),
+    let w = createWorld('stock-test', 'Ordered inventories', 'owner'),
       b = w.buildings.find((b) => b.kind === 'market')!;
     Object.assign(w, { buildings: [b], zones: [], script: '' });
     w.creator = creatorSchema.parse({ roads: false, scenery: false, weather: 'clear' });
@@ -27,7 +27,7 @@ test('inventory and shop sort by availability/name while trades and stockroom pr
       dayLength: 0,
       time: 43200,
     });
-    const p = addPlayer(w, account.id, account.name);
+    let p = addPlayer(w, account.id, account.name);
     Object.assign(p, {
       x: b.x,
       z: b.z + 12,
@@ -70,8 +70,33 @@ test('inventory and shop sort by availability/name while trades and stockroom pr
     await page.screenshot({ path: 'output/item-order/shop.png' });
     await page.locator('[data-do="trade"][data-direction="buy"][data-item="bread"]').click();
     await expect.poll(() => p.inventory.bread).toBe(3);
+    const bread = page.locator('[data-do="trade"][data-direction="buy"][data-item="bread"]');
+    const breadButton = await bread.elementHandle();
+    await page.locator('#trade-quantity').fill('3');
+    await bread.click();
+    await expect.poll(() => p.inventory.bread).toBe(6);
+    await expect
+      .poll(() => buys.evaluateAll((es) => es.map((e) => (e as HTMLElement).dataset.item)))
+      .toEqual(['water', 'bread', 'fuel']);
+    expect(await breadButton!.evaluate((el) => el.isConnected)).toBe(true);
+    await page.locator('#trade-quantity').fill('1');
     await page.locator('[data-do="trade"][data-direction="sell"][data-item="water"]').click();
     await expect.poll(() => p.inventory.water).toBe(1);
+    // A changed quote still needs a refresh after trading; only unchanged
+    // listings should keep their existing buttons.
+    b.sell.water = 150;
+    w.revision++;
+    const water = page.locator('[data-do="trade"][data-direction="buy"][data-item="water"]');
+    await water.click();
+    await expect(page.locator('#toast')).toContainText('The price changed');
+    // Rejected actions restore a world snapshot; continue with its current objects.
+    w = app.worlds.get(w.id)!;
+    b = w.buildings.find((shop) => shop.id === b.id)!;
+    p = w.players[p.id];
+    expect(p.inventory.water).toBe(1);
+    await expect(water).toHaveAttribute('data-price', '150');
+    await water.click();
+    await expect.poll(() => p.inventory.water).toBe(2);
     await close();
     b.owner = p.id;
     b.government = false;

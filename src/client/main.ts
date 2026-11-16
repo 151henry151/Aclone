@@ -475,6 +475,9 @@ const radioConsole = new RadioConsole(
 window.addEventListener('pointerdown', () => void radioConsole.unlock(), { capture: true });
 window.addEventListener('keydown', () => void radioConsole.unlock(), { capture: true });
 let panelGeneration = 0;
+let stateRevision = 0;
+let pendingPanelRefresh: { view: number; after: number; trade: boolean } | undefined;
+let tradeListingsSignature = '';
 const actionViews = new Map<number, number>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
@@ -543,6 +546,24 @@ const stateInbox = new FrameInbox<StatePresentation>((state) => {
   }
   if (world && me) radioConsole.sync(world, me);
   refreshTradingPrices();
+  if (pendingPanelRefresh && stateRevision > pendingPanelRefresh.after) {
+    const { view, trade } = pendingPanelRefresh;
+    if (view !== panelGeneration || !panel) pendingPanelRefresh = undefined;
+    else if (!document.activeElement?.matches('input,select,textarea')) {
+      pendingPanelRefresh = undefined;
+      const b = world?.buildings.find((building) => building.id === selected);
+      // Counts and ordering update in place, but changed quotes/rules still need
+      // a new listing before the player can retry a price-change refusal.
+      if (
+        !trade ||
+        panel !== 'building' ||
+        tab !== 'Main' ||
+        !b ||
+        tradeListingsSignature !== tradeListingsKey(b)
+      )
+        renderPanel();
+    }
+  }
   if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
 });
 let inputStream = new InputStream();
@@ -582,6 +603,7 @@ async function connect() {
     if (msg.type === 'radio') radioConsole.receive(msg);
     if (msg.type === 'radio-audio') radioConsole.audio(msg);
     if (msg.type === 'state') {
+      stateRevision++;
       const previousWorld = world;
       world = mergeState(world, msg);
       me = world!.players[msg.me];
@@ -672,12 +694,9 @@ async function connect() {
         panel &&
         view === panelGeneration
       )
-        setTimeout(() => {
-          // Bind replies to this particular opening, even when a player revisits the same tab.
-          // A prior action must never replace a newer form or an input being edited.
-          const editing = document.activeElement?.matches('input,select,textarea');
-          if (panel && view === panelGeneration && !editing) renderPanel();
-        }, 100);
+        // The server sends the result before its state. A fixed delay can repaint
+        // stale data on a slow connection, then never display the accepted change.
+        pendingPanelRefresh = { view, after: stateRevision, trade: visit !== undefined };
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';
         localStorage.removeItem('aclone.pilot');
@@ -1693,6 +1712,20 @@ function refreshTaxInfo() {
   for (const count of app.querySelectorAll<HTMLElement>('[data-trade-carried]')) {
     count.textContent = `You have ${me.inventory[count.dataset.item!] ?? 0}`;
   }
+  for (const count of app.querySelectorAll<HTMLElement>('[data-trade-stock]')) {
+    const item = count.dataset.item!;
+    const text = `${b.stock[item] ?? 0} / ${b.capacity} in stock${count.dataset.side === 'sell' && emergencyImport(world, b, item) ? ' · Emergency imports available at this price' : ''}`;
+    if (count.textContent !== text) count.textContent = text;
+  }
+  for (const list of app.querySelectorAll<HTMLElement>('[data-trade-side]')) {
+    const side = list.dataset.tradeSide as 'sell' | 'buy';
+    const rows = new Map([...list.children].map((row) => [(row as HTMLElement).dataset.item, row]));
+    const order = itemEntries(b[side], items, side === 'sell' ? b.stock : me.inventory);
+    for (const [index, [id]] of order.entries()) {
+      const row = rows.get(id);
+      if (row && list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
+    }
+  }
   for (const button of app.querySelectorAll<HTMLButtonElement>('[data-do="sellAll"]')) {
     const item = button.dataset.item!;
     const carried = me.inventory[item] ?? 0;
@@ -2500,6 +2533,14 @@ function productionStatus(w: World, b: Building) {
     .join(' · ');
   return `Next production check in ${Math.floor(remaining / 60)}m ${remaining % 60}s. Stockroom: ${stock}.`;
 }
+function tradeListingsKey(b: Building) {
+  return JSON.stringify([
+    b.buy,
+    b.sell,
+    world?.settings.transactionItemLimit,
+    world?.settings.denariiPerSheckle,
+  ]);
+}
 function buildingWindow(b: Building) {
   if (!me || !world) return;
   const near = b.kind === 'boathouse' ? nearBoathouse(world, me, b) : distance(me, b) < 18,
@@ -2507,6 +2548,7 @@ function buildingWindow(b: Building) {
     caretaker = caretakerBuilding === b.id && me.authority >= 20,
     owned = selfOwned || caretaker;
   buildingAccessSignature = buildingAccessKey(b);
+  tradeListingsSignature = tradeListingsKey(b);
   const tabs = [
     'Main',
     ...(owned
@@ -2567,14 +2609,14 @@ function buildingWindow(b: Building) {
       )
         .map(
           (side) =>
-            `<section><h3>${selfOwned ? (side === 'sell' ? 'Your sale listings' : 'Your purchase bids') : side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${itemEntries(
+            `<section><h3>${selfOwned ? (side === 'sell' ? 'Your sale listings' : 'Your purchase bids') : side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list" data-trade-side="${side}">${itemEntries(
               b[side],
               items,
               side === 'sell' ? b.stock : me!.inventory,
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small><small data-trade-carried data-item="${id}">You have ${me!.inventory[id] ?? 0}</small></span><b>${money(price)}</b>${selfOwned ? '' : `<button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button>${side === 'buy' ? `<button data-do="sellAll" data-building="${b.id}" data-item="${id}" data-price="${price}" disabled>Sell all</button><small class="trade-bulk-note" data-bulk-note></small>` : ''}`}<small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
+                  `<div class="trade-row" data-item="${id}"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small data-trade-stock data-item="${id}" data-side="${side}">${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small><small data-trade-carried data-item="${id}">You have ${me!.inventory[id] ?? 0}</small></span><b>${money(price)}</b>${selfOwned ? '' : `<button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button>${side === 'buy' ? `<button data-do="sellAll" data-building="${b.id}" data-item="${id}" data-price="${price}" disabled>Sell all</button><small class="trade-bulk-note" data-bulk-note></small>` : ''}`}<small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
               )
               .join('')}</div></section>`,
         )

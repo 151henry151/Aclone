@@ -39,8 +39,11 @@ test('repeated confirmed trades show totals after closing and reset for the next
     await waitForWorld(page);
     await page.locator('#target button').click();
     const buy = page.locator('[data-do="trade"][data-item="water"][data-direction="buy"]');
+    const originalBuy = await buy.elementHandle();
     for (let i = 0; i < 10; i++) await buy.click();
     await expect.poll(() => p.inventory.water).toBe(10);
+    await expect(page.locator('.trade-row').filter({ has: buy })).toContainText('You have 10');
+    expect(await originalBuy!.evaluate((el) => el.isConnected)).toBe(true);
     await expect(page.locator('#toast')).toContainText('Bought 10 Water');
     await buy.click();
     await expect(page.locator('#toast')).toContainText('Not enough stock');

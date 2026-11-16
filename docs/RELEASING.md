@@ -24,6 +24,16 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.2 — CI recovery follow-up
+
+Keep live 0.148.0 until the complete workflow passes for the approved main SHA.
+This prepared patch includes the 0.148.1 recovery changes plus accepted-state menu
+refreshes and stable shop controls. Verify changed-price refusal/retry, live stock
+ordering and desktop/phone garage paint. No save migration or player grant is
+needed. The graphics runner choice and software startup deadlines remain open;
+local GPU passes do not satisfy the hosted CI gate. Do not deploy or announce this
+checkpoint as complete while that gate is open.
+
 ## Upgrade 0.148.1 — CI recovery checkpoint
 
 Prepare this patch on main; keep live 0.148.0 until the required workflow is green.
