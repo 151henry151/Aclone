@@ -113,6 +113,32 @@ test('real scene opens furnished bays on the clock and edits door rules without 
       .toBeGreaterThan(0);
     const during = (await state()).find((b: any) => b.id === 'workshop')!.open;
     expect(during).toBeLessThan(1);
+    // The configured duration is wall time, including at two rendered frames per
+    // second; the movement integrator's 100 ms cap must not slow door animation.
+    const afterFiveSeconds = await page.evaluate(() => {
+      const scene = (globalThis as any).__doorsUnderTest;
+      scene.renderer.setAnimationLoop(null);
+      const realNow = performance.now.bind(performance);
+      const descriptor = Object.getOwnPropertyDescriptor(performance, 'now');
+      let now = realNow();
+      Object.defineProperty(performance, 'now', { configurable: true, value: () => now });
+      try {
+        scene.lastTime = scene.renderTime = now;
+        for (let step = 1; step <= 10; step++) {
+          now += 500;
+          scene.frame(true, now);
+        }
+        return scene.buildingMeshes.find((g: any) => g.userData.building === 'workshop').userData
+          .interiors[0].doors[0].openness;
+      } finally {
+        if (descriptor) Object.defineProperty(performance, 'now', descriptor);
+        else delete (performance as any).now;
+        scene.lastTime = scene.renderTime = realNow();
+        scene.renderer.setAnimationLoop((time: number) => scene.frame(false, time));
+      }
+    });
+    expect(afterFiveSeconds).toBe(1);
+
     await expect
       .poll(async () => (await state()).find((b: any) => b.id === 'workshop')?.open)
       .toBe(1);

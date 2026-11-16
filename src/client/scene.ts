@@ -1614,6 +1614,7 @@ export class GameScene {
     // and terrain work between its small asynchronous preparation batches.
     if ((!this.ready && !this.settling && !preparing) || document.hidden) return;
     const now = performance.now();
+    const animationDt = Math.max(0, (now - this.lastTime) / 1000);
     if (now - this.lastTime > 1000) this.resumeMotion();
     const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
     const renderTime = pacedRenderTime(now, this.renderTime, interval, displayTime);
@@ -1699,7 +1700,7 @@ export class GameScene {
             model,
             w,
             model.userData.doorBuilding,
-            dt,
+            animationDt,
             Math.hypot(p.x - model.position.x, p.z - model.position.z),
             this.low,
             (motion) => {
