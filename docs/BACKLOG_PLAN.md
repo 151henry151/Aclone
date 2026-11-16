@@ -22,7 +22,7 @@ Current remaining order (supersedes the historical numbered order):
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
 2. A real highway tractor, and a gradual step off the pavement — done/live 0.147.1;
    verification and release below.
-3. Hovercraft turns should drift — acceptance passes; prepare 0.148.0 release below.
+3. Hovercraft turns should drift — done/live 0.148.0; verification and release below.
 4. Pull into a marked bay to store a vehicle at Spanner & Sons.
 5. A backhoe that reads as a backhoe.
 6. Remaining hard-coded gameplay numbers — reconcile the delivered fieldsets
@@ -12237,3 +12237,52 @@ under excluded output/hovercraft-drift/. Keep the canonical default only in
 settings.json; old saves and public Puddlewick use it without a live state edit.
 Prepare 0.148.0 for the new handling and portable setting; formatting, diff and
 prefixed build gates precede commit/push/deploy on main.
+
+Hovercraft item done/live: main commit `10770eb0d204c19a7a0ac627cda07f29b8e65b3c`
+is pushed and deployed as **0.148.0**. Verify main/exact SHA, active service,
+public health/client assets and matching website. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261115-203022.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261115-203206.tar.gz`.
+Verify the bot announcement and actual 1440×900 keyboard-turn screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1571699302458327111.
+Video review approves the continuous 14.6–31.5 second land-driving excerpt:
+turn/slide, straightening, slowdown and a short reverse. Keep the later artificial
+land-to-water fixture switch out of the driving demonstration; it is not evidence
+of a shoreline crossing. No player or property edits. Continue marked garage bay.
+
+### Marked garage storage bay — criteria before production edits
+
+- At completed tractor garages (Spanner & Sons; exclude aircraft hangars and private
+  vehicleStorage buildings), draw a yellow dashed rectangular bay on concrete.
+  Derive its base dimensions from the largest configured storable land vehicle and
+  complete compatible trailer rig, including the highway tractor/longest semitrailer.
+  Add a canonical per-world `garageBayMargin` default 3 m on every side; allow 0–10 m.
+  `garageBayRequired` defaults true, including old worlds/Puddlewick; false keeps
+  existing menu-only storage. Preserve hangar arrival storage and private garages.
+- Add `tests/garage-bay.test.ts` before production code. An angled vehicle outside
+  the bay never jumps or rotates merely by entering the garage. No Store vehicle
+  action appears while moving, outside, partially crossing an edge, busy, unowned,
+  disabled or in another vehicle class. Require all corners of tractor and attached
+  trailers inside, including rotation/articulation, rather than their centres.
+- Stopped inside, offer **Store vehicle** directly on the HUD. One click validates
+  and stores the entire owned rig, preserving fuel/paint/condition/cargo/hitch state,
+  then uses the existing safe pedestrian arrival to open the garage menu. Failures
+  (including a blocked walking route or capacity) must be atomic. Exit on foot.
+  No licence/grant is introduced. Existing parked/trailer deposits must obey the
+  bay when required; switching the requirement off restores prior deposits.
+- A longest rig with a small placement offset is rejected without spare margin,
+  accepted with it. Custom vehicle/trailer dimensions and rotated buildings use
+  the same authoritative geometry as the drawing and HUD. Retrieval retains safe
+  clear-space checks and cannot overlap another player/rig using the bay. Store
+  disable/limit, SQLite, export/import and editor validation remain covered.
+- Relevant commands: `node --import tsx --test tests/garage-bay.test.ts
+tests/garage-storage.test.ts tests/arrival.test.ts tests/parked-vehicles.test.ts
+tests/vehicle-mount.test.ts` plus affected arrival/rig suites. Browser: actually
+  drive into the visible dashes, stop, click the HUD action before opening a menu,
+  see storage/menu, leave on foot, retrieve and verify blocked retrieval; inspect
+  outside/moving/no-owned-vehicle/disabled states and a full-size rig. Edit margin
+  and requirement in Rules and verify persistence. Inspect Puddlewick layout using
+  a private read-only copy, without moving live property.
+- Keep acceptance strict; record red first. Finish relevant tests, browser evidence,
+  TypeScript, Prettier and build, update backlog/player/world-builder docs and release
+  from main with a screenshot announcement. Piloted spaceflight stays untouched.
