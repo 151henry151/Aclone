@@ -6,21 +6,24 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.1] - 2026-11-15
+
 ### Fixed
 
-- Preserve TCP byte order in the slow-network test harness when timer callbacks are delayed, preventing artificial corruption of compressed messages.
-- Finish graphics warmup safely when a live world update removes a material during shader compilation.
-- Animate workshop and garage doors over their configured duration even when rendering runs slowly.
-- Keep large and rotated building entrances reachable after leaving, using the world's existing arrival range at the actual door as well as the building centre.
 - Allow boat purchase and boarding from the matching boathouse desk while preserving activity, ownership, berth and payment checks.
+- Keep large and rotated building entrances reachable after leaving, using the world's existing arrival range at the actual door as well as the building centre.
+- Animate workshop and garage doors over their configured duration even when rendering runs slowly.
 - Keep delayed action replies from replacing a reopened menu or interrupting a newer draft.
-- Refresh trailer handling controls when trailers enter or leave reach without closing the inventory disclosure.
-- Keep unchanged charter controls in place during routine inventory updates so boarding invitations remain clickable on slower computers.
 - Restore distant business inspection from the parish directory while keeping transactions restricted to nearby players.
+- Refresh trailer handling controls when trailers enter or leave reach without closing the inventory disclosure.
+- Finish graphics warmup safely when a live world update removes a material during shader compilation.
+- Keep unchanged charter controls in place during routine inventory updates so boarding invitations remain clickable on slower computers.
+- Preserve TCP byte order in the slow-network test harness when timer callbacks are delayed, preventing artificial corruption of compressed messages.
 
 ### Changed
 
 - Update browser regression fixtures for current controls, parking and reconnect behavior while retaining their acceptance checks.
+- Require the exact deployed main commit’s complete CI result in every release verification record.
 
 ## [0.148.0] - 2026-11-15
 

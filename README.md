@@ -520,7 +520,7 @@ BASE_PATH=/aclone npm run build
 PUBLIC_ORIGIN=https://hromp.com/aclone/ npm start
 ```
 
-The proxy must strip `/aclone` before forwarding, including WebSocket requests, and redirect `/aclone` to `/aclone/`. See [hosting](docs/HOSTING.md) for proxy examples, environment variables, SMTP, backups and restore; [releasing](docs/RELEASING.md) covers upgrades. Production deployment is operator-managed; the nogits.com instance deploys with `scripts/deploy-nogits.sh` after the approved release branch is pushed, using `DEPLOY_REF=<commit>` for the exact release.
+The proxy must strip `/aclone` before forwarding, including WebSocket requests, and redirect `/aclone` to `/aclone/`. See [hosting](docs/HOSTING.md) for proxy examples, environment variables, SMTP, backups and restore; [releasing](docs/RELEASING.md) covers upgrades. Every deployment must also record a successful **Check Aclone** run for its exact main SHA; a healthy server alone does not complete release verification. Production deployment is operator-managed; the nogits.com instance deploys with `scripts/deploy-nogits.sh` after the approved `main` commit is pushed, using `DEPLOY_REF=<commit>` for the exact release.
 
 ## Start playing
 

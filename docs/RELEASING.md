@@ -2,6 +2,38 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Required CI gate for every deployment
+
+Check the complete **Check Aclone** workflow for the exact pushed main SHA before
+closing a release. Local checks and a healthy live server do not prove CI passed.
+After deployment, record the run URL and conclusion beside the verified live
+version and SHA in `docs/BACKLOG_PLAN.md`.
+
+```sh
+gh run list --workflow ci.yml --branch main --commit "$RELEASE_SHA" --json databaseId,headSha,status,conclusion,url
+gh run view "$RUN_ID" --json headSha,status,conclusion,jobs,url
+# For a failed run, inspect logs and download its browser traces/screenshots:
+gh run view "$RUN_ID" --log-failed
+gh run download "$RUN_ID" --dir output/ci-evidence
+```
+
+Confirm `headSha` equals the deployed SHA and all required jobs succeed. Pending,
+cancelled, missing and failed runs do not pass this gate. Keep the release open,
+repair failures with regression coverage, then verify the resulting main run;
+do not start the next backlog feature or announce verification as complete while
+required checks remain red. Check again after deployment even if the pre-deploy
+run passed. Keep diagnostic downloads out of commits.
+
+## Upgrade 0.148.1 — CI recovery checkpoint
+
+Prepare this patch on main; keep live 0.148.0 until the required workflow is green.
+The fixes preserve saves, ownership, funds and existing world-rule values. No
+migration or player grant is needed. Verify charter/menu stability, boathouse
+boarding, large-building re-entry and graphics warmup before release. Local GPU
+benchmarks pass unchanged; the software-only charter timeout and GPU CI runner
+choice remain open in BACKLOG_PLAN.md. Do not deploy or announce this checkpoint
+as complete until the exact main SHA passes the required CI gate.
+
 ## Upgrade 0.148.0
 
 Deploy the approved main SHA with the usual database backup, prefixed build and

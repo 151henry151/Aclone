@@ -17,6 +17,171 @@ and release evidence; do not rebuild features just because their original plans
 have moved under Completed. Update BACKLOG.md status in place when acceptance
 passes; do not create another Completed heading.
 
+### CI recovery — priority interruption, 2026-11-15
+
+Henry requires checking CI after every deployment and repairing failures before
+continuing. The locally verified 0.147.0–0.148.0 releases are live, but their
+GitHub browser checks are failing or pending; those releases are not CI-green.
+Pause the garage bay until this recovery gate passes.
+
+Completion criteria before fixes:
+
+- Inspect failed `Check Aclone` runs for the exact main SHA; retain logs and
+  browser evidence under excluded `output/ci-2026-11-15/`.
+- Reproduce malformed compressed slow-link messages. Verify the TCP test fixture
+  preserves every byte in order even when timer delivery is delayed; retain the
+  existing protocol 3/4 movement, chat, ACK and latency assertions.
+- Reproduce detached menu controls and fix confirmed UI churn with browser
+  regression coverage for stable controls, live updates and preserved drafts.
+- Reconcile obsolete text-radio assertions with the shipped microphone feature,
+  preserving world-rule and failure-state coverage. Diagnose remaining browser
+  startup, rendering and interaction failures from their traces; do not hide
+  failures with skipped tests, relaxed assertions or blanket timeout increases.
+- Run relevant tests and browser flows, TypeScript, changed-file Prettier and
+  build. Require the complete GitHub workflow for the resulting main SHA to pass.
+- Record the CI run URL/conclusion alongside health/version/SHA after every
+  deployment. Failed, cancelled, missing and pending runs are not completion.
+
+Additional recovery criteria (before production edits):
+
+- Delay a real rule-save reply, close and reopen the same Rules tab, edit a new
+  draft and move focus to a button. Delivering the old reply must leave the new
+  form's element identity and draft intact while the saved server value remains
+  unchanged. Run `tests/browser/panel-replies.spec.ts` and affected rule-editor flows.
+- Exercise current garage showroom disclosure and named vehicle boarding controls
+  in existing browser scenarios; preserve their paint, purchase, boarding, camera
+  and persistence assertions rather than attempting hidden/removed controls.
+- Keep chat quiet on successful actions while retaining protected-route parking
+  refusals: drive out of the arrival clearance before switching off the engine.
+  Reconnect the slow-network client, start its restored seat through the real
+  engine button and preserve all original movement, chat and delivery deadlines.
+  Open livestock/trade trailer disclosures before using their visible controls.
+- Inspect harvest-all start duration on a fixed server clock: retain the 22.5-second
+  quote and 22/23-second countdown assertion. Run the real shader-disposal race
+  on software WebGL too, emulating only the optional parallel-readiness extension;
+  the released implementation must still fail with `isReady`, and the fix must pass.
+  Keep charter fare/offer/refusal checks on the real berth; do not lower their criteria.
+
+- Reproduce disposal during real WebGL parallel shader compilation. Warmup must
+  finish without an `isReady` exception after the removed material is disposed;
+  preserve disposal and compile the remaining geometry. Verify
+  `tests/browser/shader-disposal.spec.ts`, renderer warmup unit cases and the
+  actual takeoff browser flow, without swallowing graphics errors.
+
+- Keep directory inspection available at any distance without triggering entry;
+  show service details with distant transactions/employment disabled. Reproduce
+  and verify `tests/browser/parish-services.spec.ts`. Preserve real nearby entry.
+- Keep an open inventory's trailer controls current when a snapshot moves a
+  trailer into/out of reach, preserving the disclosure node and open state.
+  Extend `tests/browser/inventory-context.spec.ts`; verify the full factory
+  purchase, collection, refrigeration and loading browser scenario.
+- Meter real audio from both game and CB contexts in `tests/browser/audio.spec.ts`;
+  retain the exact RMS, engine/horn/machinery/ambience, mute and persistence checks.
+
+- Door animation must complete in its configured five seconds even at two
+  rendered frames per second. Extend the actual scene test in
+  `tests/browser/building-doors.spec.ts`; retain intermediate poses, sound,
+  collision clearance, stock, distance and quality checks.
+
+- A large building's actual door must remain within interaction reach after exit,
+  including rotated entrances. `tests/arrival.test.ts` must cover entry, exit,
+  re-entry and refusal just beyond a custom world range; the spaceport launch/
+  landing browser must reopen naturally without teleporting away from the door.
+
+- Restore boarding from the matching boathouse's indoor desk after a completed
+  walk-in. `tests/boating.test.ts` must retain wrong-building, busy-player and
+  insufficient-cash refusals atomically; `tests/browser/boating.spec.ts` must
+  complete its real purchase/boarding, throttle, trawl, provisions and rescue flow.
+
+#### CI recovery verification and open gate
+
+- Investigated `43783324645` (`c9d78802`, the reported failure) and
+  `43785164607` (`5ddf26fe`). The latter passed the complete check/unit job but
+  reported 33 browser failure sections, with additional tests not reached before
+  shard deadlines. Evidence: excluded `output/ci-2026-11-15/`.
+- Reproduced TCP byte reordering with a new adverse timer-delivery regression;
+  the old fixture fails the exact byte comparison. Queue the ready prefix in
+  source order. The regression and both unchanged protocol 3/4 slow-link tests
+  pass (3/3); maximum measured state ages were 1.31 and 1.20 seconds.
+- Reproduced a detached invitation button in `charter-tuning.spec.ts`. Remove
+  clock-only inventory rebuilding, initialize its snapshot signature when opened,
+  and update boating/charter markup without replacing matching controls. The new
+  panel test checks retained input/button identity, edited value, focus, native
+  disclosure state, changed limits/content and added/removed guests.
+- GPU browser verification passes boat refuelling, charter rules (including
+  empty/full/cash refusal), charter tuning, panel updates and revised communication
+  rules (5 tests across the final two runs). Inspected the real charter screenshot.
+  Software rendering passes charter tuning and panel updates, but the two-player
+  charter flow still exceeds its unchanged 120-second deadline while loading the
+  guest browser. Do not report that software run as passing.
+- Replace obsolete CB text-draft assertions with microphone controls, saved call
+  sign and the same mute refusal. Unmute through the editor before saving a longer
+  chat limit: changing the server behind an older client form could save the lock
+  again. Keep the long public/family chat, persistence and invalid-limit checks.
+- Initial local checks passed 42 charter/communication/inventory unit cases and
+  the 3 slow-link cases, TypeScript, changed-file Prettier, diff checks and the
+  subpath build. Additional fixes below require a final validation pass before
+  committing. No timeout or performance assertion was lowered.
+- Reproduced delayed replies replacing a reopened Rules form; bind replies to a
+  specific panel generation. The real delayed-WebSocket browser regression passes
+  with the new draft and original input node preserved.
+- Reproduced the shader `isReady` exception with actual WebGL disposal during
+  parallel compilation. Track explicitly disposed materials while waiting for all
+  surviving programs; propagate genuine failures. Shader browser, warmup units,
+  takeoff and spaceport launch/landing browser checks pass.
+- Reproduced large-building re-entry beyond centre-based reach and slow-frame
+  door animation. Use the existing arrival range at the actual door too, and
+  elapsed time for door motion. All 44 arrival/warmup/interior unit cases and the
+  spaceport re-entry/building-door browser flows pass.
+- Reproduced inaccessible indoor boathouse boarding. Permit departure only from
+  the matching boathouse desk, retaining payment, activity and berth checks.
+  All 16 boating unit tests and the complete purchase/trawl/rescue browser pass.
+- Directory inspection, inventory trailer reach updates, factory collection and
+  loading, audio mixer measurement and business ledger browser flows pass. Fix
+  the audio probe to meter both real audio contexts; retain every sound threshold.
+  Repair obsolete fixture controls without removing player-flow assertions.
+- All eleven remaining rule checks in `recovery-rules-4.log` pass; the two stale
+  departure/trailer controls also pass after correction. `recovery-interactions-6.log`
+  passes all six bridge-access, shared-bridge-construction, chat, livestock,
+  slow-network and solid-contact flows. The network client measured 58–60 FPS
+  locally with the GPU and retained its existing throttled movement/chat deadlines.
+  This is functional evidence, not a replacement for the separate strict benchmarks.
+- Software rendering reproduced the exact shader `isReady` exception on the
+  released implementation using the extension fixture. Also reproduced a harvest
+  countdown race after real task time elapsed. Both now pass on software WebGL.
+  A compact charter-world experiment still failed while loading its second client
+  and was discarded. Its GPU pass does not close the software CI failure.
+- Final targeted verification passes 147 unit tests (including both compressed
+  protocol versions, maximum state age 1.3/1.2 seconds), TypeScript and changed-file
+  formatting. Both production builds pass all eight core browser flows: root URL
+  and `/aclone/` through the prefix-stripping proxy. Evidence: `recovery-units-final.log`,
+  `typecheck-final.log`, `built-root.log` and `built-subpath.log` in the excluded
+  CI directory. Review and format the final documentation updates before committing.
+- The software follow-up passes harvest duration, shader disposal and microphone
+  communication rules (3/4). Charter's second client still exceeds its navigation
+  deadline. Do not call the full hosted workflow green based on local GPU passes.
+- Both unchanged GPU benchmarks pass alone (2 tests, all 8 comparisons). Interior
+  p95 frame times are 37.5/37.3 ms at low quality and 18.7/17.9 ms at normal quality
+  (closed/open). Fleet p95 times are 37.7/36.6 ms at low and 23.0/18.1 ms at normal
+  (active/parked). Every frame-count, absolute/relative budget and zero-over-100-ms
+  assertion passes. Preserve previous measurements under `performance-before/`
+  and this run under `performance-final/`. The final shader browser regression
+  also passes on the real GPU after its software-backend fixture repair.
+- The live 0.148.0 SHA's run
+  [43786622736](https://github.com/151henry151/Aclone/actions/runs/43786622736)
+  completed with the check/unit job passing and all nine browser jobs failing.
+  Prepare the locally verified recovery fixes for 0.148.1 in distinct main commits;
+  push to obtain the exact-SHA workflow result. This checkpoint is not deployed.
+- **Not complete / not released:** the full GitHub workflow has not passed for
+  these changes. Continue the remaining functional failure reproduction and
+  verification, then run the complete workflow on the resulting main SHA.
+- The hosted run also produced 16 frames where the unchanged graphics benchmark
+  requires over 200, plus strict frame-time budgets. No GPU runner is configured
+  in this repository. Asked Henry whether to retain the exact benchmark on this
+  computer's GPU with functional tests in hosted CI, or use a dedicated GPU CI
+  runner. Do not skip the benchmark or lower its assertions while that choice is
+  pending. Keep the garage bay paused and do not deploy or announce this slice.
+
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
