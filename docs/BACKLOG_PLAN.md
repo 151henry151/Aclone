@@ -7,6 +7,78 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
+## Current execution order — refreshed 2026-11-15
+
+Reread the updated BACKLOG.md, including its moved shipped sections; leave Piloted
+spaceflight excluded and pending. Work/commit/push/deploy on **main**, per Henry's
+latest instruction. The historical branch name and order below describe earlier
+work, not current operating instructions. Keep the existing claim-by-claim audit
+and release evidence; do not rebuild features just because their original plans
+have moved under Completed. Update BACKLOG.md status in place when acceptance
+passes; do not create another Completed heading.
+
+Current remaining order (supersedes the historical numbered order):
+
+1. Taking off from the runway — investigate the reopened takeoff claim first.
+2. A real highway tractor, and a gradual step off the pavement — running gear,
+   readable cluster, then continuous braking to configurable field pace.
+3. Hovercraft turns should drift.
+4. Pull into a marked bay to store a vehicle at Spanner & Sons.
+5. A backhoe that reads as a backhoe.
+6. Remaining hard-coded gameplay numbers — reconcile the delivered fieldsets
+   against the current section and complete only confirmed remaining gaps.
+7. Snow ploughing — resume the preserved foundation, then blade/pass/pay, factory
+   truck/salt, rendering/map, NPC budgets/traffic, migration and browser gates.
+8. Player-built airstrips and commercial aviation — follow all six internal stages.
+9. Seaplanes — after shared aircraft loading/passengers/crash handling and takeoff.
+10. Helicopters — after parked vehicles (already shipped) and the aviation systems.
+11. Forestry — after solid trees and earthmoving (already shipped).
+12. Flight combat — follow the six stages; shared aircraft first.
+13. Land-use districts and building permissions.
+14. Regional industry, freight routes and desert frontier — after aviation,
+    forestry, water, zoning and freight prerequisites.
+15. Oil deposits, extraction sites and refinery supply.
+16. Petrol stations and dedicated fuel retail — prove supply/coverage before policy changes.
+
+The new vehicle ideas are explicitly ideas, not implementation specifications.
+Snow work is safely held in git stash `a3cf61e8f0fb028cbe26b04b117a358e2c06f9ac`
+and excluded backups under output/operator-skills-2026-11-15/wip/. It remains
+unreleased; restore selectively after these priority fixes, preserving later edits.
+The 20 original shipped-bullet verdicts and fixes G1–G3 remain recorded below.
+The newly moved completed sections retain their existing implementation/browser
+acceptance records in this plan. The explicit reopened gaps are takeoff, the
+highway model/field-speed transition, and the backhoe model. The previously
+reported populated-world 100 ms heartbeat failure remains open, not relabelled.
+
+### Taking off from the runway — completion criteria before production edits
+
+- Add `tests/takeoff.test.ts`: use `ensurePuddlewickAirfield`, real graded terrain,
+  `move`, and `aircraftInput` full keyboard presses. From either painted threshold,
+  full throttle then pull-up after the tail rises must lift before the opposite
+  threshold, empty and with a moderate legal load. Repeat with the shortest
+  supported public strip. Neutral stick must stay grounded; a genuinely too-short
+  strip must not yield a successful takeoff before its end. Retain all landing,
+  water/building/steep-bank/dive crash assertions.
+- Diagnose the real failure before changing dynamics; record travel/speed/pitch
+  and why the lift-off gate fails. The existing flat-plane test uses a stronger
+  synthetic pitch input and is not acceptance for actual keyboard/public-runway use.
+- Rotation speed, minimum takeoff pitch and net upward acceleration must use
+  validated per-world flight rules with canonical defaults; runway dimensions
+  already use flight rules. Verify changed values, missing-key defaults, SQLite,
+  summary, design export/import and the Rules editor. Do not add auto-rotation.
+- Relevant commands: `node --import tsx --test tests/takeoff.test.ts tests/flight.test.ts
+tests/landing.test.ts tests/airfield.test.ts tests/spaceport-flight.test.ts`;
+  `TEST_GPU=1 node --import tsx node_modules/@playwright/test/cli.js test
+tests/browser/takeoff.spec.ts tests/browser/landing.spec.ts`.
+- Browser: join an isolated local public-runway world, apply throttle and pull-up
+  with actual keys, watch the wheels lift before the far paint, capture a screenshot;
+  verify neutral run, failed short-strip run and takeoff rule edits. Preserve the
+  existing real keyboard landing and strict-contact failure flow. No live test grants.
+- Finish only with relevant tests, actual browser evidence, clean TypeScript,
+  changed-file Prettier, diff checks and prefixed build. Update player/world-builder
+  guides and BACKLOG.md, release from main, verify live health/SHA, and announce
+  the completed player feature with its actual screenshot under standing authorization.
+
 ## Current priority — remaining client rendering cost, 2026-11-08
 
 Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
