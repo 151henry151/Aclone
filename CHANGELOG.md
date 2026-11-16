@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.147.1] - 2026-11-15
+
+### Fixed
+
+- Brake highway rigs smoothly toward a useful 12 mph field pace when they leave the road; retain normal acceleration onto pavement and configurable field speed and braking.
+- Join the highway tractor’s frame, axles, suspension, cab, steps, tanks and fifth wheel, and connect semitrailer floors, landing gear and rear bumper supports within the existing model budgets.
+- Replace blank truck gauge faces with labelled mph, fuel and condition scales and readable needles, including at night; keep the cluster visible above chat from the driver’s seat.
+
 ## [0.147.0] - 2026-11-15
 
 ### Added

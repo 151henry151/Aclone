@@ -217,3 +217,66 @@ test('semitrailer support legs retract on coupling and wheel roll uses the actua
   scene.update(w, new Map(), () => 0, 0.05);
   assert.ok(Math.abs(new T.Box3().setFromObject(legs).min.y - parkedBottom) < 1e-8);
 });
+
+test('truck axles physically span the wheel centres below the frame', async () => {
+  const { createHighwayTractor } = await import('../src/client/highway-model');
+  const w = createWorld('axles', 'Axles', 'p'),
+    g = createHighwayTractor(w);
+  g.updateMatrixWorld(true);
+  const zs = [
+    ...new Set(
+      (g.userData.wheels as T.Group[]).map((wheel) => wheel.getWorldPosition(new T.Vector3()).z),
+    ),
+  ];
+  assert.equal(zs.length, 3);
+  for (const z of zs) {
+    const hits = new T.Raycaster(new T.Vector3(0, 0, z), new T.Vector3(0, 1, 0)).intersectObject(
+      g,
+      true,
+    );
+    assert.ok(
+      hits.some((h) => h.point.y >= 0.3 && h.point.y <= 0.6),
+      `No axle joins the wheels at z=${z}`,
+    );
+  }
+});
+
+test('marked truck instruments use actual mph, tank fraction and condition, even with custom top speed', async () => {
+  const { createHighwayTractor } = await import('../src/client/highway-model');
+  const { drawHighwayPanel, highwayDials } = await import('../src/client/highway-panel');
+  const { addPlayer } = await import('../src/shared/simulation');
+  const w = createWorld('instruments', 'Instruments', 'p'),
+    p = addPlayer(w, 'p', 'Driver');
+  Object.assign(p, {
+    vehicle: 37,
+    speed: 17.8816,
+    fuel: 160,
+    fleetState: { 37: { condition: 75 } },
+  });
+  for (const top of [29.0576, 60]) {
+    w.vehicleTuning = { 37: { speed: top } };
+    const v = vehicleDef(w, 37),
+      dials = highwayDials(v),
+      g = createHighwayTractor(w);
+    const words: string[] = [];
+    const canvas = new Proxy(
+      {},
+      { get: (_o, key) => (key === 'fillText' ? (text: string) => words.push(text) : () => {}) },
+    ) as CanvasRenderingContext2D;
+    drawHighwayPanel(canvas, dials);
+    for (const label of ['MPH', 'FUEL %', 'CONDITION %']) assert.ok(words.includes(label), label);
+    assert.ok(words.includes('0') && words.includes('100'));
+    g.userData.highwayAnimate(p, 0);
+    const needles = g.children.filter((c) =>
+      c.children.some(
+        (o) =>
+          o instanceof T.Mesh &&
+          o.geometry instanceof T.BoxGeometry &&
+          o.geometry.parameters.width === 0.008,
+      ),
+    );
+    assert.equal(needles.length, 3);
+    for (const [i, value] of [40 / dials[0].max, 0.5, 0.75].entries())
+      assert.ok(Math.abs(needles[i].rotation.z - Math.PI * (-0.75 + 1.5 * value)) < 1e-6);
+  }
+});

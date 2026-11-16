@@ -2120,7 +2120,12 @@ completed private vehicles. Actual saved worlds retain those assets.
 The same tab exposes collection reach, per-player semitrailer ownership limit,
 three bodies' length/width/height/capacity, fifth-wheel/kingpin/bogie dimensions,
 dirt/off-road/reverse caps, braking/coasting/drag, full-load acceleration, turning
-radius/lateral acceleration, pickup reach/alignment and articulation. Terrain
+radius/lateral acceleration, pickup reach/alignment and articulation. Field pace
+is `driving.offRoadSpeed` (default 5.4 m/s, range 0.1–30); dirt pace remains
+`driving.dirtSpeed` (20.1168 m/s) and braking remains `driving.braking` (6 m/s²,
+range 0.1–20). Crossing a surface boundary sheds speed with that braking rule,
+adjusted for grip, rather than snapping to the new cap. Existing custom values
+are retained, and lower field speeds remain available. Terrain
 support defaults to at most 0.85 m rise per horizontal metre plus 0.5 m suspension
 clearance; the respective limits are 0–2 and 0–3 m. Unhitch
 existing semitrailers before changing coupled geometry; unload cargo before

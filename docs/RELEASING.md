@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.147.1
+
+Deploy the approved main SHA with the normal backup, prefixed build and restart;
+publish the matching website and verify health/version/SHA. Reload for the truck
+and trailer models, marked instruments and shared gradual field-braking behavior.
+Worlds without a custom automotive catalogue, including the verified Puddlewick
+snapshot, use 5.4 m/s field pace. Explicit custom offRoadSpeed and braking values
+remain unchanged. No migration, vehicle grant or live property move is required.
+
 ## Upgrade 0.147.0
 
 Deploy the approved main SHA with the usual database backup, prefixed build and

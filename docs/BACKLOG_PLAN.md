@@ -20,8 +20,8 @@ passes; do not create another Completed heading.
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
-2. A real highway tractor, and a gradual step off the pavement — running gear,
-   readable cluster, then continuous braking to configurable field pace.
+2. A real highway tractor, and a gradual step off the pavement — acceptance passes;
+   prepare 0.147.1 release below.
 3. Hovercraft turns should drift.
 4. Pull into a marked bay to store a vehicle at Spanner & Sons.
 5. A backhoe that reads as a backhoe.
@@ -12114,3 +12114,56 @@ No live player or parked-property edits. Continue highway tractor item.
 - Complete only after relevant tests, browser flows, TypeScript, Prettier, diff checks
   and prefixed build pass. Update BACKLOG.md in place, player/world-builder/model docs,
   changelog/README; commit/push/deploy on main and announce actual screenshots.
+
+Highway red evidence: the new field target and current/swept edge tests fail at
+1.4 m/s, the custom braking case snaps from 10 to 2 m/s, and axle geometry is
+missing at the rear wheel centres. The gauge claim fails because no marked-panel
+implementation exists. Correct the forward road-end fixture to account for its
+rounded 4 m endpoint; the corrected swept-edge test also fails at 1.4 m/s.
+Evidence: output/highway-rework/{red,swept-red,gauges-red}.log.
+
+Inspect all seven before renders against the manufacturer reference photos.
+Confirm missing crossmembers/axles, unsupported cab/steps/mudguards and fifth wheel,
+floating trailer rear bumper, and blank gauge discs obscured by the steering wheel.
+Implement continuous braking once per tick across both current and swept caps;
+24 driving cases pass, including whole-rig and custom-rule prediction checks.
+Repair the missing supports and marked instruments. Initial additions exceed the
+12,000-triangle truck budget (12,770); retain the limit and omit the driver’s
+fully enclosed lower-body triangles in a truck-only cached geometry. All 11 model
+cases then pass, including custom dimensions, coupling/leg animation and mph/fuel/
+condition needles. Browser acceptance is still running; do not mark done yet.
+
+The first combined browser run finds two fixture problems: the older hitch flow
+never opens the now-collapsed Your trailers list, and the new road flow starts
+8 m before the edge so full throttle accelerates beyond its assumed 40 mph bound.
+Open the disclosure as a player would, and start the transition fixture 1 m
+before the endpoint with a healthy engine (the original 75% condition reduces
+field pace). Keep the speed-drop, coupling, brake and return-to-road assertions.
+Also raise the labelled cluster slightly to keep its labels above the usual chat
+panel, then rerun the actual cockpit flow and inspect it before release.
+
+Browser road departure/field cruise/return to road passes with a coupled loaded
+trailer. Model browser passes all requested viewpoints plus empty box/refrigerated,
+loaded stake and night instruments. Inspect day and night scales and the actual
+field-cab.png screenshot; labels remain above chat. The existing keyboard/controller/
+mobile coupling flow passes after opening Your trailers and deriving its full-speed
+stop deadline from speed / configured grip-adjusted braking plus 500 ms for input
+and snapshot delivery. Its former 700 ms assumed 1.4 m/s field speed; stopping
+from 5.4 m/s at 6 m/s² physically takes 900 ms. Do not alter braking to satisfy
+that obsolete timing assumption. Exact per-tick limits remain unit assertions.
+
+A read-only Puddlewick snapshot has no custom automotive driving catalogue, so
+it receives the canonical 5.4 m/s default; preserve all explicit custom catalogues.
+Prepare patch release 0.147.1 for these model, gauge and surface-transition repairs.
+
+Final affected suite: 85 unit tests pass (highway driving/models/haulage, vehicle
+configuration, trailers, manufacturing and automotive economy). Initial TypeScript
+finds two narrowing issues in the cached geometry and optional road fixture; give
+the cloned geometry its concrete type and assert the fixture road array, then rerun.
+Three distinct browser flows pass: model inspection, actual road/field/road driving,
+and keyboard/controller/mobile rig controls. Keep the original collision, gauge
+visibility, model budget, loaded acceleration and custom-world assertions. Format,
+diff and prefixed build gates precede the main commit and deployment.
+
+TypeScript rerun exits 0 after the narrowing fixes. Changed-file Prettier and diff
+checks pass; the final prefixed build is checked before the release commit.

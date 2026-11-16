@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.147.1 repairs the highway tractor and semitrailer’s connected running gear,
+adds readable cab gauges, and brakes smoothly toward about **12 mph** when the rig
+leaves the road. World builders retain control of field pace and braking.
+
 Version 0.147.0 makes takeoff thresholds configurable per world and clarifies the
 keyboard takeoff procedure: hold Down until liftoff, then release. Real public-strip
 tests cover cargo, neutral controls and short strips; landing rules remain intact.

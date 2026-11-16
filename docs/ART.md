@@ -427,3 +427,23 @@ for the boathouse lifting hall. Use `SCREENSHOT_OUTPUT_DIR` to
 keep review captures separate. Verify both actual scene journeys and the full
 geometry survey with the two `tests/browser/building-{doors,interiors}.spec.ts`
 tests; screenshots and performance measurements remain required release gates.
+
+## Highway tractor and semitrailers
+
+Keep the truck’s frame, axles, leaf packs, tank brackets, stair risers, cab mounts
+and fifth-wheel plate connected. The semitrailer floor rests on crossmembers;
+landing-leg sockets, bogie springs and rear bumper hangers join the frame. Coupled
+legs retract; uncoupled feet reach ground. Model dimensions still come from the
+world vehicle and automotive catalogues. Match the server coupling heights.
+
+The three instrument faces share a cached canvas texture with labelled scales;
+independent needles use actual mph, tank percentage and condition. World top speed
+sets the mph scale, and the steering wheel sits below the gauges. Avoid repainting
+the texture on each frame. Remove only driver triangles fully enclosed by this
+cab’s opaque lower panels, with geometry cached by cab height; other people and
+vehicles retain their full figures. Preserve the existing truck/semitrailer mesh
+and triangle budgets. `tests/browser/highway-model.spec.ts` records the actual
+side/front/rear/underside/coupled/driver views and all trailer body types.
+
+Use the manufacturer’s [exterior and cab photos](https://www.peterbilt.com/trucks/on-highway/589)
+to check assembly relationships; these are references, not copied game assets.

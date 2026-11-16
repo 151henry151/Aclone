@@ -1108,11 +1108,18 @@ The default truck is 6.4 m long and a semitrailer 13.6 m. Allow room for the
 whole rig when reversing, turning, crossing bridges and entering gates.
 
 Default targets are about 45 mph on dirt roads and 65 mph on paved roads, only
-while the whole rig fits the road. Off-road travel is limited to 1.4 m/s.
+while the whole rig fits the road. Leaving the road brakes progressively toward
+about **12 mph (5.4 m/s)** on fields; it does not instantly drop to walking speed.
+The trailer counts too: keep the whole rig on the road for road pace. Returning
+to pavement lets the engine accelerate normally.
 Reverse is limited to 3 m/s; full loads accelerate more slowly, braking slows
 the rig and tight turns are restricted at speed. Hold **B**, the controller’s
 left shoulder button, or the mobile **Brakes** pedal to stop; release the throttle
 to coast. Boost does not raise truck speed. World weather, slopes, condition, fuel and wear still apply.
+
+Press **C** for the cab view. The marked dashboard shows actual **MPH**, **Fuel %**
+and **Condition %**; reverse shows the magnitude of your speed. The speed scale
+adapts to the world’s configured truck top speed.
 
 Box semitrailers carry 3,000 weight of dry goods, refrigerated bodies 2,400 of
 fish/raw meat, and stake trailers 4,000 of Logs/Wood. Use existing trailer stock

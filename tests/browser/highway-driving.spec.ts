@@ -8,6 +8,8 @@ import { createWorld, addPlayer } from '../../src/shared/simulation';
 import { creatorSchema } from '../../src/shared/creator';
 import { fifthWheel, kingpin } from '../../src/shared/highway-geometry';
 import { waitForWorld } from './fixtures/ready';
+import { automotiveConfig } from '../../src/shared/automotive-config';
+import { roadConditions } from '../../src/shared/environment';
 test.use({ video: { mode: 'on', size: { width: 1440, height: 900 } } });
 test('reverse, brake, couple, load and drive a full rig using keyboard, controller and mobile brakes', async ({
   page,
@@ -100,6 +102,10 @@ test('reverse, brake, couple, load and drive a full rig using keyboard, controll
     await page.keyboard.up('b');
     expect(gap()).toBeLessThan(1);
     await page.keyboard.press('i');
+    await page
+      .locator('summary')
+      .filter({ hasText: /^Your trailers/ })
+      .click();
     const panel = page
       .locator('section.notice')
       .filter({ has: page.getByRole('heading', { name: 'Box semitrailer', exact: true }) });
@@ -123,7 +129,14 @@ test('reverse, brake, couple, load and drive a full rig using keyboard, controll
     await page.keyboard.up('w');
     await page.keyboard.down('b');
     await expect
-      .poll(() => Math.abs(p.speed), { timeout: 700, intervals: [50] })
+      .poll(() => Math.abs(p.speed), {
+        timeout:
+          Math.ceil(
+            (1000 * Math.abs(p.speed)) /
+              (automotiveConfig(w).driving.braking * roadConditions(w).grip),
+          ) + 500,
+        intervals: [50],
+      })
       .toBeLessThan(0.05);
     await page.keyboard.up('b');
     expect(Math.hypot(p.x - before.x, p.z - before.z)).toBeGreaterThan(5);

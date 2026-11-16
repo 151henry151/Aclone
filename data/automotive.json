@@ -125,7 +125,7 @@
   },
   "driving": {
     "dirtSpeed": 20.1168,
-    "offRoadSpeed": 1.4,
+    "offRoadSpeed": 5.4,
     "reverseSpeed": 3,
     "braking": 6,
     "coasting": 0.35,

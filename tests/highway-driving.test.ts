@@ -63,12 +63,12 @@ const drive = (
 ) => {
   for (let i = 0; i < Math.round(seconds / 0.05); i++) move(w, p, { throttle, steer, boost }, 0.05);
 };
-test('loaded and empty highway rigs reach road targets without boost, and crawl off-road', () => {
+test('loaded and empty highway rigs reach road targets without boost, with a usable field pace', () => {
   for (const surface of ['paved', 'dirt', 'field'] as const)
     for (const loaded of [false, true]) {
       const { w, p } = setup(surface, loaded);
       drive(w, p, 90);
-      const target = surface === 'paved' ? 29.0576 : surface === 'dirt' ? 20.1168 : 1.4;
+      const target = surface === 'paved' ? 29.0576 : surface === 'dirt' ? 20.1168 : 5.4;
       assert.ok(
         Math.abs(p.speed - target) < 0.15,
         `${surface}/${loaded}: ${p.speed}, expected ${target}`,
@@ -582,4 +582,59 @@ test('resident travel keeps a fueled highway tractor and navigates a loaded rig 
   assert.ok(p.z > 116 && p.z < 124);
   assert.ok(Math.abs(p.speed) < 0.2);
   assert.equal(t.cargo.steel, 1500);
+});
+
+test('a highway rig brakes smoothly from road speed to field pace, including trailer-only departure', () => {
+  for (const trailerOnly of [false, true]) {
+    const { w, p, t } = setup();
+    p.speed = 17.88;
+    if (trailerOnly) t.x = 3;
+    else p.x = t.x = 3;
+    const before = p.speed;
+    move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+    assert.ok(
+      p.speed >= before - automotiveConfig(w).driving.braking * 0.05 - 0.001,
+      `A surface transition snapped from ${before} to ${p.speed}`,
+    );
+    assert.ok(p.speed < before, 'A field transition must brake despite full throttle');
+  }
+  const { w, p } = setup('field');
+  p.speed = 17.88;
+  let previous = p.speed;
+  for (let i = 0; i < 60; i++) {
+    move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+    assert.ok(p.speed >= previous - automotiveConfig(w).driving.braking * 0.05 - 0.001);
+    assert.ok(p.speed <= previous + 0.001);
+    previous = p.speed;
+  }
+  assert.ok(Math.abs(p.speed - 5.4) < 0.01);
+});
+
+test('the swept first wheel off the pavement brakes once, and returning to pavement accelerates normally', () => {
+  const { w, p, t } = setup();
+  // Tractor front is still on the road; the next forward step crosses its end.
+  w.roads![0].b.z = -0.5;
+  w.pavedRoads![0].b.z = -0.5;
+  p.speed = 17.88;
+  move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+  assert.ok(p.speed >= 17.88 - 6 * 0.05 - 0.001 && p.speed < 17.88, `${p.speed}`);
+  // On the paved portion again, a rig at field speed does not jump to 65 mph.
+  p.z = -100;
+  t.z = -107.1;
+  p.speed = 5.4;
+  move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+  assert.ok(p.speed > 5.4 && p.speed < 5.5);
+});
+
+test('custom field pace and braking govern the continuous transition on server and prediction', () => {
+  const { w, p } = setup('field');
+  act(w, p.id, { type: 'automotiveConfig', patch: { driving: { offRoadSpeed: 2, braking: 1 } } });
+  p.speed = 10;
+  const predicted = structuredClone(p);
+  move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+  move(w, predicted, { throttle: 1, steer: 0, boost: false }, 0.05, true);
+  assert.ok(Math.abs(p.speed - 9.95) < 0.001, `${p.speed}`);
+  assert.equal(predicted.speed, p.speed);
+  drive(w, p, 12);
+  assert.ok(Math.abs(p.speed - 2) < 0.01);
 });

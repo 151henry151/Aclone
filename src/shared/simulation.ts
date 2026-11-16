@@ -9,7 +9,12 @@ import {
 import { cancelEarthworksOnDeath } from './earthworks-contracts';
 import { slopeAssessment, slopeBypass } from './construction-slope';
 import { coolingInterval } from './highway-refrigeration';
-import { highwayControls, highwaySurface, clearHighwayRig } from './highway-driving';
+import {
+  highwayControls,
+  highwaySurface,
+  highwaySpeedLimit,
+  clearHighwayRig,
+} from './highway-driving';
 import { isEarthmover } from './earthmoving-definitions';
 import { HIGHWAY_TRACTOR, isSemitrailer, semiProducts } from './highway-definitions';
 import {
@@ -3355,7 +3360,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.boatThrottle = 0;
     return;
   }
-  const towBefore = { x: p.x, z: p.z, heading: p.heading };
+  const towBefore = { x: p.x, z: p.z, heading: p.heading, speed: p.speed };
   if (p.game === 'fishing')
     p.y = poweredBoat(p.vehicle, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
   if (
@@ -3575,7 +3580,12 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       highwaySurface(w, from, { x: nx, z: nz, heading: p.heading }, prediction).speed *
       roadConditions(w).speed;
     if (Math.abs(p.speed) > surfaceLimit) {
-      p.speed = Math.sign(p.speed) * surfaceLimit;
+      p.speed = highwaySpeedLimit(
+        p.speed,
+        towBefore.speed,
+        surfaceLimit,
+        automotiveConfig(w).driving.braking * roadConditions(w).grip * dt,
+      );
       nx = p.x + Math.sin(p.heading) * p.speed * dt;
       nz = p.z + Math.cos(p.heading) * p.speed * dt;
     }

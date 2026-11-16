@@ -74,6 +74,10 @@ export function highwaySurface(w: World, p: Player, to?: RoadPose, prediction = 
     ? { kind: 'paved' as const, speed: v.speed }
     : { kind: 'dirt' as const, speed: Math.min(v.speed, r.dirtSpeed) };
 }
+/** Cap acceleration immediately, but shed existing momentum with one braking impulse per tick. */
+export function highwaySpeedLimit(speed: number, previous: number, cap: number, impulse: number) {
+  return Math.sign(speed) * Math.min(Math.abs(speed), Math.max(cap, Math.abs(previous) - impulse));
+}
 export function highwayControls(
   w: World,
   p: Player,
@@ -89,6 +93,7 @@ export function highwayControls(
     weather = roadConditions(w);
   const throttle = Math.max(-1, Math.min(1, input.throttle)),
     load = Math.min(1, Math.max(0, trailerLoad(w, p)));
+  const previousSpeed = p.speed;
   const sign = Math.sign(p.speed),
     braking = !!input.brake || (sign !== 0 && throttle !== 0 && Math.sign(throttle) !== sign);
   if (braking) p.speed = sign * Math.max(0, Math.abs(p.speed) - r.braking * weather.grip * dt);
@@ -109,7 +114,12 @@ export function highwayControls(
     weather.speed *
     (0.7 + condition * 0.003) *
     Math.min(1, slopeSpeed(grade * Math.sign(p.speed)));
-  p.speed = Math.max(-Math.min(cap, r.reverseSpeed), Math.min(cap, p.speed));
+  p.speed = highwaySpeedLimit(
+    p.speed,
+    previousSpeed,
+    p.speed < 0 ? Math.min(cap, r.reverseSpeed) : cap,
+    r.braking * weather.grip * dt,
+  );
   const steer = Math.max(-1, Math.min(1, input.steer)),
     yaw = Math.min(
       Math.abs(p.speed) / r.minimumTurnRadius,

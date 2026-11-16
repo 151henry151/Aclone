@@ -30,7 +30,13 @@ Full throttle for the length of the runway, then pulling up, leaves the airplane
 
 **Tests.** On the real graded runway, full throttle from one threshold and a pull-up once the tail is flying leaves the ground before the far threshold, and the same run with the stick neutral stays down. A short strip that is genuinely too short still stays down. Water, a building and a steep bank still destroy the airframe.
 
-## Planned — A real highway tractor, and a gradual step off the pavement
+## Verified — A real highway tractor, and a gradual step off the pavement
+
+**Verified for 0.147.1 (2026-11-15).** Connect the truck and trailer structures,
+replace blank instruments with labelled live gauges, and brake continuously to
+the configurable 5.4 m/s field pace. Keep the original geometry budgets and
+normal dirt/paved targets. Relevant unit and actual model/driving browser evidence
+is recorded in BACKLOG_PLAN.md; the original report/spec follows.
 
 The on-road tractor-trailer is too simple, and leaving the pavement throws it from road speed down to a walk.
 

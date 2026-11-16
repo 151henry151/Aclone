@@ -4,6 +4,7 @@ import { batch } from './tractor';
 import { detailTexture } from './detail-textures';
 import { vehicleLamp } from './vehicle-lights';
 import { createHuman } from './human';
+import { highwayPanelTexture, highwayNeedles } from './highway-panel';
 import {
   HIGHWAY_TRACTOR,
   highwayTractor,
@@ -13,6 +14,36 @@ import {
 import { automotiveConfig } from '../shared/automotive-config';
 import { vehicleDef } from '../shared/vehicle-config';
 import type { World, Stock, Player } from '../shared/types';
+
+const enclosedDriverGeometry = new Map<number, T.BufferGeometry>();
+/** Legs hidden by this closed cab need no triangles; retain the visible seated person. */
+function cabDriver(cutoff: number) {
+  const driver = createHuman('seated');
+  driver.group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    let geometry = enclosedDriverGeometry.get(cutoff);
+    if (!geometry) {
+      const source = o.geometry,
+        positions = source.attributes.position;
+      const indices = source.index?.array ?? Array.from({ length: positions.count }, (_, i) => i);
+      const visible: number[] = [];
+      for (let i = 0; i < indices.length; i += 3)
+        if (
+          [indices[i], indices[i + 1], indices[i + 2]].some(
+            (index) => positions.getY(index) >= cutoff,
+          )
+        )
+          visible.push(indices[i], indices[i + 1], indices[i + 2]);
+      const clipped: T.BufferGeometry = source.clone();
+      clipped.setIndex(visible);
+      clipped.userData.shared = true;
+      enclosedDriverGeometry.set(cutoff, clipped);
+      geometry = clipped;
+    }
+    o.geometry = geometry;
+  });
+  return driver;
+}
 
 const lamp = (color: string, intensity: number) =>
   vehicleLamp(new T.MeshStandardMaterial({ color, emissive: color, roughness: 0.4 }), intensity);
@@ -103,7 +134,7 @@ export function createSemitrailer(kind: SemiKind, cargo: Stock, world?: World) {
     pin = component('kingpin');
   group.userData.landingLegs = legs;
   // The support foot travels up toward the fixed chassis underside.
-  legs.userData.retractedY = 0.92 - 0.17;
+  legs.userData.retractedY = 0.92 - 0.04;
   const paint = mat(d.color, 0.2),
     timber = mat('#a47b49'),
     red = lamp('#a73429', 1.8),
@@ -115,8 +146,14 @@ export function createSemitrailer(kind: SemiKind, cargo: Stock, world?: World) {
     box(chassis, 0.07, 0.3, l * 0.48, alloy, side * (w / 2 - 0.13), 0.67, 0.25);
     for (let z = -l / 2 + 0.7; z < l / 2; z += 2)
       box(chassis, 0.035, 0.075, 0.15, amber, side * (w / 2 - 0.015), floor - 0.05, z);
-    box(legs, 0.12, 0.82, 0.13, steel, side * w * 0.29, 0.62, l * 0.22);
-    box(legs, 0.35, 0.08, 0.35, steel, side * w * 0.29, 0.17, l * 0.22);
+    box(legs, 0.12, 0.99, 0.13, steel, side * w * 0.29, 0.535, l * 0.22);
+    box(legs, 0.35, 0.08, 0.35, steel, side * w * 0.29, 0.04, l * 0.22);
+  }
+  for (let z = -l / 2 + 0.25; z < l / 2; z += 1.2)
+    box(chassis, w - 0.1, 0.16, 0.12, steel, 0, 1.12, z); // floor rests on crossmembers, which rest on rails
+  for (const side of [-1, 1]) {
+    box(chassis, 0.12, 0.22, 0.25, steel, side * w * 0.29, 1.08, l * 0.22); // fixed landing-leg socket
+    box(chassis, 0.12, 0.52, 0.15, steel, side * w * 0.3, 0.73, -l / 2 + 0.04); // rear bumper hanger
   }
   box(body, w, 0.12, l, steel, 0, floor - 0.06, 0);
   add(
@@ -131,6 +168,10 @@ export function createSemitrailer(kind: SemiKind, cargo: Stock, world?: World) {
   for (const z of [bogie - 1.2, bogie, bogie + 1.2]) {
     box(chassis, w - 0.25, 0.13, 0.14, steel, 0, 0.52, z);
     for (const side of [-1, 1]) {
+      box(chassis, 0.18, 0.12, 0.9, steel, side * w * 0.3, 0.64, z);
+      for (const dz of [-0.35, 0.35])
+        box(chassis, 0.18, 0.28, 0.13, steel, side * w * 0.3, 0.76, z + dz);
+      box(chassis, 0.4, 0.16, 0.13, steel, side * w * 0.35, 1.02, z);
       wheel(group, side * (w / 2 - 0.18), z);
       box(chassis, 0.39, 0.07, 1.1, rubber, side * (w / 2 - 0.2), 1.08, z);
     }
@@ -180,7 +221,20 @@ export function createSemitrailer(kind: SemiKind, cargo: Stock, world?: World) {
     }
     box(body, w, 0.08, l, paint, 0, h - 0.04, 0);
     box(body, w, h - floor, 0.08, paint, 0, (h + floor) / 2, l / 2 - 0.04);
-    box(body, w - 0.1, h - floor - 0.05, 0.08, paint, 0, (h + floor) / 2, -l / 2 + 0.04);
+    for (const side of [-1, 1]) {
+      box(
+        body,
+        w / 2 - 0.035,
+        h - floor - 0.05,
+        0.08,
+        paint,
+        (side * w) / 4,
+        (h + floor) / 2,
+        -l / 2 + 0.04,
+      );
+      box(body, 0.08, h - floor, 0.1, alloy, side * (w / 2 - 0.04), (h + floor) / 2, -l / 2 + 0.04);
+    }
+    box(body, w, 0.1, 0.12, alloy, 0, floor, -l / 2 + 0.04);
     for (const x of [-w * 0.24, w * 0.24]) {
       box(body, 0.045, h - floor - 0.2, 0.045, steel, x, (h + floor) / 2, -l / 2 - 0.005);
       for (const y of [floor + 0.4, h - 0.4])
@@ -232,6 +286,66 @@ export function createHighwayTractor(world: World, color?: string) {
     interior = component('cab-interior'),
     mirrors = component('mirrors'),
     fifth = component('fifth-wheel');
+  // Crossmembers carry the cab, driveline and fifth-wheel plate on the two rails.
+  for (const z of [-l / 2 + 0.2, rear, 0, front, l / 2 - 0.2])
+    box(chassis, w * 0.56, 0.22, 0.18, steel, 0, 0.85, z);
+  box(chassis, 0.6, 0.45, 1.5, steel, 0, 1.14, front - 0.3); // engine/transmission bearer
+  add(
+    chassis,
+    new T.CylinderGeometry(0.09, 0.09, front - rear, 8).rotateX(Math.PI / 2),
+    steel,
+    0,
+    0.65,
+    (front + rear) / 2,
+  );
+  for (const z of [rear - 0.6, rear + 0.6, front]) {
+    add(
+      chassis,
+      new T.CylinderGeometry(0.1, 0.1, w - 0.38, 10).rotateZ(Math.PI / 2),
+      steel,
+      0,
+      0.52,
+      z,
+    );
+    if (z !== front) add(chassis, new T.SphereGeometry(0.2, 10, 6), steel, 0, 0.52, z);
+    for (const side of [-1, 1]) {
+      box(chassis, 0.16, 0.12, 0.9, steel, side * w * 0.28, 0.65, z); // leaf pack connects axle to hangers
+      for (const offset of [-0.36, 0.36])
+        box(chassis, 0.2, 0.2, 0.14, steel, side * w * 0.28, 0.75, z + offset);
+    }
+  }
+  for (const side of [-1, 1]) {
+    // Cab pedestals rise continuously from the rails to its fixed floor.
+    for (const z of [l * 0.1, l * 0.4])
+      box(chassis, 0.3, 0.64, 0.3, steel, side * w * 0.28, 1.3, z);
+    // Closed rear corner and lower sill join the door panels and cab back.
+    box(cab, 0.1, 0.72, 0.34, paint, side * (w / 2 - 0.05), 2.02, l * 0.08);
+    box(cab, 0.12, 0.32, l * 0.44, paint, side * (w / 2 - 0.06), 1.55, l * 0.28);
+    // Tank straps/brackets and stair riser attach these assemblies to the rails.
+    for (const z of [-0.55, 0.35]) {
+      box(chassis, 0.42, 0.12, 0.12, steel, side * w * 0.32, 0.83, z);
+      box(chassis, 0.54, 0.045, 0.07, steel, side * (w / 2 - 0.34), 0.51, z);
+      box(chassis, 0.045, 0.56, 0.07, steel, side * (w / 2 - 0.08), 0.8, z);
+    }
+    box(chassis, 0.1, 1.15, 0.68, steel, side * (w / 2 - 0.32), 1.04, front - 0.8);
+    box(chassis, 0.5, 0.12, 0.65, steel, side * (w / 2 - 0.48), 0.9, front - 0.8);
+    for (const z of [rear - 0.6, rear + 0.6])
+      box(chassis, 0.48, 0.18, 0.12, steel, side * w * 0.33, 1.06, z);
+    // Front wheel cover meets the body rather than floating over the tyre.
+    box(chassis, 0.48, 0.12, 1.22, paint, side * (w / 2 - 0.23), 1.13, front);
+  }
+  box(cab, w * 0.94, 0.5, 0.2, paint, 0, 2.17, l / 2 - 0.1); // cowl joins grille to windscreen
+  box(
+    fifth,
+    w * 0.56 + 0.18,
+    0.1,
+    1.1,
+    steel,
+    0,
+    1.03,
+    automotiveConfig(world).coupling.fifthWheelZ,
+  );
+  box(fifth, 0.5, 0.12, 0.5, steel, 0, 1.09, automotiveConfig(world).coupling.fifthWheelZ);
   const head = lamp('#fff0c7', 1.8),
     tail = lamp('#b33228', 1.6),
     marker = lamp('#e4b458', 0.8);
@@ -250,9 +364,9 @@ export function createHighwayTractor(world: World, color?: string) {
     (group.userData.steerPivots ??= []).push(pivot);
     for (const y of [0.5, 0.83, 1.16])
       box(chassis, 0.3, 0.09, 0.65, alloy, side * (w / 2 - 0.16), y, front - 0.8);
-    box(cab, 0.12, 1.7, 0.15, paint, side * (w / 2 - 0.08), 2.75, l / 2 - 0.13);
+    box(cab, 0.12, 1.74, 0.15, paint, side * (w / 2 - 0.08), 2.75, l / 2 - 0.13);
     box(cab, 0.08, 0.7, 2.55, paint, side * (w / 2 - 0.05), 2.02, l * 0.29);
-    box(cab, 0.08, 1.4, 0.13, paint, side * (w / 2 - 0.05), 2.8, l * 0.07);
+    box(cab, 0.08, 1.64, 0.13, paint, side * (w / 2 - 0.05), 2.8, l * 0.07);
     box(cab, 0.025, 0.92, 2.25, glass, side * (w / 2 - 0.025), 2.92, l * 0.29);
     box(mirrors, 0.45, 0.045, 0.06, steel, side * w * 0.53, 2.9, l * 0.4);
     box(mirrors, 0.2, 0.44, 0.09, steel, side * w * 0.59, 2.8, l * 0.4);
@@ -260,6 +374,7 @@ export function createHighwayTractor(world: World, color?: string) {
     box(chassis, 0.36, 0.14, 0.08, head, side * w * 0.31, 1.02, l / 2 - 0.02);
     box(chassis, 0.32, 0.13, 0.08, tail, side * w * 0.31, 0.9, -l / 2 + 0.02);
     box(cab, 0.12, 0.08, 0.12, marker, side * w * 0.39, 3.65, l * 0.4);
+    box(interior, 0.3, 0.28, 0.4, steel, side * w * 0.24, 1.83, l * 0.23);
     box(interior, 0.66, 0.15, 0.7, rubber, side * w * 0.24, 2.03, l * 0.23);
     box(interior, 0.66, 0.72, 0.15, rubber, side * w * 0.24, 2.35, l * 0.18);
   }
@@ -269,13 +384,13 @@ export function createHighwayTractor(world: World, color?: string) {
   for (let y = 1.25; y < 1.7; y += 0.09)
     box(cab, w * 0.6, 0.025, 0.045, alloy, 0, y, l / 2 + 0.025);
   box(cab, w * 0.96, 0.13, l * 0.44, paint, 0, highwayTractor().height - 0.065, l * 0.28);
-  box(cab, w * 0.96, 2.2, 0.12, paint, 0, 2.5, l * 0.06);
+  box(cab, w * 0.96, 2.25, 0.12, paint, 0, 2.51, l * 0.06);
   box(cab, w * 0.88, 1.02, 0.025, glass, 0, 2.91, l / 2 - 0.1);
-  box(interior, w * 0.9, 0.12, l * 0.4, steel, 0, 1.65, l * 0.27);
+  box(interior, w * 0.94, 0.12, l * 0.44, steel, 0, 1.65, l * 0.27);
   box(interior, w * 0.86, 0.3, 0.55, rubber, 0, 2.47, l * 0.4);
   box(interior, w * 0.82, 0.22, 0.6, cream, 0, 2.04, l * 0.1);
   const steering = new T.Group();
-  steering.position.set(w * 0.24, 2.66, l * 0.34);
+  steering.position.set(w * 0.24, 2.31, l * 0.34);
   steering.rotation.x = 0.7;
   group.add(steering);
   add(steering, new T.TorusGeometry(0.23, 0.025, 4, 12), rubber, 0, 0, 0);
@@ -293,21 +408,25 @@ export function createHighwayTractor(world: World, color?: string) {
     spoke.rotation.z = -angle;
   }
   batch(steering);
+  box(interior, 0.09, 0.64, 0.09, steel, w * 0.24, 1.99, l * 0.34);
+  box(interior, 0.92, 0.36, 0.1, rubber, w * 0.24, 2.78, l * 0.4 - 0.25);
+  const panel = add(
+    interior,
+    new T.PlaneGeometry(0.9, 0.3375),
+    new T.MeshBasicMaterial({ map: highwayPanelTexture(v), color: '#ffffff', toneMapped: false }),
+    w * 0.24,
+    2.78,
+    l * 0.4 - 0.31,
+  );
+  panel.rotation.y = Math.PI;
   const needles: T.Group[] = [];
+  const needlePaint = new T.MeshBasicMaterial({ color: '#f0c46e', toneMapped: false });
   for (let i = 0; i < 3; i++) {
-    const x = w * 0.24 + (i - 1) * 0.19;
-    add(
-      interior,
-      new T.CylinderGeometry(0.08, 0.08, 0.02, 16).rotateX(Math.PI / 2),
-      cream,
-      x,
-      2.67,
-      l * 0.4 - 0.29,
-    );
+    const x = w * 0.24 + (1 - i) * 0.299;
     const needle = new T.Group();
-    needle.position.set(x, 2.67, l * 0.4 - 0.315);
+    needle.position.set(x, 2.793, l * 0.4 - 0.315);
     group.add(needle);
-    box(needle, 0.008, 0.06, 0.008, steel, 0, 0.025, 0);
+    box(needle, 0.008, 0.09, 0.008, needlePaint, 0, 0.035, 0);
     needles.push(needle);
   }
   add(
@@ -319,7 +438,9 @@ export function createHighwayTractor(world: World, color?: string) {
     automotiveConfig(world).coupling.fifthWheelZ,
   );
   box(fifth, 0.18, 0.14, 0.3, rubber, 0, 1.18, automotiveConfig(world).coupling.fifthWheelZ - 0.3);
-  const driver = createHuman('seated');
+  const driver = cabDriver(
+    Math.min(0, 1.65 + (0.72 * (v.height! - 1.65)) / (highwayTractor().height - 1.65) - 2.1),
+  );
   driver.group.position.set(w * 0.24, 2.1, l * 0.23);
   group.add(driver.group);
   group.userData.driver = driver.group;
@@ -334,14 +455,7 @@ export function createHighwayTractor(world: World, color?: string) {
     for (const pivot of group.userData.steerPivots as T.Group[])
       pivot.rotation.y = T.MathUtils.clamp(turn, -0.55, 0.55);
     steering.rotation.z = -turn * 2;
-    const values = [
-      Math.abs(p.speed) / v.speed,
-      p.fuel / (v.tank ?? 1),
-      (p.fleetState?.[p.vehicle]?.condition ?? 100) / 100,
-    ];
-    needles.forEach(
-      (needle, i) => (needle.rotation.z = 2.3 - T.MathUtils.clamp(values[i], 0, 1) * 4.6),
-    );
+    highwayNeedles(p, v).forEach((angle, i) => (needles[i].rotation.z = angle));
   };
   // Change the cab shell above its fixed floor, leaving the person, controls,
   // chassis and coupling at their true physical size and working heights.
