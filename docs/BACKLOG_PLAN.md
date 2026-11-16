@@ -93,6 +93,27 @@ Additional recovery criteria (before production edits):
   insufficient-cash refusals atomically; `tests/browser/boating.spec.ts` must
   complete its real purchase/boarding, throttle, trawl, provisions and rescue flow.
 
+Additional criteria from the pushed CI run (before further production edits):
+
+- Hold real WebSocket state messages after a successful paint/pasture action while
+  delivering its acknowledgement. After releasing the state, show the saved paint
+  and expanded pasture capacity without reopening the menu. The pasture trace
+  already shows the correct 4/8 adult shares; update its obsolete cows wording. Preserve the existing
+  reopened-editor draft regression. Verify `action-snapshots.spec.ts`,
+  `tractor-shop.spec.ts`, `vehicle-editor.spec.ts` and `panel-replies.spec.ts`.
+- Keep the same trade row and Buy button connected through a successful purchase
+  and a cash refusal, including stock/carried counts and investment. Reproduce in
+  `action-snapshots.spec.ts`; retain the import-premium and trade-feedback flows.
+  Extend `item-order.spec.ts`: buying the last stocked bread moves it behind
+  stocked Water while retaining the same button and the selected trade quantity.
+  If the shop changes a quote, its refusal must refresh that price before retry.
+  Retain the same Buy button through ten real-time-clock purchases in
+  `trade-feedback.spec.ts`; ticking daylight must not trigger listing replacement.
+- Make resource recovery assertions use explicit simulation time: show depleted
+  stock, advance exactly the configured recovery interval, gather the recovered
+  load and show depletion again. Retain all rule persistence, invalid-value and
+  empty-resource assertions in `resource-deposit-rules.spec.ts`.
+
 #### CI recovery verification and open gate
 
 - Investigated `43783324645` (`c9d78802`, the reported failure) and
@@ -172,14 +193,48 @@ Additional recovery criteria (before production edits):
   completed with the check/unit job passing and all nine browser jobs failing.
   Prepare the locally verified recovery fixes for 0.148.1 in distinct main commits;
   push to obtain the exact-SHA workflow result. This checkpoint is not deployed.
+- Push the nine locally verified recovery commits to main, ending at
+  `17e1de98fd43e95b09b73e81e196c7f9dd5bb0c1` (prepared version 0.148.1).
+  [Check Aclone run 43802121222](https://github.com/151henry151/Aclone/actions/runs/43802121222)
+  fails overall. Its check job passes formatting, TypeScript and all 2,566 unit
+  tests (zero skipped, cancelled or failed); all eight `/aclone/` browser flows
+  pass. The eight root shards reach their unchanged 20-minute limits: 101 pass,
+  20 fail and 166 do not run. Retain logs, traces and screenshots under
+  `github-17e1de98-*`. This is not a deployment or a green CI result.
+- Follow up the hosted failures with delayed-state browser regressions. The old
+  code leaves garage paint stale after the accepted state arrives and detaches
+  the Buy button after an acknowledgement; both fail for those reasons. Refresh
+  after a later accepted state, scoped to the same panel opening, and update
+  trade stock in place. The pasture trace already shows correct 4/8 adult shares:
+  its old wording assertion is stale. Resource recovery runs on an explicit
+  simulation clock so screenshot latency cannot replenish extra loads.
+- Follow-up verification (2026-11-16): all 17 affected GPU browser cases pass,
+  including desktop/phone tractor paint and recall, repeated trades, changed-price
+  refusal/retry, availability ordering, editor drafts, business rules, resource
+  recovery, boat arrival and both construction flows. The final seven-case trading
+  run also preserves button identity while the day/night clock runs. Relevant
+  units pass 42/42 and TypeScript is clean. Keep the strict graphics results above;
+  these UI changes do not replace or relax that acceptance.
+- Software follow-up: the first four delayed-state/import cases pass. Resource
+  recovery/depletion passes its assertions, but the final empty-world reload
+  exceeds the unchanged 120-second deadline. Its complete GPU run passes. The
+  first frozen-clock attempt also stopped periodic snapshots; refresh through a
+  normal flashlight action while retaining explicit simulation time. Preserve
+  the failed evidence and do not describe the software run as fully passing.
+- The final software trading follow-up passes both delayed-state market and
+  import-premium/cash-refusal cases (`trade-final-software.log`), with the final
+  quote/order logic. Prepare 0.148.2 for push in two logical commits: player-facing
+  action/trading repair, then remaining browser fixture corrections and this CI
+  record. The prepared `/aclone/` build, changed-file formatting and diff check
+  pass. Keep production on 0.148.0 and preserve the pending GPU runner choice.
 - **Not complete / not released:** the full GitHub workflow has not passed for
   these changes. Continue the remaining functional failure reproduction and
   verification, then run the complete workflow on the resulting main SHA.
 - The hosted run also produced 16 frames where the unchanged graphics benchmark
   requires over 200, plus strict frame-time budgets. No GPU runner is configured
-  in this repository. Asked Henry whether to retain the exact benchmark on this
-  computer's GPU with functional tests in hosted CI, or use a dedicated GPU CI
-  runner. Do not skip the benchmark or lower its assertions while that choice is
+  in this repository. Asked Henry to choose a dedicated isolated GPU runner or
+  explicitly authorize this laptop as a GPU CI runner for the public repository.
+  No runner is registered while that choice is pending. Do not skip the benchmark or lower its assertions while that choice is
   pending. Keep the garage bay paused and do not deploy or announce this slice.
 
 Current remaining order (supersedes the historical numbered order):

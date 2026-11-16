@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
-import { createWorld, addPlayer } from '../../src/shared/simulation';
+import { createWorld, addPlayer, advance } from '../../src/shared/simulation';
 import { worldResources } from '../../src/shared/resources';
 import { creatorSchema } from '../../src/shared/creator';
 import { waitForWorld } from './fixtures/ready';
@@ -14,7 +14,7 @@ test('deposit rules persist and show capacity depletion recovery and empty groun
   test.setTimeout(120000);
   page.setDefaultTimeout(15000);
   const dir = mkdtempSync(join(tmpdir(), 'aclone-gathering-rates-')),
-    app = await createApp({ dataDir: dir, port: 0, dev: true });
+    app = await createApp({ dataDir: dir, port: 0, dev: true, tick: false });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   try {
@@ -74,7 +74,13 @@ test('deposit rules persist and show capacity depletion recovery and empty groun
     );
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
-    const close = () => page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+    // tick:false also pauses periodic snapshots. Use a real, harmless action to
+    // publish the explicitly advanced state without advancing simulation time.
+    const sync = () => page.getByRole('button', { name: 'Flashlight', exact: true }).click();
+    const close = async () => {
+      await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+      await sync();
+    };
     const edit = async () => {
       await page.keyboard.press('F10');
       await page.getByRole('button', { name: 'Rules', exact: true }).click();
@@ -108,6 +114,13 @@ test('deposit rules persist and show capacity depletion recovery and empty groun
     await expect(page.locator('#resource-stock')).toContainText('0/9 available');
     await expect(page.locator('#resource-gather')).toBeDisabled();
     await page.screenshot({ path: 'test-results/resource-deposit-depleted.png' });
+    // Test the configured recovery interval, not time spent rendering screenshots
+    // or scrolling on a software GPU. Those delays must not grow extra loads.
+    advance(w(), patch.resourceOtherRegrowthSeconds - 1);
+    await sync();
+    await expect(page.locator('#resource-gather')).toBeDisabled();
+    advance(w(), 1);
+    await sync();
     await expect(page.locator('#resource-gather')).toBeEnabled({ timeout: 20000 });
     await page.locator('[data-do="resources"]:visible').click();
     const row = page
@@ -119,6 +132,9 @@ test('deposit rules persist and show capacity depletion recovery and empty groun
     await page.screenshot({ path: 'test-results/resource-deposit-recovered.png' });
     await close();
     await page.locator('#resource-gather').click();
+    await expect.poll(() => p().task?.kind).toBe('gather');
+    advance(w(), p().task!.end - w().time);
+    await sync();
     await expect.poll(() => p().inventory.dirt).toBe(3);
     await expect(page.locator('#resource-status')).toContainText('needs time to replenish');
     await edit();

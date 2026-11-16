@@ -66,7 +66,7 @@ test('world owner saves a custom vehicle and expands a working livestock pasture
     await expect(page.getByRole('button', { name: /Buy adjoining pasture/ })).toBeVisible();
     await page.getByRole('button', { name: /Buy adjoining pasture/ }).click();
     await expect.poll(() => barn.pasture?.parcels).toBe(2);
-    await expect(page.getByText(/capacity 8 cows/)).toBeVisible();
+    await expect(page.getByText(/4 \/ 8 adult shares occupied/)).toBeVisible();
     await page.screenshot({ path: 'test-results/pasture-management.png' });
     await page.keyboard.press('Escape');
     Object.assign(p, { vehicle: 8, fleet: [0, 5, 8], fuelVehicle: 8, fuel: 100 });

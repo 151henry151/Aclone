@@ -13,6 +13,10 @@ All notable changes to Aclone are documented here. This project follows
 - Refresh action results after their accepted world state arrives, so slow connections show saved garage paint instead of stale values.
 - Keep shop trade buttons stable, update stock and availability order, and refresh changed prices before retrying a refused trade.
 
+### Changed
+
+- Check resource recovery against explicit simulation time and update the pasture browser assertion to the shipped adult-share display.
+
 ## [0.148.1] - 2026-11-15
 
 ### Fixed
