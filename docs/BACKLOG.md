@@ -52,7 +52,15 @@ The on-road tractor-trailer is too simple, and leaving the pavement throws it fr
 
 **Tests.** A rig at about 40 mph that puts a wheel onto the field is still well above 3 mph on the next tick, and it reaches about 12 mph by braking rather than in one step. Sitting fully off the pavement, the cap is about 12 mph. A dirt road is still about 45 mph, and pavement is still about 65 mph. A render of the tractor and a coupled semitrailer shows the frame, axles, tanks, steps and fifth wheel meeting, and the seated view shows three marked gauges whose needles match speed, fuel and condition.
 
-## Planned — Hovercraft turns should drift
+## Verified — Hovercraft turns should drift
+
+Acceptance passes for 0.148.0: forward travel retains momentum through turns,
+straightens along a held heading, and stops with released throttle. Reverse stays
+controlled. The portable hovercraftDriftSeconds rule defaults to 1.25 seconds;
+zero reproduces the released pivot trace exactly. The actual hovercraft is slot
+4, **mode 5**; the original diagnosis below confused the slot and movement mode.
+The model, skirt and fan remain unchanged. See BACKLOG_PLAN.md for tests and
+release evidence.
 
 A hovercraft currently corners like a wheeled tractor. Turning the nose should not instantly turn the direction of travel.
 

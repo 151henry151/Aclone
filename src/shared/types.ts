@@ -40,6 +40,7 @@ import type { RadioRules } from './radio-rules';
 import type { RowboatRules } from './rowboat-rules';
 import type { CanoeRules } from './canoe-rules';
 import type { FuelRules } from './fuel-rules';
+import type { HovercraftRules } from './hovercraft-driving';
 import type { FlightRules } from './flight-rules';
 import type { WalkingRules } from './walking-rules';
 import type { GatheringSceneryRules } from './gathering-scenery';
@@ -133,6 +134,7 @@ export interface Player {
   speed: number;
   /** Last blocked scenery sweep; clear when position, direction, vehicle or layout permits travel. */
   sceneryStop?: { id: string; x: number; z: number; vehicle: number; reach: number };
+  hoverVelocity?: import('./hovercraft-driving').HoverVelocity;
   flight?: import('./flight').FlightState;
   lastFlightCrash?: { at: number; cause: string; slot: number; x?: number; y?: number; z?: number };
   fuel: number;
@@ -420,6 +422,7 @@ export interface Settings
     Partial<NameTagRules>,
     Partial<RoadRules>,
     Partial<BridgeRules>,
+    Partial<HovercraftRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,

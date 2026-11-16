@@ -34,6 +34,7 @@ import { radioRules } from './radio-rules';
 import { fuelRules } from './fuel-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Settings, World } from './types.ts';
+import { hovercraftRules } from './hovercraft-driving';
 import { flightRules, landingLimits } from './flight-rules';
 import { walkingRules } from './walking-rules';
 import { gatheringSceneryRules } from './gathering-scenery';
@@ -208,6 +209,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     `Walking snow: ${walking.walkingSnow ? `enabled, field strength ${walking.walkingSnowScale}` : 'disabled'}. Bare-ground walking is unchanged.`,
     `Gathering scenery: ${gathering.gatheringScenery}, ${gathering.gatheringTownDistance} m beyond towns, ${gathering.gatheringRecentSeconds} s recent-use window.`,
     s.requireCaptainSkill ? 'Boats longer than the motorboat need the captain skill.' : '',
+    `Hovercraft drift: ${hovercraftRules(s).hovercraftDriftSeconds} seconds (0 = legacy pivot).`,
     `Takeoff: minimum ${flight.flightRotationSpeed} m/s, nose above ${flight.flightTakeoffPitch}°, net upward acceleration above ${flight.flightTakeoffLift} m/s²; pilot rotation required.`,
     `Flight contacts: ${flight.flightStrictLanding ? 'strict' : 'custom/default'}, maximum sink ${limits.sink} m/s, bank ${Math.round((limits.bank * 180) / Math.PI)}°, speed ${limits.speed} m/s. Airbrake ${flight.flightAirbrake ? 'enabled' : 'disabled'}; approach ${flight.flightApproachSpeed} m/s. Public runway target ${flight.runwayLength} × ${flight.runwayWidth} m, shoulder ${flight.runwayShoulder} m.`,
     s.loseBoatsOnDeath

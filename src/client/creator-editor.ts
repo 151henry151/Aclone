@@ -67,6 +67,7 @@ import {
 import { vehicleEditor, fuelTrailerEditor } from './vehicle-editor';
 import { walkingRules, walkingRuleFields } from '../shared/walking-rules';
 import { vehicleDef } from '../shared/vehicle-config';
+import { hovercraftRuleFields, hovercraftRules } from '../shared/hovercraft-driving';
 import { flightRuleFields, flightRules, type FlightRuleKey } from '../shared/flight-rules';
 import { coursesPanel } from './courses';
 import { bookSchema, townEventSchema } from '../shared/world-stories';
@@ -189,6 +190,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(roadRuleFields),
     ...Object.keys(bridgeRuleFields),
     ...Object.keys(radioRuleFields),
+    ...Object.keys(hovercraftRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
     ...Object.keys(gatheringSceneryFields),
@@ -955,6 +957,9 @@ export function settingsFields(settings: Settings = defaults) {
     )}<p>Natural sites have no tools or wear. Near-settlement mode adds a footpath within the town buffer, while depleted or actively gathered, or during the recent-use window. Set the window to 0 to disable recent-use wear. Always-worked restores legacy tools and cut timber. These visual rules do not change gathering or required inventory implements.</p></fieldset>`;
   const walking = walkingRules(settings);
   const walkingFields = `<fieldset class="boat-death-settings"><legend>Walking in snow</legend><label class="check"><input name="walkingSnow" type="checkbox" ${walking.walkingSnow ? 'checked' : ''}>${walkingRuleFields.walkingSnow.label}</label>${field(walkingRuleFields.walkingSnowScale.label, 'walkingSnowScale', walking.walkingSnowScale, 'number', `min="${walkingRuleFields.walkingSnowScale.min}" max="${walkingRuleFields.walkingSnowScale.max}" step="0.1"`)}<p>Default 1 uses the tractor snow curve. 0 removes extra field drag; 2 strengthens it. Roads retain their wet-road pace. Ordinary walking and Shift share this limit; bare ground is unchanged.</p></fieldset>`;
+  const hovercraft = hovercraftRules(settings);
+  const hoverSpec = hovercraftRuleFields.hovercraftDriftSeconds;
+  const hovercraftFields = `<fieldset class="boat-death-settings"><legend>Hovercraft handling</legend>${field(hoverSpec.label, 'hovercraftDriftSeconds', hovercraft.hovercraftDriftSeconds, 'number', `min="${hoverSpec.min}" max="${hoverSpec.max}" step="any"`)}<p>Higher values retain the old travel direction longer. Release steering to straighten the slide; release throttle to stop. Zero restores instant pivot steering. Reverse follows the nose; other vehicle types are unchanged.</p></fieldset>`;
   const flying = flightRules(settings);
   const flightFields = `<fieldset class="boat-death-settings"><legend>Flight and public runway</legend>${Object.entries(
     flightRuleFields,
@@ -981,6 +986,7 @@ export function settingsFields(settings: Settings = defaults) {
     provisions +
     labour +
     boatRules +
+    hovercraftFields +
     flightFields +
     walkingFields +
     gatheringFields +

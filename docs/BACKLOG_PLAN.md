@@ -22,7 +22,7 @@ Current remaining order (supersedes the historical numbered order):
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
 2. A real highway tractor, and a gradual step off the pavement — done/live 0.147.1;
    verification and release below.
-3. Hovercraft turns should drift.
+3. Hovercraft turns should drift — acceptance passes; prepare 0.148.0 release below.
 4. Pull into a marked bay to store a vehicle at Spanner & Sons.
 5. A backhoe that reads as a backhoe.
 6. Remaining hard-coded gameplay numbers — reconcile the delivered fieldsets
@@ -12197,7 +12197,7 @@ No live player or property edits. Continue hovercraft drift.
   legacy steering and movement. Test validation, missing old-save default, SQLite,
   design export/import, rules summary and the world-builder field. No second default.
 - Commands: `node --import tsx --test tests/hovercraft-driving.test.ts
-tests/prediction.test.ts tests/ground-collisions.test.ts` plus affected existing
+tests/prediction.test.ts tests/vehicle-contacts.test.ts` plus affected existing
   vehicle/motion suites. Browser: drive and turn the real hovercraft, release steering,
   stop and reverse, edit the drift setting to zero and repeat. Check land and water,
   blocked movement, and no-fuel state; capture actual game screenshots/video.
@@ -12205,3 +12205,35 @@ tests/prediction.test.ts tests/ground-collisions.test.ts` plus affected existing
   browser verification, clean TypeScript, changed-file Prettier and prefixed build.
   Update player/world-builder docs, README, changelog and backlog in place; release
   from main and announce real evidence under standing authorization.
+
+Hovercraft red evidence: cruise/settling/low-speed-yaw assertions fail because
+travel follows the nose, and the new setting is rejected as Unknown setting.
+Capture pre-change traces for hovercraft, tractor and boat in the test fixture;
+zero drift must reproduce every recorded pose exactly. Evidence: excluded
+output/hovercraft-drift/red.log and legacy.json.
+
+Implement a hovercraft-only velocity direction with a configurable response time,
+retaining the existing signed speed/drag, reverse cap, support height and collision
+pipeline. Reset stale direction after stopping, teleporting or changing vehicle.
+The first portability test mistakenly imports into an occupied fixture; clear
+that fixture's players, as portable design import requires, and rerun. All 58
+initial relevant unit tests pass, including exact legacy traces, SQLite, portable
+settings and prediction isolation. Existing model browser passes unchanged.
+
+Browser collision fixture corrections: an exact overlap permits escape by design;
+place the obstacle ahead instead. Holding throttle after the first stopped sweep
+can creep closer to its surface, as in the existing vehicle collision system.
+Release throttle at contact before asserting stationary position. Keep the real
+approach/stop and no-stale-velocity checks; do not change collision rules to fit
+an invalid stationary-with-throttle assumption. Browser acceptance still pending.
+
+Hovercraft acceptance passes: 82 relevant unit tests (drift, prediction, vehicle
+contacts/configuration/grounding, motion and highway driving) and both browser
+flows (unchanged model; full keyboard handling and rule edit). The final flow
+covers land/water, drift settling, slow reverse, stopped contact, empty tank and
+zero-rule steering. TypeScript exits 0. Inspect turning.png, water-turn.png and
+world-rules.png; the complete successful recording is handling-and-world-rule.webm
+under excluded output/hovercraft-drift/. Keep the canonical default only in
+settings.json; old saves and public Puddlewick use it without a live state edit.
+Prepare 0.148.0 for the new handling and portable setting; formatting, diff and
+prefixed build gates precede commit/push/deploy on main.

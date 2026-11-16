@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.0] - 2026-11-15
+
+### Added
+
+- Let hovercraft retain momentum through turns, settle along a held heading and steer more gently at low speed; keep reverse controlled and preserve other vehicles’ handling.
+- Add a portable world rule for hovercraft drift response, including a zero setting that restores the previous instant pivot.
+
 ## [0.147.1] - 2026-11-15
 
 ### Fixed

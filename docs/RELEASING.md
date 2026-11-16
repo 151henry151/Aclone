@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.148.0
+
+Deploy the approved main SHA with the usual database backup, prefixed build and
+restart; publish the matching website and verify health/version/SHA. Reload for
+shared hovercraft handling and the new Rules field. Missing hovercraftDriftSeconds
+uses 1.25 seconds, including public Puddlewick; zero restores the previous pivot.
+Explicit custom response values survive save/load and portable designs. No live
+player grant, property move or manual migration is required.
+
 ## Upgrade 0.147.1
 
 Deploy the approved main SHA with the normal backup, prefixed build and restart;

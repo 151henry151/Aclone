@@ -86,6 +86,7 @@ export function switchVehicle(p: Player, slot: number, remember = true, w?: Worl
   }
   if (p.vehicle !== slot) {
     delete p.flight;
+    delete p.hoverVelocity;
     delete p.earthmovingImplement;
   }
   p.vehicle = slot;

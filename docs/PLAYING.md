@@ -620,6 +620,18 @@ Money, construction and resource counters are private and specific to the world 
 
 Construction counts finished buildings owned at completion, including a helper's final delivery; buying an existing property or cancelling an unfinished site does not count. Materials count completed gathering loads and caught fish; crops harvested into a farm's stockroom are listed separately. Failed or cancelled work does not count. Counters survive death. Existing death totals are retained, but money and activity before this update are unknown rather than reconstructed as zero.
 
+## Hovercraft handling
+
+The Marsh Courier slides through turns on land and water. At speed, its nose turns
+before its direction of travel catches up: allow room outside a turn. Release
+steering and hold the new heading to straighten the slide. Release throttle to
+slow and stop. Reverse stays a slow shove along the nose, and low-speed yaw is
+weaker for lining up and docking. Fuel, obstacles and the existing hover height
+still apply; tractors, trucks and boats keep their own handling.
+
+The default direction response is 1.25 seconds. World builders can change it in
+**F10 → Rules → Hovercraft handling**; zero restores the old instant pivot.
+
 ## Boats and the coastal trade
 
 Boats cannot motor onto the shoreline. A shore impact removes one percentage point of powered-boat hull condition, cuts throttle to zero and pushes the vessel a short distance back into water where clear. Release the throttle key (or reverse it) before accelerating again; holding the same key through the impact cannot keep ramming the shore. Boat service repairs condition. The collision boundary follows the tide; waves do not let you climb the beach.

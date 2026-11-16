@@ -553,6 +553,18 @@ Upload original GLB/OBJ assets and PNG/JPEG artwork in **Assets**, then save nam
 
 Save and test driving, docking, fuel consumption, cargo limits and camera placement before inviting players. The server rejects invalid combinations and edits that would strand occupants or shrink loaded storage. **Restore built-in settings** returns that slot to its original configuration. World designs preserve these definitions; use a media bundle to transfer uploaded models and artwork between servers.
 
+### Hovercraft handling
+
+**F10 → Rules → Hovercraft handling** sets `hovercraftDriftSeconds`, the direction
+response time in seconds (default **1.25**, range **0–5**). Larger values retain the
+previous direction longer through a turn. Zero restores the former instant pivot
+and full low-speed steering. With drift enabled, yaw authority grows with speed;
+reverse follows the nose and uses the existing reverse cap. This applies to the
+amphibious hovercraft movement mode (mode 5, including the default slot 4 Marsh
+Courier); other modes keep their own handling. Vehicle speed, acceleration, turn
+rate and fuel remain in **Vehicles**. The rule saves with the world and portable
+designs; old worlds receive the default without changing ownership or locations.
+
 ### Fuel tanker tuning
 
 In **F10 → Vehicles → Fuel tanker trailer**, set the purchase price in denarii

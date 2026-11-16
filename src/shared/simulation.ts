@@ -227,6 +227,7 @@ import {
 } from './boathouse';
 import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
+import { hovercraftRuleFields, hovercraftRules, hovercraftVelocity } from './hovercraft-driving';
 import { flightRuleFields } from './flight-rules';
 import { walkingRuleFields } from './walking-rules';
 import { gatheringSceneryFields, gatheringSceneryModes } from './gathering-scenery';
@@ -2534,6 +2535,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(calendarRuleFields, key) ||
             Object.hasOwn(landscapeRuleFields, key) ||
             Object.hasOwn(communicationRuleFields, key) ||
+            Object.hasOwn(hovercraftRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
@@ -2764,6 +2766,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         if (gatheringField && 'min' in gatheringField)
           num(v, gatheringField.min, gatheringField.max);
         if (walkingField && 'min' in walkingField) num(v, walkingField.min, walkingField.max);
+        const hovercraftField = hovercraftRuleFields[key as keyof typeof hovercraftRuleFields];
+        if (hovercraftField) num(v, hovercraftField.min, hovercraftField.max);
         const flightField = flightRuleFields[key as keyof typeof flightRuleFields];
         if (flightField && 'min' in flightField) num(v, flightField.min, flightField.max);
         if (
@@ -3355,6 +3359,8 @@ export function command(w: World, p: Player, text: string): string {
 }
 export function move(w: World, p: Player, input: Input, dt: number, prediction = false) {
   if (w.maintenance?.paused) return;
+  if (p.speed <= 0 || p.task || p.atHome || p.inside || p.hitch || p.game === 'fishing')
+    delete p.hoverVelocity;
   if (beingTowed(w, p)) {
     p.speed = 0;
     p.boatThrottle = 0;
@@ -3380,6 +3386,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const v = vehicleDef(w, p.vehicle),
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
     water = ground < surfaceWaterLevel(w, p.x, p.z);
+  const driftSeconds = v.mode === 5 ? hovercraftRules(w.settings).hovercraftDriftSeconds : 0;
+  if (!driftSeconds) delete p.hoverVelocity;
   if (v.mode === 2) {
     const previous = { x: p.x, z: p.z, y: p.y, fuel: p.fuel };
     let solidFlightContact = false;
@@ -3530,7 +3538,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
       dt *
       ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
-      (Math.abs(p.speed) > 0.1 ? 1 : 0);
+      (Math.abs(p.speed) > 0.1 ? 1 : 0) *
+      (driftSeconds ? Math.min(1, Math.abs(p.speed) / v.speed) : 1);
   }
   if (isEarthmover(p.vehicle)) {
     const field = !('onRoad' in surface && surface.onRoad);
@@ -3572,8 +3581,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (v.mode === 5) p.y = Math.max(ground, surfaceWaterLevel(w, p.x, p.z)) + 0.5;
   const half = mapHalf(w);
   const previousPosition = { x: p.x, z: p.z };
-  let nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
-    nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
+  const velocity = driftSeconds
+    ? hovercraftVelocity(p, towBefore.heading, towBefore.speed, driftSeconds, dt)
+    : undefined;
+  let nx = clamp(p.x + (velocity?.x ?? Math.sin(p.heading) * p.speed) * dt, -half, half),
+    nz = clamp(p.z + (velocity?.z ?? Math.cos(p.heading) * p.speed) * dt, -half, half);
   if (p.vehicle === HIGHWAY_TRACTOR) {
     const from = { ...p, ...towBefore };
     const surfaceLimit =
@@ -3750,6 +3762,20 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < waterLevel(w) - 1) {
     Object.assign(p, parishSpawnPosition(w), { speed: 0 });
   }
+  if (
+    driftSeconds &&
+    p.speed > 0 &&
+    dt > 0 &&
+    (p.x !== previousPosition.x || p.z !== previousPosition.z)
+  )
+    p.hoverVelocity = {
+      x: (p.x - previousPosition.x) / dt,
+      z: (p.z - previousPosition.z) / dt,
+      atX: p.x,
+      atZ: p.z,
+      vehicle: p.vehicle,
+    };
+  else delete p.hoverVelocity;
   if (trawling)
     advanceTrawl(
       w,

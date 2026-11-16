@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slide,
+and holding a heading straightens it. World builders can tune the response or
+restore the former instant pivot.
+
 Version 0.147.1 repairs the highway tractor and semitrailer’s connected running gear,
 adds readable cab gauges, and brakes smoothly toward about **12 mph** when the rig
 leaves the road. World builders retain control of field pace and braking.
@@ -713,7 +717,11 @@ and [art notes](docs/ART.md#canal-boat) for controls, costs and model details.
 
 The Marsh Courier hovercraft has a rubber skirt, enclosed cockpit, guarded rear
 fan and cargo lockers, with working speed/fuel instruments and individual paint.
-See [the art notes](docs/ART.md#hovercraft).
+At speed, steer ahead of the turn: the craft keeps sliding along its old direction
+briefly. Release steering to run true, and release throttle to slow down; reverse
+stays aligned with the nose. Low-speed steering is gentler for docking. Worlds
+can adjust this in **F10 → Rules → Hovercraft handling**, or use zero for the old
+pivot. See [the art notes](docs/ART.md#hovercraft).
 
 Factory-built bulldozers and backhoes use plant-operator training and per-world
 machine settings. See the [machine and grading guide](docs/PLAYING.md#earthmoving-machines)
