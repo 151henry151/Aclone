@@ -1798,9 +1798,17 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         'Buy this manufactured vehicle from an automotive factory',
       );
       const parkingBuilding = w.buildings.find((b) => b.id === a.building);
+      const boathouseDeparture =
+        poweredBoat(slot, w) &&
+        parkingBuilding?.kind === 'boathouse' &&
+        p.inside === parkingBuilding.id;
       if (persistentVehicles(w, p)) {
         requireThat(
-          !p.task && !p.atHome && !p.inside && !p.crowBody && Math.abs(p.speed) < 0.5,
+          !p.task &&
+            !p.atHome &&
+            (!p.inside || boathouseDeparture) &&
+            !p.crowBody &&
+            Math.abs(p.speed) < 0.5,
           'Stop outside and finish your activity before changing vehicles',
         );
         if (a.building !== undefined) nearby(w, p, a.building);
@@ -2104,6 +2112,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         p.engine = false;
       }
       p.y = poweredBoat(slot, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
+      if (boathouseDeparture) delete p.inside;
       beginVehicleMount(w, p, beforeVehicle);
       break;
     }

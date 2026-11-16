@@ -369,3 +369,34 @@ test('returning boats can disembark throughout the waterfront arrival area, but 
   w.revision++;
   assert.equal(withinBoatLanding(w, p, d, true), false);
 });
+
+test('a skipper can board from inside the matching boathouse after walking to its desk', () => {
+  const { w, p, yard, d } = setup();
+  w.settings.vehiclesPersist = true;
+  w.settings.arrivalAnimation = 'off';
+  p.vehicle = 5;
+  p.fleet = [0, 5, 30];
+  act(w, p.id, { type: 'approach', building: yard.id });
+  assert.equal(p.inside, yard.id);
+  vehicle(w, p, 30, yard.id);
+  assert.equal(p.vehicle, 30);
+  assert.equal(p.inside, undefined);
+  assert.deepEqual({ x: p.x, z: p.z }, d.berth);
+});
+
+test('boathouse desk boarding keeps wrong-building, activity and affordability refusals atomic', () => {
+  for (const refusal of ['wrong building', 'other interior', 'activity', 'cash']) {
+    const { w, p, yard } = setup();
+    w.settings.vehiclesPersist = true;
+    w.settings.arrivalAnimation = 'off';
+    p.vehicle = 5;
+    p.fleet = [0, 5];
+    act(w, p.id, { type: 'approach', building: yard.id });
+    if (refusal === 'other interior') p.inside = 'someone-elses-house';
+    if (refusal === 'activity') p.task = { kind: 'labour', end: w.time + 20 };
+    if (refusal === 'cash') p.cash = 0;
+    const before = structuredClone(w);
+    assert.throws(() => vehicle(w, p, 30, refusal === 'wrong building' ? 'other-yard' : yard.id));
+    assert.deepEqual(w, before);
+  }
+});

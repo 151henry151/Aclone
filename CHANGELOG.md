@@ -12,6 +12,7 @@ All notable changes to Aclone are documented here. This project follows
 - Finish graphics warmup safely when a live world update removes a material during shader compilation.
 - Animate workshop and garage doors over their configured duration even when rendering runs slowly.
 - Keep large and rotated building entrances reachable after leaving, using the world's existing arrival range at the actual door as well as the building centre.
+- Allow boat purchase and boarding from the matching boathouse desk while preserving activity, ownership, berth and payment checks.
 
 ## [0.148.0] - 2026-11-15
 
