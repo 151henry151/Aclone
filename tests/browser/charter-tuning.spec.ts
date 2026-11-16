@@ -88,6 +88,13 @@ test('charter boarding and its panel use the saved vehicle editor berths and tan
       act(w, q.id, { type: 'charter', operation: 'accept', captain: c.id });
     }
     await expect(panel).toContainText('Passengers 2/2');
+    const invitation = page.getByRole('button', { name: 'Invite Waiting guest', exact: true });
+    await expect(invitation).toBeVisible();
+    const originalInvitation = await invitation.elementHandle();
+    // Five seconds cross both the inventory and charter refresh intervals.
+    // A stationary captain must be able to point at the same button and click it.
+    await page.waitForTimeout(5500);
+    expect(await originalInvitation!.evaluate((element) => element.isConnected)).toBe(true);
     await page.getByRole('button', { name: 'Invite Waiting guest', exact: true }).click();
     await expect.poll(() => c.charter?.offers[p.id]?.fare).toBe(7500);
     await panel.evaluate((element) => element.scrollIntoView({ block: 'center' }));

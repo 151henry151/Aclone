@@ -13,6 +13,9 @@ All notable changes to Aclone are documented here. This project follows
 - Animate workshop and garage doors over their configured duration even when rendering runs slowly.
 - Keep large and rotated building entrances reachable after leaving, using the world's existing arrival range at the actual door as well as the building centre.
 - Allow boat purchase and boarding from the matching boathouse desk while preserving activity, ownership, berth and payment checks.
+- Keep delayed action replies from replacing a reopened menu or interrupting a newer draft.
+- Refresh trailer handling controls when trailers enter or leave reach without closing the inventory disclosure.
+- Keep unchanged charter controls in place during routine inventory updates so boarding invitations remain clickable on slower computers.
 
 ## [0.148.0] - 2026-11-15
 

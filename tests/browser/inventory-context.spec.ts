@@ -106,6 +106,21 @@ test('inventory follows nearby actions and keeps trailers collapsed on desktop a
     await trailers.locator('summary').focus();
     await page.keyboard.press('Enter');
     await expect(trailers.locator('h4').first()).toBeVisible();
+    const trailerSummary = await trailers.locator('summary').elementHandle();
+    w.trailers!.t0.x = p.x;
+    w.trailers!.t0.z = p.z + 1;
+    const nearbyTrailer = trailers.locator('section.notice').first();
+    await expect(
+      nearbyTrailer.getByRole('button', { name: 'Hitch trailer', exact: true }),
+    ).toBeVisible();
+    w.trailers!.t0.x = 200;
+    w.trailers!.t0.z = 200;
+    await expect(
+      nearbyTrailer.getByRole('button', { name: 'Hitch trailer', exact: true }),
+    ).toHaveCount(0);
+    expect(await trailerSummary!.evaluate((node) => node.isConnected)).toBe(true);
+    await expect(trailers).toHaveAttribute('open', '');
+
     await modal.getByRole('button', { name: 'Close dialog' }).click();
     await page.keyboard.down('w');
     await expect.poll(() => p.z).toBeLessThan(2.5);

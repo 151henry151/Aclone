@@ -1,3 +1,4 @@
+import { patchPanelContent } from './panel-content';
 import { toolImportShop } from '../shared/tool-imports';
 import { toolImportRules } from '../shared/tool-import-rules';
 import { itemEntries } from './item-order';
@@ -473,7 +474,8 @@ const radioConsole = new RadioConsole(
 );
 window.addEventListener('pointerdown', () => void radioConsole.unlock(), { capture: true });
 window.addEventListener('keydown', () => void radioConsole.unlock(), { capture: true });
-const actionViews = new Map<number, string | undefined>();
+let panelGeneration = 0;
+const actionViews = new Map<number, number>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
 let tradeVisit = 0;
@@ -485,7 +487,7 @@ function send(action: Action) {
   }
   const id = ++request;
   if (action.type === 'radio') radioRequests.set(id, action);
-  actionViews.set(id, $('modal-host').dataset.viewKey);
+  actionViews.set(id, panelGeneration);
   if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
   if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
   if (actionViews.size > 128) actionViews.delete(actionViews.keys().next().value!);
@@ -668,12 +670,13 @@ async function connect() {
         panel !== 'bridges' &&
         panel !== 'earthworks' &&
         panel &&
-        view === $('modal-host').dataset.viewKey
+        view === panelGeneration
       )
         setTimeout(() => {
-          // A prior action must never replace a newly opened tab or an input being edited.
+          // Bind replies to this particular opening, even when a player revisits the same tab.
+          // A prior action must never replace a newer form or an input being edited.
           const editing = document.activeElement?.matches('input,select,textarea');
-          if (panel && view === $('modal-host').dataset.viewKey && !editing) renderPanel();
+          if (panel && view === panelGeneration && !editing) renderPanel();
         }, 100);
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';
@@ -1370,11 +1373,70 @@ function drawMap() {
   ctx.fillText('HORN BALL', sx(63), sz(84));
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
+function storyPanelKey() {
+  if (!world || !me) return '';
+  return JSON.stringify([
+    panel,
+    world.creator?.books,
+    world.creator?.townEvents,
+    world.lottery,
+    panel === 'lottery'
+      ? [
+          world.settings.lotteryEnabled,
+          world.settings.lotteryDrawDays,
+          world.settings.lotteryTicketPrice,
+        ]
+      : null,
+    world.towJobs,
+    reboardReason(world, me) === undefined,
+    tenderOf(world, me)?.towedBy,
+    tenderOf(world, me)?.landing,
+    Object.values(world.players).map((q) => [q.id, q.canBeTowed]),
+    me.inventory,
+    me.trailerCargo,
+    me.boatHold,
+    me.boatHolds,
+    me.task?.freight,
+    me.task?.kind === 'freight' ? Math.floor(world.time * 2) : null,
+    world.settings.freightTransferRate,
+    world.settings.freightShopRange,
+    Object.values(world.trailers ?? {}).map((t) => [
+      t.id,
+      t.kind,
+      t.attached,
+      t.storedAt,
+      t.parkedWith,
+    ]),
+    me.vehicle,
+    me.atHome,
+    me.task?.kind,
+    me.hitch,
+    me.game,
+    me.skills,
+    me.crewOffers,
+    me.crewBerth,
+    me.fishingVoyage?.members,
+    me.fishingVoyage?.offers,
+    me.lastFishingSettlement,
+    world.boatRescues?.[me.id]?.spoilage?.spoiled,
+    world.boatRescues?.[me.id]?.dinghy.moored,
+    me.boatLighting,
+    // Boat controls refresh in their own stable host above. A clock tick must
+    // not replace the entire inventory and detach a button under the pointer.
+    me.stormExposure,
+    me.lights,
+    me.crowBody,
+    me.crowClass,
+    me.crowMark,
+    me.crowIntegrity,
+    panel === 'inventory' ? null : Math.floor(world.time / 60),
+  ]);
+}
 let storyPanelSignature = '';
 let caretakerBuilding = '';
 let trailerReachRoot: HTMLDetailsElement | null = null;
 let trailerReachSignature = '';
-function refreshTrailerReach(b: Building) {
+function refreshTrailerReach(b?: Building) {
   if (!world || !me) return;
   const root = app.querySelector<HTMLDetailsElement>(
     'details[data-fleet-disclosure="owned-trailers"]',
@@ -1548,6 +1610,7 @@ function closePanel(exit = true) {
   panel = '';
   caretakerBuilding = '';
   watchCaretaker(false);
+  panelGeneration++;
   $('modal-host').innerHTML = '';
 }
 function modal(title: string, content: string, wide = false) {
@@ -1557,6 +1620,7 @@ function modal(title: string, content: string, wide = false) {
   closeBuildPreview?.();
   closeBuildPreview = undefined;
   panelMemory.capture();
+  panelGeneration++;
   $('modal-host').innerHTML =
     `<div class="modal-backdrop"><section class="window ${wide ? 'large' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><span class="eyebrow">ACLONE / ${esc(world?.name ?? 'UNIVERSE')}</span>${button('×', 'close', 'aria-label="Close dialog"', 'close')}</header><h2>${esc(title)}</h2>${content}</section></div>`;
   panelMemory.restore(
@@ -1669,6 +1733,7 @@ let boardingRoot: Element | null = null;
 let boardingSignature = '';
 let fuelPanelRoot: Element | null = null;
 let charterSignature = '';
+let charterPanelRoot: Element | null = null;
 let expeditionSignature = '';
 function refreshTradingPrices() {
   if (world && me)
@@ -1732,11 +1797,12 @@ function refreshTradingPrices() {
   }
   if (panel === 'inventory' && world && me) {
     refreshSpringPanel(app.querySelector('[data-spring-panel]'), world, me, true);
+    refreshTrailerReach();
     const boating = app.querySelector<HTMLElement>('[data-inventory-boating]');
     if (boating) {
       const html = boatControls();
       if (boating.dataset.rendered !== html) {
-        boating.innerHTML = html;
+        patchPanelContent(boating, html);
         boating.dataset.rendered = html;
       }
     }
@@ -1773,61 +1839,7 @@ function refreshTradingPrices() {
       panel === 'lottery' ||
       panel === 'activities')
   ) {
-    const key = JSON.stringify([
-      panel,
-      world.creator?.books,
-      world.creator?.townEvents,
-      world.lottery,
-      panel === 'lottery'
-        ? [
-            world.settings.lotteryEnabled,
-            world.settings.lotteryDrawDays,
-            world.settings.lotteryTicketPrice,
-          ]
-        : null,
-      world.towJobs,
-      reboardReason(world, me) === undefined,
-      tenderOf(world, me)?.towedBy,
-      tenderOf(world, me)?.landing,
-      Object.values(world.players).map((q) => [q.id, q.canBeTowed]),
-      me.inventory,
-      me.trailerCargo,
-      me.boatHold,
-      me.boatHolds,
-      me.task?.freight,
-      me.task?.kind === 'freight' ? Math.floor(world.time * 2) : null,
-      world.settings.freightTransferRate,
-      world.settings.freightShopRange,
-      Object.values(world.trailers ?? {}).map((t) => [
-        t.id,
-        t.kind,
-        t.attached,
-        t.storedAt,
-        t.parkedWith,
-      ]),
-      me.vehicle,
-      me.atHome,
-      me.task?.kind,
-      me.hitch,
-      me.game,
-      me.skills,
-      me.crewOffers,
-      me.crewBerth,
-      me.fishingVoyage?.members,
-      me.fishingVoyage?.offers,
-      me.lastFishingSettlement,
-      world.boatRescues?.[me.id]?.spoilage?.spoiled,
-      world.boatRescues?.[me.id]?.dinghy.moored,
-      me.boatLighting,
-      panel === 'inventory' && boatSlot(me.vehicle, world) ? Math.floor(world.time) : null,
-      me.stormExposure,
-      me.lights,
-      me.crowBody,
-      me.crowClass,
-      me.crowMark,
-      me.crowIntegrity,
-      Math.floor(world.time / 60),
-    ]);
+    const key = storyPanelKey();
     if (key !== storyPanelSignature && !document.activeElement?.matches('input,select,textarea')) {
       storyPanelSignature = key;
       renderPanel();
@@ -1842,18 +1854,16 @@ function refreshTradingPrices() {
       '.charter-panel input,.charter-panel select,.charter-panel textarea',
     )
   ) {
-    const key = JSON.stringify([
-      me.charter ? { ...me.charter, elapsed: Math.floor(me.charter.elapsed / 60) } : undefined,
-      me.charterPassage,
-      me.charterOffers,
-      Math.floor((me.charterElapsed ?? 0) / 60),
-      Math.floor(world.time / 5),
-    ]);
-    if (key !== charterSignature) {
-      charterSignature = key;
-      charterRoot.outerHTML = charterPanel(world, me);
+    const html = charterPanel(world, me);
+    if (charterRoot !== charterPanelRoot || html !== charterSignature) {
+      const next = document.createElement('div');
+      next.innerHTML = html;
+      patchPanelContent(charterRoot, next.firstElementChild!.innerHTML);
+      charterPanelRoot = charterRoot;
+      charterSignature = html;
     }
   }
+
   const expeditionRoot = app.querySelector('.expedition-panel');
   if (
     expeditionRoot &&
@@ -2293,6 +2303,7 @@ function renderPanel() {
     return;
   }
   if (panel === 'inventory' || panel === 'skills') {
+    if (panel === 'inventory') storyPanelSignature = storyPanelKey();
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
       panel === 'inventory'
