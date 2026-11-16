@@ -19,7 +19,7 @@ passes; do not create another Completed heading.
 
 Current remaining order (supersedes the historical numbered order):
 
-1. Taking off from the runway — investigate the reopened takeoff claim first.
+1. Taking off from the runway — acceptance verified; prepare 0.147.0 release below.
 2. A real highway tractor, and a gradual step off the pavement — running gear,
    readable cluster, then continuous braking to configurable field pace.
 3. Hovercraft turns should drift.
@@ -12040,3 +12040,38 @@ Henry's latest instruction supersedes the earlier branch workflow: all subsequen
 work, commits, pushes and production deployments use `main`. The unfinished snow
 foundation remains separate and unreleased; the other agent's 0.146.3–0.146.5
 fixes and backlog amendments are preserved.
+
+### Runway takeoff investigation — 2026-11-15
+
+No dynamical failure reproduced with the correct keyboard pull-up: the new real
+220/400 m runway tests pass in both directions, empty and with 45 weight aboard.
+A private read-only live snapshot replays successful south-threshold takeoff at
+112.45 m with pull-up beginning at 19 m/s; waiting until 28 m/s takes 210.38 m.
+The reverse threshold overlaps a legitimately parked biplane and cannot accelerate;
+retain that collision, and do not move live property. Puddlewick still has its
+legacy 240 × 18 m reservation; startup correctly avoids unsafe expansion.
+
+Confirmed gap: all three takeoff gates are hard-coded. New world-rule regression
+fails with `Unknown setting`. Expose speed (19 m/s, range 10–60), nose-up pitch
+(4°, range 0–17) and net upward acceleration (0.4 m/s², range 0–10) through the
+existing flight fieldset. Keep current dynamics, actual pilot rotation, collision
+and landing rules. No thrust/lift boost or automatic rotate is justified by these
+measurements. Guard the existing airbrake taper when custom rotation speed meets
+or exceeds approach speed. Browser evidence remains required before completion.
+
+Runway acceptance passes: 42 relevant unit cases, including eight real-strip
+load/direction variations, and both actual browser flows (keyboard takeoff with
+neutral/short-strip failures and Rules edits; keyboard landing with strict
+contacts/airbrake options). Inspect keyboard-liftoff.png and world-takeoff-rules.png
+under excluded output/runway-takeoff/. The flying guide previously recommended
+only a gentle tap; explain holding Down until wheels lift, then releasing it,
+starting well before the runway ends. Do not claim a reproduced physics failure
+or a thrust/lift retune. Prepare 0.147.0 for the new portable world rules.
+
+Additional custom-rule regression passes for rotation speed equal to and above
+approach speed: airborne B still slows the aircraft with finite state. All nine
+landing cases pass after adding this guard coverage (43 relevant unit cases total).
+
+Final TypeScript exits 0; changed-file Prettier, diff checks and /aclone/ production
+build pass. Browser logs and screenshots are retained locally in
+output/runway-takeoff/. Release from main follows under standing authorization.

@@ -44,7 +44,6 @@ const wrap = (v: number) => Math.atan2(Math.sin(v), Math.cos(v));
 const axis = (v: number | undefined) => (Number.isFinite(v) ? clamp(v!, -1, 1) : 0);
 export const FLIGHT = {
   pushbackSpeed: 1.5,
-  rotationSpeed: 19,
   stallAngle: (16 * Math.PI) / 180,
   gravity: 9.81,
 };
@@ -156,14 +155,18 @@ export function fly(
     let cl = clamp(0.28 + 4.5 * f.aoa, -1.15, 1.45);
     if (stall) cl *= Math.max(0.15, 1 - (absAlpha - FLIGHT.stallAngle) * 3.2);
     const q = 0.0217 * speed * speed; // rho*S/(2*m): 23 m² wing, roughly 650 kg loaded.
+    // A configured rotation speed above approach must not reverse the brake's
+    // slow-speed taper or divide by zero. Braking remains off at/below its floor.
+    const brakeFloor = Math.min(rules.flightRotationSpeed, rules.flightApproachSpeed);
+    const brakeRamp = rules.flightApproachSpeed - brakeFloor;
     const airbrake =
       !f.grounded && input.brake && rules.flightAirbrake
         ? rules.flightAirbrakeDrag *
-          clamp(
-            (speed - FLIGHT.rotationSpeed) / (rules.flightApproachSpeed - FLIGHT.rotationSpeed),
-            0,
-            4,
-          )
+          (speed <= brakeFloor
+            ? 0
+            : brakeRamp > 0
+              ? clamp((speed - brakeFloor) / brakeRamp, 0, 4)
+              : 1)
         : 0;
     const drag =
       q *
@@ -207,9 +210,9 @@ export function fly(
       f.vy = 0;
       p.y = ground;
       if (
-        nextSpeed >= FLIGHT.rotationSpeed &&
-        f.pitch > 0.07 &&
-        acceleration[1] > 0.4 &&
+        nextSpeed >= rules.flightRotationSpeed &&
+        f.pitch > (rules.flightTakeoffPitch * Math.PI) / 180 &&
+        acceleration[1] > rules.flightTakeoffLift &&
         !input.brake
       ) {
         f.grounded = false;

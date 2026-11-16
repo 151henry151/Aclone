@@ -3,6 +3,9 @@ import defaults from '../../data/settings.json';
 
 /** Bounds and labels are shared by validation and the editor; defaults live in settings.json. */
 export const flightRuleFields = {
+  flightRotationSpeed: { label: 'Minimum takeoff speed (m/s)', min: 10, max: 60 },
+  flightTakeoffPitch: { label: 'Minimum takeoff nose-up pitch (degrees)', min: 0, max: 17 },
+  flightTakeoffLift: { label: 'Minimum takeoff net upward acceleration (m/s²)', min: 0, max: 10 },
   flightStrictLanding: { label: 'Strict landing contacts (legacy limits)' },
   flightLandingSink: { label: 'Maximum landing sink (m/s)', min: 1, max: 20 },
   flightLandingBank: { label: 'Maximum landing bank (degrees)', min: 1, max: 60 },

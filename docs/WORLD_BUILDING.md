@@ -398,6 +398,15 @@ them use the defaults, including Puddlewick. Other vehicles are unaffected.
 
 ## Flight and public runway
 
+Takeoff uses three independent minimum gates: `flightRotationSpeed` defaults to
+19 m/s (range 10–60), `flightTakeoffPitch` to 4° (0–17), and `flightTakeoffLift`
+to 0.4 m/s² of net upward acceleration (0–10). Change them in **Rules → Flight
+and public runway**. The pilot must still pull up and release the wheel brake.
+Higher gates can make a strip or aircraft unable to take off; test your chosen
+values with cargo aboard. They persist in saves and portable designs and appear
+in the world rules summary; missing keys use these defaults. Custom rotation
+speeds at or above approach speed keep airborne braking finite and effective.
+
 **Rules → Flight and public runway** controls landing sink, bank, minimum/maximum
 pitch, slip and speed. Defaults are 8 m/s, 25°, −15°/+25°, 40° and 44.7 m/s.
 **Strict landing contacts** selects the legacy 3.5 m/s, 12°, −0.1-radian/+20°,

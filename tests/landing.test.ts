@@ -85,6 +85,23 @@ test('airbrake bleeds a fast approach, supports a stable descent and does not st
       assert.ok(a.p.flight!.vy >= -4.5 && a.p.flight!.vy <= -1.8, `descent ${a.p.flight!.vy}`);
   }
 });
+test('airbrake still slows flight when the world rotation gate meets or exceeds approach speed', () => {
+  for (const rotation of [24, 30]) {
+    const { w, p, env } = approach(200, 35, 0);
+    w.settings.flightRotationSpeed = rotation;
+    Object.assign(p.flight!, { pitch: 0.08, bank: 0 });
+    const unbraked = structuredClone(p);
+    for (let t = 0; t < 1; t += 0.05) {
+      assert.equal(fly(p, { ...idle, brake: true }, 0.05, env), undefined);
+      assert.equal(fly(unbraked, idle, 0.05, env), undefined);
+    }
+    assert.ok(Number.isFinite(p.speed) && Number.isFinite(p.y));
+    assert.ok(
+      p.speed < unbraked.speed - 0.5,
+      'custom takeoff gates cannot disable airborne braking',
+    );
+  }
+});
 test('full key presses with a late flare land on the actual graded runway and stop on the paint', () => {
   for (const releaseDelay of [0, 0.3]) {
     const w = createWorld('puddlewick', 'Puddlewick', 'server');

@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.147.0] - 2026-11-15
+
+### Added
+
+- Make the minimum takeoff speed, nose-up pitch and upward acceleration configurable in each world, including saved designs and the Rules editor.
+
+### Fixed
+
+- Clarify keyboard takeoff: hold Down until the wheels lift, then release it, starting well before the end of a clear runway. Verify loaded takeoff on the real public strip while preserving landing and collision behavior.
+- Keep the airbrake effective when a world sets its takeoff speed at or above approach speed.
+
 ## [0.146.6] - 2026-11-15
 
 ### Fixed

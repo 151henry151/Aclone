@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.147.0 makes takeoff thresholds configurable per world and clarifies the
+keyboard takeoff procedure: hold Down until liftoff, then release. Real public-strip
+tests cover cargo, neutral controls and short strips; landing rules remain intact.
+See the [flight guide](docs/FLYING.md) and [world rules](docs/WORLD_BUILDING.md#flight-and-public-runway).
+
 Version 0.146.6 preserves explicitly granted operator testing skills across deaths.
 This server-maintained exception does not change normal player progression; see
 [operator grant scope and revocation](docs/PLAYER_GRANTS.md).

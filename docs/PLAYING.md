@@ -66,6 +66,9 @@ State is server-saved; a new name creates a different identity. [Account recover
 The [flight guide](FLYING.md) explains persistent throttle, independent rudder and
 ailerons, takeoff, stalls, gliding and safe landing. The HUD and F7 help show the new
 controls. These controls replace the earlier automatic-climb system introduced before 0.91.0.
+For takeoff, line up on a clear strip, release B and apply full throttle with W.
+Around 45–55 mph, hold Down until the wheels lift, then release it and keep a modest
+nose-up attitude. Do not wait until the far end of the runway to pull up.
 
 ## Beer, wine and intoxication
 

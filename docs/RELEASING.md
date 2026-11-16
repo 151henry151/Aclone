@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.147.0
+
+Deploy the approved main SHA with the usual database backup, prefixed build and
+restart; publish the matching website and verify health/version/SHA. Reload
+clients for the takeoff fields in Rules. Missing takeoff rules use the canonical
+19 m/s, 4° and 0.4 m/s² defaults; saved runway placement and aircraft ownership
+remain intact. No player grant or manual live-world edit is required.
+
 ## Upgrade 0.146.6
 
 Commit and push to main, then deploy the approved main SHA with the normal backup,

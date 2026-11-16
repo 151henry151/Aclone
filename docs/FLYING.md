@@ -69,15 +69,23 @@ There is no automatic runway alignment or instant vertical takeoff.
    start it with F4. Check fuel and, on worlds requiring
    licences, obtain the pilot qualification. Taxi at low throttle using A/D.
 2. Line up, release B, and increase power with W. The tail comes up as speed builds.
-3. Around **45–55 mph**, gently tap Down to rotate. Full throttle alone does not lift
-   the aircraft from level ground. Holding Down continuously can cause a stall.
-4. Keep a modest nose-up attitude. Level off by easing the nose down as needed.
+3. Around **45–55 mph**, **hold Down to raise the nose until the wheels lift**,
+   then release it. Begin while there is still runway ahead; do not wait until the
+   far end. Full throttle alone does not lift the aircraft from level ground, and
+   a brief tap may not raise the nose enough.
+4. Keep a modest nose-up attitude. Ease the nose down as needed; continuing to hold
+   Down after liftoff can pull the aircraft into a stall.
 5. Use small banks to turn. Watch altitude: a steep bank leaves less lift supporting
    your weight. Release the bank keys early to let the wings settle; counter-bank
    when a quicker correction is needed.
 
 These are practice targets, not exact guarantees: slope, ground grip, engine
-condition and the aircraft's attitude affect the ground run and flight path.
+condition, cargo and the aircraft's attitude affect the ground run and flight path.
+Check that the runway is clear: parked vehicles still block the aircraft. World
+builders can change the minimum takeoff speed, nose-up pitch and upward acceleration;
+the defaults are 19 m/s (about 42 mph), 4° and 0.4 m/s². These are minimum gates,
+not a promise to lift at that exact speed. A sufficiently short strip remains
+unusable. See [flight world rules](WORLD_BUILDING.md#flight-and-public-runway).
 
 ## Reading the cockpit
 

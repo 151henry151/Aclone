@@ -8,7 +8,17 @@ of truth across simulation, UI and NPCs. Test changed values as well as defaults
 and preserve existing saved state when policies change. Client graphics quality
 and technical performance controls remain in their appropriate layer.
 
-## Planned — Taking off from the runway
+## Verified — Taking off from the runway
+
+**Verified for 0.147.0 (2026-11-15).** Real keyboard takeoff passes on the graded
+220/400 m strips in both directions, empty and with 45 weight aboard; a local
+replay of Puddlewick’s 240 m strip also lifts before its end. The reported failure
+was not reproduced with a sustained pull-up. Correct the flying guide to hold
+Down until liftoff, and expose the three previously hard-coded takeoff gates as
+world rules. Retain flight dynamics, neutral-stick ground runs, short-strip
+failures and collision/landing rules. A parked aircraft found at the reverse
+Puddlewick threshold remains a valid obstruction. Acceptance evidence and release
+status are recorded in BACKLOG_PLAN.md; the original report/spec follows.
 
 Full throttle for the length of the runway, then pulling up, leaves the airplane on the ground.
 
