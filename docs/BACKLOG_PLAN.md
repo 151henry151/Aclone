@@ -12930,6 +12930,21 @@ criterion complete. The unchanged ford journey passes without the reload.
   Local passes do not close the CI gate. Do not deploy, announce completion or
   start the garage bay until the entire workflow succeeds.
 
+The final GPU matrix has sixteen serial shards. The list-only coverage comparison
+assigns all **291 cases exactly once**, with no omission or duplicate. Historical
+and local durations place the longest projected shard at about **1051 seconds**,
+within the unchanged 1200-second suite limit. Structural YAML comparison confirms
+that URLs, permissions, steps, limits and hosted checks are unchanged outside the
+matrix (`output/ci-2026-11-15/workflow-verification.txt`). Coverage evidence is in
+`output/ci-2026-11-15/shard-coverage-16/`. Checkpoint **0.148.15** is prepared for the
+full main workflow; it is not yet CI-green or deployed.
+
+Final pre-push verification: `npm run build` (including TypeScript) passes. The
+repository-wide local format command reports only three ignored, untracked
+`docs/NPC_STATUS*.md` artifacts; leave them untouched and excluded. Checking every
+tracked file with Prettier passes. The local game and proxy are stopped, ports
+33173/33174 are free, and the laptop GPU runner is online and idle.
+
 ### Marked garage storage bay — criteria before production edits
 
 - At completed tractor garages (Spanner & Sons; exclude aircraft hangars and private

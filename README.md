@@ -6,7 +6,7 @@ Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slid
 and holding a heading straightens it. World builders can tune the response or
 restore the former instant pivot.
 
-The 0.148.14 CI recovery checkpoint is being verified on main and is not live yet.
+The 0.148.15 CI recovery checkpoint is being verified on main and is not live yet.
 Main CI uses the [laptop GPU runner](docs/GPU_RUNNER.md) for full browser coverage,
 with hosted software smoke checks and an exact-commit deployment gate.
 The pending recovery also fixes spring editing, accepted editor refreshes and
@@ -584,7 +584,7 @@ keep these distinct from whole-game frame rates and server heartbeat checks.
 
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 
-CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
+CI runs unit/type/format checks, sixteen serial GPU browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
 
 Browser tests may create pilots and worlds: never target production. `TEST_URL` selects the server; `CHROMIUM_PATH` selects an installed Chromium. People use a continuous smooth body mesh with skeletal walking/jogging animation adapted from recorded human motion and a shared workwear/face texture. Preview the actual model and seated pose with `npx tsx scripts/walking-preview.ts`; it writes 30-fps frames and front/back/side/seated views into `output/walking/`. Rebuild its baked surface with `npx tsx scripts/human-mesh.ts` and motion clips with `npx tsx scripts/human-motion.ts`; [motion provenance](art/motion/README.md) credits the CMU capture data. Load/network checks are in [Hosting](docs/HOSTING.md#connection-and-multiplayer-checks); visual capture commands are in [Art](docs/ART.md#reviewing-visual-changes).
 

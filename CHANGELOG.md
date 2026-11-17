@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.15] - 2026-11-17
+
+### Changed
+
+- Divide the complete laptop GPU browser suite into sixteen serial jobs so every case fits within the existing job and test deadlines; retain hosted unit, formatting, type and software-browser checks.
+
 ## [0.148.14] - 2026-11-17
 
 ### Fixed

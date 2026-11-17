@@ -1,7 +1,9 @@
 # Laptop GPU CI runner
 
 Henry authorizes the laptop's NVIDIA Quadro M1200 for Aclone CI. The complete
-browser suite runs for pushes to main, one shard at a time. Hosted workers still
+browser suite runs for pushes to main, in sixteen serial shards. Every case remains
+assigned exactly once; smaller shards leave room within the existing 20-minute
+suite and 25-minute job deadlines. Hosted workers still
 run formatting, TypeScript, unit tests and software-rendered root and `/aclone/`
 smoke checks for pushes and pull requests. Main's full workflow is the deployment
 gate; a pull request's smoke checks alone are not release acceptance.

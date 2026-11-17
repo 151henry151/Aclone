@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.15 — Complete GPU coverage within existing deadlines
+
+Run sixteen serial laptop GPU shards instead of eight. All 291 browser cases are
+assigned exactly once; keep the 20-minute suite and 25-minute job limits, individual
+assertion deadlines, trusted-main guard and hosted software/unit checks unchanged.
+The complete resulting main workflow must pass before releasing the accumulated
+CI recovery fixes. Keep live 0.148.0 until then; no save migration is required.
+
 ## Upgrade 0.148.14 — Current player journeys in browser checks
 
 Update stale test interactions to the shipped menus, boarding labels and arrival

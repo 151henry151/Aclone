@@ -37,28 +37,52 @@ jobs:
         include:
           - name: root-1
             base_path: ''
-            tests: --shard=1/8
+            tests: --shard=1/16
           - name: root-2
             base_path: ''
-            tests: --shard=2/8
+            tests: --shard=2/16
           - name: root-3
             base_path: ''
-            tests: --shard=3/8
+            tests: --shard=3/16
           - name: root-4
             base_path: ''
-            tests: --shard=4/8
+            tests: --shard=4/16
           - name: root-5
             base_path: ''
-            tests: --shard=5/8
+            tests: --shard=5/16
           - name: root-6
             base_path: ''
-            tests: --shard=6/8
+            tests: --shard=6/16
           - name: root-7
             base_path: ''
-            tests: --shard=7/8
+            tests: --shard=7/16
           - name: root-8
             base_path: ''
-            tests: --shard=8/8
+            tests: --shard=8/16
+          - name: root-9
+            base_path: ''
+            tests: --shard=9/16
+          - name: root-10
+            base_path: ''
+            tests: --shard=10/16
+          - name: root-11
+            base_path: ''
+            tests: --shard=11/16
+          - name: root-12
+            base_path: ''
+            tests: --shard=12/16
+          - name: root-13
+            base_path: ''
+            tests: --shard=13/16
+          - name: root-14
+            base_path: ''
+            tests: --shard=14/16
+          - name: root-15
+            base_path: ''
+            tests: --shard=15/16
+          - name: root-16
+            base_path: ''
+            tests: --shard=16/16
     name: Browser (${{ matrix.name }})
     env:
       BASE_PATH: ${{ matrix.base_path }}
@@ -95,7 +119,8 @@ jobs:
         run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
       - name: Wait for health endpoint
         run: node --import tsx scripts/wait-ci-server.ts
-      # Keep the existing shard and individual test deadlines. The laptop executes
+      # Keep the existing suite and individual test deadlines; smaller shards leave
+      # headroom for the full browser suite. The laptop executes
       # one shard at a time; no competing CI renderer distorts graphics benchmarks.
       # Playwright's deadline leaves time to upload diagnostics before the job limit.
       - run: npm run test:e2e -- --global-timeout=1200000 ${{ matrix.tests }}
