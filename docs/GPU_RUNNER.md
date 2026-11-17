@@ -9,6 +9,9 @@ gate; a pull request's smoke checks alone are not release acceptance.
 The runner is installed outside the development checkout at
 `~/.local/share/aclone-gpu-ci/`. Its user service is `aclone-gpu-runner.service`.
 It needs the laptop awake, network access and the logged-in NVIDIA display session.
+CI uses game port 33173; its readiness check requires the spawned process and the
+checkout’s exact Aclone version. Host networking is shared, so an unrelated
+application’s successful health response must never authorize browser input.
 A missing display or software fallback fails the renderer preflight, rather than
 silently accepting weaker performance. Every GPU shard uploads its renderer name.
 Do not run local benchmarks or GPU-heavy applications alongside performance CI.

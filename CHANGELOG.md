@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.8] - 2026-11-16
+
+### Fixed
+
+- Give laptop browser CI a dedicated game port and verify the spawned server's identity and exact version before testing, so another local application's health endpoint cannot be mistaken for Aclone.
+
 ## [0.148.7] - 2026-11-16
 
 ### Fixed

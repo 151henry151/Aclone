@@ -24,6 +24,13 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.8 — Verify the CI game server
+
+Use dedicated laptop port 33173 and require the spawned game process, exact
+checkout version and Aclone health payload before browser input. Hosted smoke
+jobs retain their own ports and use the same identity check. Include the earlier
+recovery fixes; keep live 0.148.0 until the full exact-SHA workflow passes.
+
 ## Upgrade 0.148.7 — Interior rendering
 
 Batch compatible fixed furniture colours without changing the room's appearance

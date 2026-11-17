@@ -37,40 +37,33 @@ jobs:
         include:
           - name: root-1
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=1/8
           - name: root-2
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=2/8
           - name: root-3
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=3/8
           - name: root-4
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=4/8
           - name: root-5
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=5/8
           - name: root-6
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=6/8
           - name: root-7
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=7/8
           - name: root-8
             base_path: ''
-            url: http://127.0.0.1:3000/
             tests: --shard=8/8
     name: Browser (${{ matrix.name }})
     env:
       BASE_PATH: ${{ matrix.base_path }}
-      TEST_URL: ${{ matrix.url }}
+      PORT: '33173'
+      TEST_URL: http://127.0.0.1:33173/
       DATA_DIR: /tmp/aclone-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.name }}
       TEST_GPU: '1'
     steps:
@@ -94,20 +87,14 @@ jobs:
         if: matrix.name == 'root-1'
         run: npm run check:website
       - name: Start disposable game server
-        run: npm start > /tmp/aclone.log 2>&1 &
+        run: |
+          npm start > /tmp/aclone.log 2>&1 &
+          echo $! > /tmp/aclone-ci-server.pid
       - name: Start subpath proxy
         if: matrix.base_path != ''
         run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
       - name: Wait for health endpoint
-        run: |
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --max-time 2 "${TEST_URL}api/health"; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat /tmp/aclone.log
-          exit 1
+        run: node --import tsx scripts/wait-ci-server.ts
       # Keep the existing shard and individual test deadlines. The laptop executes
       # one shard at a time; no competing CI renderer distorts graphics benchmarks.
       # Playwright's deadline leaves time to upload diagnostics before the job limit.
@@ -150,20 +137,14 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm start > /tmp/aclone.log 2>&1 &
+      - run: |
+          npm start > /tmp/aclone.log 2>&1 &
+          echo $! > /tmp/aclone-ci-server.pid
       - name: Start subpath proxy
         if: matrix.base_path != ''
         run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
       - name: Wait for health endpoint
-        run: |
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --max-time 2 "${TEST_URL}api/health"; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat /tmp/aclone.log
-          exit 1
+        run: node --import tsx scripts/wait-ci-server.ts
       - run: npm run test:e2e -- --global-timeout=1200000 tests/browser/game.spec.ts tests/browser/expansion.spec.ts
       - uses: actions/upload-artifact@v4
         if: failure() || cancelled()

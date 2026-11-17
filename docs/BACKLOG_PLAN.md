@@ -301,6 +301,73 @@ unit deadline and assertion. Acceptance is a successful completed hosted check,
 including cleanup, on the final SHA. This specific infrastructure correction is
 not a relaxation of browser or graphics acceptance.
 
+Push the runner infrastructure as `02e5d143`, home fixture as `888249f6`, and
+unit-job cleanup allowance as `c9db25993bda0c3ffce9b77b935f25bdd6f3deb3` on main.
+The initial GitHub runner preflight/build passes and its uploaded renderer artifact
+confirms NVIDIA Quadro M1200 hardware inside the isolated job. Cancel/supersede
+bootstrap run 43985997626 after caching the download; its hosted tests passed all
+2,573 cases but cleanup hit the former ten-minute job limit. The complete corrected
+run is [43987617554](https://github.com/151henry151/Aclone/actions/runs/43987617554).
+It remains in progress; keep production on 0.148.0 and do not mark recovery done.
+
+GPU acceptance gap, before production edits: the real runner passes absolute
+frame budgets and zero >100 ms hitches, but normal open interiors measure 20.2 ms
+p95 against closed 18.2 ms × 1.1 = 20.02 ms. Preserve that failed evidence. The
+open scene adds 48 draw calls for just 3,242 triangles. Fixed furniture currently
+batches separately by paint colour even when its lighting/material properties
+match. Add a regression requiring compatible untextured fixed furniture to share
+a draw while preserving linear colours, every triangle, world-space bounds and
+principal/detail visibility. Keep dynamic stock, vehicles, lamps and animated
+parts separate. Verify colour/geometry in browser, the relevant interior unit
+suite, and the original unchanged absolute/relative GPU benchmarks. Do not call
+the performance item complete until those measurements and exact-SHA CI pass.
+
+Additional main-run failure before production edit: `business-controls.spec.ts`
+reaches the saved Hops/Coffee status then detaches the farm policy form during
+scrolling. Snapshot summaries already update in place, but its action reply still
+queues a whole-panel refresh. Extend the browser regression to retain the original
+farm and bulk-discount form nodes across saves, while verifying all existing
+saved values, draft restoration, phone controls, purchase quotes and payments.
+Confirm deterministic red identity failure, then avoid full-panel refresh only for
+these two forms whose saved status already updates from accepted world snapshots.
+Keep delayed garage/dairy/trading and reopened-editor reply regressions green.
+Temporarily remove the GPU scheduling label to drain the current job, run local
+verification alone, then restore it. No queued tests are skipped or cancelled.
+
+Runner startup gap: first shard finishes 34 passed/3 failed; its caretaker case
+reaches Grafana because laptop port 3000 belongs to another application. The old
+curl check accepted that application's `/api/health`. Before changing startup,
+require a dedicated CI port, a still-running spawned server PID, and an Aclone
+health payload with `ok: true`, the checkout's exact version and a numeric world
+count. Exercise real HTTP tests for correct health, another service's HTTP 200,
+and an exited server. Fail before browser input on an identity/ownership mismatch.
+Keep hosted smoke checks on their separate ports and do not alter the other app.
+
+Local follow-up verification: all 34 relevant unit tests and TypeScript pass.
+Six browser cases pass (delayed garage/dairy/trade state, retained farm/bulk forms,
+reopened editor replies, and pixel-preserving furniture batching). The new render
+fixture initially used two Three.js module instances, so `instanceof` did not
+select its meshes; load the fixture through Vite's module graph, then verify
+4 → 1 draws with at most one byte of pixel difference. Inspect both renders.
+The unchanged performance suite passes all eight comparisons in 6.3 minutes:
+interiors low closed/open p95 36.9/37.4 ms, normal 17.3/18.7 ms; fleet low
+active/parked 37.6/36.5 ms, normal 19.4/19.5 ms. Every sample exceeds 200 frames
+and has no >100 ms frames. The normal open scene draws 1,049 calls, down from
+1,053 in the failed run. Keep the relative 1.1 limit and all absolute budgets.
+Prepare three separate fixes: retained forms (0.148.6), fixed-furniture batching
+(0.148.7), and dedicated-port/identity-checked CI startup (0.148.8). Full CI is
+still required; the first GPU run is superseded because its remaining base-URL
+cases would hit the known wrong service. Restore scheduling for the corrected
+full run after local server/health/caretaker verification.
+
+Dedicated-server verification passes: build 0.148.8, verify its exact health on
+port 33173, then run the complete caretaker UI flow (18.3 s) and industrial model
+geometry/triangle-budget browser check (5.0 s). Both pass. Stop the disposable
+local server before resuming CI. All three confirmed first-shard gaps now have
+local passing regression evidence. Cancel the old queued run and push these
+logical fixes together; require the complete corrected workflow, not the earlier
+34 passing browser cases or local measurements, before deployment.
+
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
