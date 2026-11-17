@@ -3117,8 +3117,12 @@ app.addEventListener('click', async (e) => {
         );
         return;
       }
-      creatorClick(op, id ?? '', world, send);
+      const actions: Action[] = [];
+      creatorClick(op, id ?? '', world, (action) => actions.push(action));
       renderPanel();
+      // Register acknowledgements against the view just rendered, not the
+      // generation it replaced, so accepted edits refresh their visible rows.
+      for (const action of actions) send(action);
       return;
     }
     if (action === 'manage-building' && (me?.authority ?? 0) >= 20) {

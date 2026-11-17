@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.12] - 2026-11-17
+
+### Fixed
+
+- Refresh the world editor after accepted edits, including the empty list after deleting the last spring, and allow saving springs whose ID field shares the form attribute’s name.
+
 ## [0.148.11] - 2026-11-16
 
 ### Fixed

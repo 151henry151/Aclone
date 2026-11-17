@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.12 — Accepted spring edits
+
+Refresh creator changes against the currently displayed editor generation and
+read the form ID attribute without colliding with a Spring ID control. The complete
+spring delete/empty/save flow and catalogue/story editors pass locally. No save
+migration is needed. Keep live 0.148.0 until the full exact-SHA recovery workflow
+passes; this checkpoint is not deployed yet.
+
 ## Upgrade 0.148.11 — Stocked-first scroll fixture
 
 Exercise a genuinely scrolled sale list with the shipped stocked-first ordering.

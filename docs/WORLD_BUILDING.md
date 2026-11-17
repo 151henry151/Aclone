@@ -1858,8 +1858,9 @@ contexts reuse authoritative world rules; there is no separate UI distance limit
 
 **F10 → Rules → Springs and water production** exposes the complete water-source
 rules. **F10 → Springs** places, moves, changes flow or deletes individual saved
-sources by stable `spring-…` ID. Exports include the edited survey and building
-intakes. Moving/deleting a source pauses an existing pump; it does not redirect
+sources by stable `spring-…` ID. The list refreshes after the server accepts an
+edit; deleting its last source shows the empty survey immediately. Exports include
+the edited survey and building intakes. Moving/deleting a source pauses an existing pump; it does not redirect
 its intake. Reusing the same ID and position restores it. Ordinary players
 cannot edit the survey.
 

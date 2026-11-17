@@ -143,6 +143,9 @@ test('hike to a spring, drink, build a pump, and author sources and rules throug
     expect(current().settings.desalinationIntakeMaxReach).toBe(11);
     await close();
     await page.keyboard.press('i');
+    await expect(page.locator('[data-spring-panel]')).toBeHidden();
+    await close();
+    await page.getByRole('button', { name: 'Activities', exact: true }).click();
     await expect(page.locator('[data-spring-panel]')).toContainText('disabled');
     await close();
     await page.keyboard.press('F10');
@@ -155,8 +158,12 @@ test('hike to a spring, drink, build a pump, and author sources and rules throug
     await page.getByRole('button', { name: 'Delete spring', exact: true }).click();
     await expect.poll(() => current().springs?.length).toBe(0);
     await expect(page.getByRole('dialog')).toContainText('No springs');
+    await expect(page.locator('[data-spring-form]')).toHaveCount(0);
     await close();
     await page.keyboard.press('i');
+    await expect(page.locator('[data-spring-panel]')).toBeHidden();
+    await close();
+    await page.getByRole('button', { name: 'Activities', exact: true }).click();
     await expect(page.locator('[data-spring-panel]')).toContainText('No springs');
     await close();
     await page.keyboard.press('F10');
@@ -168,6 +175,8 @@ test('hike to a spring, drink, build a pump, and author sources and rules throug
     await form.locator('[name="flow"]').fill('1.2');
     await form.getByRole('button', { name: 'Save spring', exact: true }).click();
     await expect.poll(() => current().springs?.[0]?.id).toBe('spring-restored');
+    await expect(page.locator('[data-spring-form]')).toHaveCount(1);
+    await expect(page.locator('#creator-spring-spring-restored [name="flow"]')).toHaveValue('1.2');
     await page.screenshot({ path: 'output/water-sources/spring-editor.png' });
     expect(current().buildings[0].waterSource?.spring).toBe('spring-hike');
     expect(errors).toEqual([]);
@@ -269,6 +278,9 @@ test('a surveyed northern spring quenches a hiker and river/coastal construction
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
     await page.keyboard.press('i');
+    await expect(page.locator('[data-spring-panel]')).toBeHidden();
+    await close();
+    await page.getByRole('button', { name: 'Activities', exact: true }).click();
     await expect(page.locator('[data-spring-panel]')).toContainText('within 3');
     await close();
     await page.keyboard.press('m');

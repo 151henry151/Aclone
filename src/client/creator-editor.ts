@@ -1459,7 +1459,8 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
-  if (form.id.startsWith('creator-automotive-')) return automotiveForm(form);
+  if ((form.getAttribute('id') ?? '').startsWith('creator-automotive-'))
+    return automotiveForm(form);
   if (form.getAttribute('id') === 'creator-spring-form' || form.hasAttribute('data-spring-form')) {
     const d = new FormData(form);
     return {
