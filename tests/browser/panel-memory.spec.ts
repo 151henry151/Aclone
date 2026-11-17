@@ -26,6 +26,12 @@ test('repeat trades preserve list scroll and quantity; capital and stock control
     harbour.sell = { ...harbour.buy };
     harbour.stock = Object.fromEntries(Object.keys(items).map((id) => [id, 30]));
     const last = Object.keys(items).at(-1)!;
+    // Stocked goods sort first. Populate that group so this sale really exercises
+    // a scrolled list, rather than relying on the old catalogue insertion order.
+    for (const [id] of Object.entries(items)
+      .filter(([, item]) => item.weight <= 3 && item.name.localeCompare(items[last].name, 'en') < 0)
+      .slice(0, 12))
+      p.inventory[id] = 1;
     p.inventory[last] = 12;
     const mill = makeBuilding('mill', 'mill', 35, 0);
     mill.name = 'My test mill';

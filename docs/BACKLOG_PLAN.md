@@ -12650,6 +12650,22 @@ lightweight carried goods alphabetically before that sale item to exercise a
 real scrolled list under the shipped stocked-first ordering. This is fixture
 repair, not a change to player inventory ordering; verify the complete flow.
 
+Follow-up local acceptance passes: all seven adjacent panel cases (six in the
+original run; the corrected scroll fixture in 23.6 s), the full freight flow,
+76 unit tests, clean final TypeScript, changed-file Prettier and diff checks.
+Prepare separate patch commits for freight stability, software success-image
+overhead and the stocked-first scroll fixture. Stop the disposable prefix server
+and proxy; restore the GPU label and collect the six remaining original-run
+shards before the next push. The final pushed SHA still needs complete green CI;
+production stays on 0.148.0 and the marked garage bay remains unstarted.
+
+Scheduling follow-up: restoring the GPU label leaves all six remaining jobs
+queued despite an online, idle runner. Restart the idle service; its old session
+lease expires and it reconnects, but GitHub still assigns no job. Preserve the
+completed logs and supersede this stalled run with the locally verified recovery
+commits. A fresh pushed-main workflow must execute all shards; the old completed
+jobs alone do not establish acceptance, and the remaining shards are unverified.
+
 ### Marked garage storage bay — criteria before production edits
 
 - At completed tractor garages (Spanner & Sons; exclude aircraft hangars and private

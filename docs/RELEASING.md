@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.11 — Stocked-first scroll fixture
+
+Exercise a genuinely scrolled sale list with the shipped stocked-first ordering.
+Retain every scroll and repeated-sale assertion; no gameplay rule changes. The
+complete fixture passes locally, as do the adjacent draft/disclosure/reply cases.
+Collect the remaining CI results before pushing the recovery batch, then require
+a full successful workflow for the resulting main SHA before deployment.
+
 ## Upgrade 0.148.10 — Software smoke evidence
 
 Keep walking, camera, boarding and reload assertions unchanged in software smoke.

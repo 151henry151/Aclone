@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.11] - 2026-11-16
+
+### Fixed
+
+- Seed the repeat-trade browser fixture with enough carried goods to exercise scrolling under stocked-first inventory ordering; retain its original scroll, quantity, repeated-sale and draft checks.
+
 ## [0.148.10] - 2026-11-16
 
 ### Fixed
