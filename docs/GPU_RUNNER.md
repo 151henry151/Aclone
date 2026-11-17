@@ -38,6 +38,10 @@ GitHub cautions against public-repository self-hosted runners; the host gate and
 isolation are deliberate requirements here. See
 [GitHub's security guidance](https://docs.github.com/en/actions/reference/security/secure-use)
 and [job hooks](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/run-scripts).
+The walking smoke test captures its optional success screenshots on GPU runs.
+Software smoke keeps the same actions, assertions and deadlines, plus automatic
+failure screenshots and traces, without expensive success-image readback.
+
 Only reviewed changes to main may run. Changes to the host-installed scripts must
 be reviewed and copied explicitly; a checkout cannot update its own host policy.
 

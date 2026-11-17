@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.10] - 2026-11-16
+
+### Fixed
+
+- Capture optional walking and cockpit success screenshots on the GPU run, so software-browser smoke checks spend their unchanged deadline verifying movement, boarding and reload persistence; retain failure screenshots and traces everywhere.
+
 ## [0.148.9] - 2026-11-16
 
 ### Fixed

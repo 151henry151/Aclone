@@ -24,6 +24,13 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.10 — Software smoke evidence
+
+Keep walking, camera, boarding and reload assertions unchanged in software smoke.
+Capture its optional success views on GPU; keep automatic failure screenshots and
+traces on both paths. Both local prefix flows pass. This changes test overhead
+only and retains the complete exact-SHA CI gate before deployment.
+
 ## Upgrade 0.148.9 — Stable freight quotes
 
 Preserve freight forms and their displayed unit prices while refreshing live stock.

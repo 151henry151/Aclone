@@ -257,16 +257,21 @@ test('walking character can move, change camera and return to the tractor', asyn
   await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
   await page.waitForTimeout(800);
   await page.keyboard.up('ArrowDown');
-  await page.screenshot({ path: 'test-results/walking.png' });
+  // Success-image readback can take tens of seconds under SwiftShader. The GPU
+  // run supplies these views; software smoke retains every action/assertion and
+  // automatic failure screenshots/traces within the original test deadline.
+  if (process.env.TEST_GPU === '1') await page.screenshot({ path: 'test-results/walking.png' });
   await page.keyboard.press('c');
-  await page.screenshot({ path: 'test-results/walking-first-person.png' });
+  if (process.env.TEST_GPU === '1')
+    await page.screenshot({ path: 'test-results/walking-first-person.png' });
   await page.keyboard.press('c');
   await page.keyboard.press('c');
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   await page.getByRole('button', { name: 'Return to tractor' }).click();
   await expect(page.locator('#driving')).toContainText('Puddle tractor');
   await page.keyboard.press('c');
-  await page.screenshot({ path: 'test-results/driver-first-person.png' });
+  if (process.env.TEST_GPU === '1')
+    await page.screenshot({ path: 'test-results/driver-first-person.png' });
   await page.reload();
   await expect(page.locator('#driving')).toContainText('Puddle tractor');
   expect(errors).toEqual([]);
