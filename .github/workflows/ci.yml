@@ -11,6 +11,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24.22.1'
@@ -22,10 +24,14 @@ jobs:
       - run: node --import tsx --test --test-concurrency=2 tests/*.test.ts
 
   browser:
-    runs-on: ubuntu-latest
+    # A single laptop GPU executes the complete main suite serially. PRs retain
+    # hosted smoke checks below and can never select this runner through this job.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == '151henry151/Aclone'
+    runs-on: [self-hosted, linux, x64, aclone-gpu]
     timeout-minutes: 25
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - name: root-1
@@ -60,26 +66,29 @@ jobs:
             base_path: ''
             url: http://127.0.0.1:3000/
             tests: --shard=8/8
-          - name: subpath
-            base_path: /aclone
-            url: http://127.0.0.1:3013/aclone/
-            # These suites exercise the deployed build through TEST_URL. Other
-            # suites start their own isolated servers and run in the root shards.
-            tests: tests/browser/game.spec.ts tests/browser/expansion.spec.ts
     name: Browser (${{ matrix.name }})
     env:
       BASE_PATH: ${{ matrix.base_path }}
       TEST_URL: ${{ matrix.url }}
-      DATA_DIR: /tmp/aclone-ci
+      DATA_DIR: /tmp/aclone-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.name }}
+      TEST_GPU: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24.22.1'
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
+      - name: Require hardware WebGL
+        run: node --import tsx scripts/verify-ci-gpu.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpu-renderer-${{ matrix.name }}
+          path: test-results/gpu-renderer.json
       - name: Check public website
         if: matrix.name == 'root-1'
         run: npm run check:website
@@ -98,14 +107,67 @@ jobs:
           done
           cat /tmp/aclone.log
           exit 1
-      # Eight bounded shards run one software-WebGL renderer each. Allow 20 minutes
-      # per suite as coverage grows; keep each individual test deadline unchanged.
+      # Keep the existing shard and individual test deadlines. The laptop executes
+      # one shard at a time; no competing CI renderer distorts graphics benchmarks.
       # Playwright's deadline leaves time to upload diagnostics before the job limit.
       - run: npm run test:e2e -- --global-timeout=1200000 ${{ matrix.tests }}
       - uses: actions/upload-artifact@v4
         if: failure() || cancelled()
         with:
           name: browser-test-evidence-${{ matrix.name }}
+          path: |
+            test-results/
+            /tmp/aclone.log
+            /tmp/aclone-proxy.log
+
+  browser-smoke:
+    name: Software browser (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: root
+            base_path: ''
+            url: http://127.0.0.1:3000/
+          - name: subpath
+            base_path: /aclone
+            url: http://127.0.0.1:3013/aclone/
+    env:
+      BASE_PATH: ${{ matrix.base_path }}
+      TEST_URL: ${{ matrix.url }}
+      DATA_DIR: /tmp/aclone-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm start > /tmp/aclone.log 2>&1 &
+      - name: Start subpath proxy
+        if: matrix.base_path != ''
+        run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
+      - name: Wait for health endpoint
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --max-time 2 "${TEST_URL}api/health"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/aclone.log
+          exit 1
+      - run: npm run test:e2e -- --global-timeout=1200000 tests/browser/game.spec.ts tests/browser/expansion.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure() || cancelled()
+        with:
+          name: browser-test-evidence-software-${{ matrix.name }}
           path: |
             test-results/
             /tmp/aclone.log

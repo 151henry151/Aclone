@@ -38,7 +38,7 @@ JSON and other files that cannot contain comments are covered by COPYRIGHT.
 
 ## CI browser checks
 
-CI limits unit-test concurrency to two and runs browser checks on separate runners. Each browser shard uses one software renderer; `--shard=N/8` selects one of eight groups (N = 1–8). The first group also checks the public website. A separate `/aclone/` job runs `game.spec.ts` and `expansion.spec.ts` against the prefixed production build; other browser suites start isolated servers themselves. Server health must succeed before tests start. Failures/cancellations retain screenshots, traces and server logs.
+CI limits unit-test concurrency to two. Main pushes run the complete browser suite on the laptop GPU runner, serially in eight shards (`--shard=N/8`). Each shard verifies hardware WebGL before testing. Hosted runners retain software-rendered root and `/aclone/` smoke coverage for pushes and pull requests. The first GPU shard also checks the public website. Server health must succeed before tests start, and failures/cancellations retain screenshots, traces and server logs. See [GPU runner operations](docs/GPU_RUNNER.md) for isolation, trusted-main enforcement and service controls.
 
 Use performance graphics for functional tests on software rendering; `TEST_GPU=1` enables detailed capture where supported. Use `waitForWorld` from `tests/browser/fixtures/ready.ts` before gameplay input: the HUD appears during settling, before controls are enabled. Wait for observable UI state after a server mutation or viewport resize. Hold finite task fixtures until assertions finish, then explicitly test completion; do not depend on screenshot speed or add retries to conceal a failure.
 

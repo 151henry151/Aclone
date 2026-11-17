@@ -227,6 +227,11 @@ Additional criteria from the pushed CI run (before further production edits):
   action/trading repair, then remaining browser fixture corrections and this CI
   record. The prepared `/aclone/` build, changed-file formatting and diff check
   pass. Keep production on 0.148.0 and preserve the pending GPU runner choice.
+- Push the 0.148.2 follow-up to main as `11c80d76` (action/trading repair) and
+  `8f329256736bc9d8aea504f315af69786859ab85` (fixture corrections and CI record).
+  [Check Aclone run 43808105944](https://github.com/151henry151/Aclone/actions/runs/43808105944)
+  is in progress for that exact SHA. The local repair checks are complete; the
+  overall CI recovery gate remains open. No deployment or announcement is made.
 - **Not complete / not released:** the full GitHub workflow has not passed for
   these changes. Continue the remaining functional failure reproduction and
   verification, then run the complete workflow on the resulting main SHA.
@@ -236,6 +241,39 @@ Additional criteria from the pushed CI run (before further production edits):
   explicitly authorize this laptop as a GPU CI runner for the public repository.
   No runner is registered while that choice is pending. Do not skip the benchmark or lower its assertions while that choice is
   pending. Keep the garage bay paused and do not deploy or announce this slice.
+
+#### Laptop GPU runner — authorized 2026-11-16, criteria before changes
+
+Henry authorizes this laptop's Quadro M1200 for CI and requires green CI on every
+push before continuing the backlog. Run 43808105944 failed its software root
+shards; its unit and prefixed browser jobs passed. Keep deployment paused.
+
+- Run main's complete browser suite on one GPU worker at a time, preserving every
+  test and its individual deadline/graphics threshold. Keep hosted unit checks and
+  software root/prefixed smoke coverage for pushes and pull requests.
+- Before tests, launch real Chromium and require its renderer to identify hardware;
+  SwiftShader/llvmpipe/missing WebGL must fail. Save renderer evidence as an artifact.
+- Install a dedicated runner workspace outside the development checkout. Hide the
+  user's home, credentials, Docker socket and other processes from job execution.
+  Limit the workflow to main pushes and install a host-owned pre-job gate that
+  terminates the worker before any steps for another repository, ref, event or
+  workflow. Test accepted main and rejected PR/branch/repository/workflow inputs,
+  including that rejection cannot proceed into an always-run step.
+- Commands: scoped runner guard tests, real software-negative/hardware-positive
+  renderer probes, TypeScript, changed-file Prettier, then the complete GitHub
+  workflow on the exact pushed SHA. Verify the runner uses a separate checkout,
+  publishes evidence, and runs serially. Do not deploy until every required job
+  passes; record and recheck CI after deployment.
+
+Laptop runner setup verification: all seven host-gate tests pass after the red
+missing-hook run. The real software probe exits 1; the hardware probe reports
+`ANGLE (NVIDIA Corporation, Quadro M1200/PCIe/SSE2, OpenGL 4.5.0)` and exits 0.
+Bubblewrap verification confirms hidden host home/session/Docker socket, private
+processes, writable runner home and visible Quadro. Install official runner 2.338.2
+only after its SHA256 matches GitHub's release digest. Register `henry-laptop-gpu`
+and verify it is online; enable the isolated user service. TypeScript and changed
+formatting pass. Prepare 0.148.3 for the workflow change; keep the existing test
+thresholds and all browser cases. Full exact-SHA CI remains the next gate.
 
 Current remaining order (supersedes the historical numbered order):
 

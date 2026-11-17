@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.3 — GPU CI recovery
+
+Use the [laptop GPU runner](GPU_RUNNER.md) for the complete main browser suite.
+Keep live 0.148.0 until all jobs pass for the exact approved main SHA, including
+hardware renderer verification and hosted software smoke checks. This checkpoint
+includes the unreleased 0.148.1/0.148.2 fixes. No save migration or player grant is
+needed. Recheck CI after deployment and record its run URL and live version/SHA.
+
 ## Upgrade 0.148.2 — CI recovery follow-up
 
 Keep live 0.148.0 until the complete workflow passes for the approved main SHA.

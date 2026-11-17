@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.3] - 2026-11-16
+
+### Changed
+
+- Run main's full browser CI on the laptop GPU with hardware verification, isolated job files and a trusted-main gate; retain hosted unit and software browser checks without weakening graphics acceptance.
+
 ## [0.148.2] - 2026-11-16
 
 ### Fixed
