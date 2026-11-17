@@ -24,6 +24,13 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.7 — Interior rendering
+
+Batch compatible fixed furniture colours without changing the room's appearance
+or mutable displays. Require the original interior/parked frame budgets and
+pixel-preservation browser check, then the complete main workflow. Keep live
+0.148.0 until that exact-SHA gate passes; no save migration or world-rule changes.
+
 ## Upgrade 0.148.6 — Stable business forms
 
 Preserve farm and bulk-discount forms across saves. Verify saved status, draft

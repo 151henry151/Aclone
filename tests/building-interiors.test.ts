@@ -528,3 +528,74 @@ test('garage grinder and parts washer share the long rear workbench', () => {
   assert.equal(grinder.position.x, bench.position.x - 1.5);
   assert.equal(washer.position.x, bench.position.x + 1.5);
 });
+
+test('fixed furniture shares draws across colours without changing geometry or dynamic props', async () => {
+  const { batchInteriorProps } = await import('../src/client/interior-batching');
+  const root = new T.Group(),
+    principal = new T.Group(),
+    detail = new T.Group();
+  root.add(principal, detail);
+  root.position.set(7, 3, -9);
+  root.rotation.y = 0.7;
+  const fixture = new T.Group();
+  fixture.userData.fixedInteriorProp = true;
+  principal.add(fixture);
+  const colours = ['#783c20', '#157c93'];
+  for (const [i, color] of colours.entries()) {
+    const mesh = new T.Mesh(
+      new T.BoxGeometry(),
+      new T.MeshStandardMaterial({ color, roughness: 0.8 }),
+    );
+    mesh.position.x = i * 3;
+    fixture.add(mesh);
+  }
+  const stock = new T.Mesh(
+    new T.BoxGeometry(),
+    new T.MeshStandardMaterial({ color: '#783c20', roughness: 0.8 }),
+  );
+  stock.position.z = 5;
+  principal.add(stock);
+  const glass = new T.Mesh(
+    new T.BoxGeometry(),
+    new T.MeshStandardMaterial({ transparent: true, opacity: 0.3 }),
+  );
+  fixture.add(glass);
+  const detailFixture = new T.Group();
+  detailFixture.userData.fixedInteriorProp = true;
+  detailFixture.add(
+    new T.Mesh(
+      new T.BoxGeometry(),
+      new T.MeshStandardMaterial({ color: colours[0], roughness: 0.8 }),
+    ),
+  );
+  detail.add(detailFixture);
+  const before = new T.Box3().setFromObject(root);
+  batchInteriorProps({ group: root, principal, detail, doors: [], volume: {} as any });
+  const batches = principal.children.filter(
+    (o) => o.name === 'Batched interior furnishings',
+  ) as T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>[];
+  assert.equal(batches.length, 1, 'colour alone must not create another draw call');
+  const merged = batches[0];
+  assert.equal(merged.geometry.attributes.position.count, 72, 'retain both boxes');
+  assert.equal(merged.material.color.getHex(), 0xffffff);
+  assert.equal(merged.material.vertexColors, true);
+  assert.equal(merged.material.roughness, 0.8);
+  const rgb = merged.geometry.attributes.color;
+  for (const [i, hex] of colours.entries()) {
+    const expected = new T.Color(hex);
+    for (let vertex = i * 36; vertex < (i + 1) * 36; vertex++) {
+      assert.ok(Math.abs(rgb.getX(vertex) - expected.r) < 1e-6);
+      assert.ok(Math.abs(rgb.getY(vertex) - expected.g) < 1e-6);
+      assert.ok(Math.abs(rgb.getZ(vertex) - expected.b) < 1e-6);
+    }
+  }
+  const after = new T.Box3().setFromObject(root);
+  assert.ok(before.min.distanceTo(after.min) < 1e-5 && before.max.distanceTo(after.max) < 1e-5);
+  assert.equal(stock.parent, principal, 'mutable stock keeps its identity');
+  assert.equal(glass.parent, fixture, 'transparency keeps its own draw');
+  assert.equal(
+    detail.children.filter((o) => o.name === 'Batched interior furnishings').length,
+    1,
+    'detail retains a separate visibility gate',
+  );
+});

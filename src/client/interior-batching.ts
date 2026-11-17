@@ -13,7 +13,10 @@ export function batchInteriorProps(rig: InteriorRig) {
     const arms = parent.getObjectByName('lift-arms');
     if (arms instanceof T.Group) batch(arms);
     const inverse = parent.matrixWorld.clone().invert();
-    const batches = new Map<string, { material: T.MeshStandardMaterial; meshes: T.Mesh[] }>();
+    const batches = new Map<
+      string,
+      { material: T.MeshStandardMaterial; meshes: T.Mesh[]; bakeColour: boolean }
+    >();
     for (const fixture of parent.children) {
       if (!fixture.userData.fixedInteriorProp) continue;
       fixture.traverse((o) => {
@@ -27,8 +30,13 @@ export function batchInteriorProps(rig: InteriorRig) {
         for (let p: T.Object3D | null = o; p && p !== fixture; p = p.parent)
           if (['kettle-steam', 'hearth-coals', 'lift-arms'].includes(p.name)) return;
         const m = o.material;
+        // Plain fixed furniture can keep its linear paint colour per vertex,
+        // sharing a draw without flattening roughness, lighting or visibility.
+        const bakeColour = !m.map && !m.emissiveMap && !m.vertexColors;
         const key = JSON.stringify([
-          m.color.getHex(),
+          bakeColour ? null : m.color.getHex(),
+          bakeColour,
+          m.vertexColors,
           m.roughness,
           m.metalness,
           m.map?.uuid,
@@ -40,20 +48,36 @@ export function batchInteriorProps(rig: InteriorRig) {
           m.depthWrite,
           Object.keys(o.geometry.attributes).sort(),
         ]);
-        const entry = batches.get(key) ?? { material: m, meshes: [] };
+        const entry = batches.get(key) ?? { material: m, meshes: [], bakeColour };
         entry.meshes.push(o);
         batches.set(key, entry);
       });
     }
-    for (const { material, meshes } of batches.values()) {
-      const geometries = meshes.map((m) =>
-        (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()).applyMatrix4(
-          inverse.clone().multiply(m.matrixWorld),
-        ),
-      );
+    for (const { material, meshes, bakeColour } of batches.values()) {
+      const geometries = meshes.map((m) => {
+        const geometry = (
+          m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()
+        ).applyMatrix4(inverse.clone().multiply(m.matrixWorld));
+        if (bakeColour) {
+          const colour = (m.material as T.MeshStandardMaterial).color;
+          const rgb = new Float32Array(geometry.attributes.position.count * 3);
+          for (let i = 0; i < rgb.length; i += 3) {
+            rgb[i] = colour.r;
+            rgb[i + 1] = colour.g;
+            rgb[i + 2] = colour.b;
+          }
+          geometry.setAttribute('color', new T.BufferAttribute(rgb, 3));
+        }
+        return geometry;
+      });
       const geometry = mergeGeometries(geometries);
       if (!geometry) throw new Error('Interior fixture attributes cannot be merged');
-      const merged = new T.Mesh(geometry, material);
+      const finish = bakeColour ? material.clone() : material;
+      if (bakeColour) {
+        finish.color.setRGB(1, 1, 1);
+        finish.vertexColors = true;
+      }
+      const merged = new T.Mesh(geometry, finish);
       merged.name = 'Batched interior furnishings';
       merged.castShadow = merged.receiveShadow = true;
       for (const mesh of meshes) {

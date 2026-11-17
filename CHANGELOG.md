@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.7] - 2026-11-16
+
+### Fixed
+
+- Combine compatible plain furniture colours into fewer interior draw calls while preserving rendered colours, geometry, stock and animated parts; retain the original frame-time acceptance limits.
+
 ## [0.148.6] - 2026-11-16
 
 ### Fixed
