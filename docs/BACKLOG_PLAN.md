@@ -19,6 +19,13 @@ passes; do not create another Completed heading.
 
 ### CI recovery — priority interruption, 2026-11-15
 
+Latest status (2026-11-17): live remains **0.148.0**. Recovery fixes through
+0.148.15 are pushed but not deployed. Full run 44024638297 passed 18/19 jobs;
+only the reversing-light browser fixture failed. Its screenshot-timing defect is
+reproduced and fixed locally for checkpoint **0.148.16**; the full exact-SHA gate
+still applies. The garage bay has not started. See the final GPU shard recovery
+record at the end of this plan.
+
 Henry requires checking CI after every deployment and repairing failures before
 continuing. The locally verified 0.147.0–0.148.0 releases are live, but their
 GitHub browser checks are failing or pending; those releases are not CI-green.
@@ -12981,3 +12988,48 @@ tests/vehicle-mount.test.ts` plus affected arrival/rig suites. Browser: actually
 - Keep acceptance strict; record red first. Finish relevant tests, browser evidence,
   TypeScript, Prettier and build, update backlog/player/world-builder docs and release
   from main with a screenshot announcement. Piloted spaceflight stays untouched.
+
+### Final GPU shard recovery — 2026-11-17
+
+Full run [44024638297](https://github.com/151henry151/Aclone/actions/runs/44024638297)
+for `dbf297f4e8de0c3669d7c3c70b406d66585d3010` completed with 18 successful jobs and
+one failed GPU job. Its 14 other cases passed; only night-time reversing/hitching
+failed. The screenshot and trace show the stopped tractor past its coupling point,
+with the correct refusal: the rear hitch is 3 m from the drawbar. The test awaited
+a screenshot while holding reverse, so capture latency controlled driving distance.
+Keep live 0.148.0 and the prepared announcement unpublished.
+
+Completion criteria before editing the test:
+
+- Preserve the failed log, screenshot and trace under
+  `output/ci-2026-11-15/github-dbf297f4-root16/`.
+- Reproduce the overshoot with delayed screenshot completion. Release reverse
+  using actual authoritative coupling geometry independently of screenshot timing;
+  verify that the stopped tractor is eligible to hitch before opening Inventory.
+- Retain default beam intensity 90, darkness when stopped/forward, real keyboard
+  reversing, real Hitch trailer, unchanged wood cargo, and saved/reloaded custom
+  intensity/range and disabled-light settings. No teleport, range changes, skipped
+  cases, forced clicks, or increased deadlines.
+- Run the affected browser journey with normal and delayed screenshot completion,
+  TypeScript, Prettier and build. Push a separate test-maintenance checkpoint and
+  require its complete exact-SHA workflow before deployment or starting the bay.
+
+The delayed-capture reproductions fail with the same 3 m hitch refusal as CI
+(`reverse-delay-red.log` and `reverse-completion-red.log`). The corrected test
+polls authoritative coupling geometry independently of capture, releases the real
+reverse key and turns off the engine, then verifies the stopped hitch eligibility
+before using Inventory. Both normal and 2,000 ms delayed-completion cases pass
+(**30.6 s / 28.5 s**) with the original assertions and deadlines retained. Inspect
+the success screenshot: the rear beam visibly illuminates the drawbar; the saved
+Rules screenshot retains disabled lights, intensity 71 and range 14 after reload.
+Evidence: `output/ci-2026-11-15/reverse-capture-green*` and
+`output/trailer-feedback/reverse-browser/`. Prepare checkpoint **0.148.16**; no
+production code or gameplay rules change in this follow-up.
+
+Final follow-up checks: TypeScript and `npm run build` pass; Prettier is applied to
+all seven changed files. The callback's known fixture trailer uses a non-null
+assertion for TypeScript; runtime behavior is unchanged from the passing browser
+run. List-only coverage assigns all **292** cases exactly once to the sixteen
+shards (`output/ci-2026-11-15/shard-coverage-16-followup/`). No production files,
+workflow permissions or deadlines changed. Do not deploy until the pushed follow-up
+commit's whole workflow passes.

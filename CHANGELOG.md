@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.16] - 2026-11-17
+
+### Fixed
+
+- Stop the night-time trailer test at the actual coupling range independently of screenshot timing; cover delayed captures while retaining real reversing, hitching, cargo and saved-lighting checks.
+
 ## [0.148.15] - 2026-11-17
 
 ### Changed

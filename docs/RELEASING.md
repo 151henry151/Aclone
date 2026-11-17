@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.16 — Screenshot-independent reversing check
+
+Keep the complete recovery batch pending until all jobs pass for this main SHA.
+The night-time trailer browser check stops at authoritative coupling range while
+its screenshot completes, and exercises a delayed capture too. No gameplay range,
+lighting rule, save migration or deadline changes. Keep live 0.148.0 until the gate
+passes; then deploy the recovery batch, verify health/SHA and recheck CI.
+
 ## Upgrade 0.148.15 — Complete GPU coverage within existing deadlines
 
 Run sixteen serial laptop GPU shards instead of eight. All 291 browser cases are
