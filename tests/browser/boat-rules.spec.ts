@@ -53,8 +53,10 @@ test('world editor exposes boat death, cargo lifetime and fuel rules and saves t
     home.stock = { bread: 3, water: 8 };
     w.buildings.push(home);
     w.revision++;
-    act(w, p.id, { type: 'home', building: home.id });
+    // Close Rules before beginning entry: Escape during arrival cancels it.
     await page.keyboard.press('Escape');
+    act(w, p.id, { type: 'home', building: home.id });
+    await expect.poll(() => p.atHome).toBe(true);
     await expect(page.locator('[data-home-provisions]')).toContainText(
       'Provisions run out in about',
     );

@@ -275,6 +275,24 @@ and verify it is online; enable the isolated user service. TypeScript and change
 formatting pass. Prepare 0.148.3 for the workflow change; keep the existing test
 thresholds and all browser cases. Full exact-SHA CI remains the next gate.
 
+Additional confirmed fixture gap (before edit): `boat-rules.spec.ts` fails on
+hardware too at the home-provisions assertion. It starts entering a home and then
+presses Escape; closing a panel intentionally exits/cancels a building arrival.
+Close Rules before requesting home entry, assert that entry succeeds, and retain
+all saved boat/survival rules, provisions depletion and departure checks. Run the
+unchanged home assertions on GPU and inspect the resulting HUD screenshot.
+
+Home fixture verification: the original reproduces the missing HUD on hardware.
+Closing Rules before entry passes the complete case on GPU (35.3 s) and software
+(2.0 min), with no deadline changes. Inspect `home-provisions-status.png` showing
+the estimate and both departure buttons. TypeScript passes. The first correction
+incorrectly treated `act`'s string result as an object; replace that with an
+explicit `p.atHome` assertion before verifying the original UI criteria.
+Prepare 0.148.4 as a separate fixture correction. Supersede the initial runner
+bootstrap run once its download is cached, so the full suite tests this corrected
+main commit rather than repeating the known failing fixture. Retain all logs and
+require every job on the resulting SHA before release/backlog continuation.
+
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.

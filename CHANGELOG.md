@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.4] - 2026-11-16
+
+### Fixed
+
+- Close the world editor before starting the home-provisions browser check, so Escape does not cancel the arrival being tested.
+
 ## [0.148.3] - 2026-11-16
 
 ### Changed

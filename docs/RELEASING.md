@@ -24,6 +24,13 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.4 — Home browser fixture
+
+Retain the 0.148.3 GPU CI gate and all earlier recovery fixes. This follow-up changes
+only the home-provisions test's ordering: close Rules, enter home, then verify
+provisions and departure. Its hardware and software runs pass. Keep live 0.148.0
+until the full exact-SHA workflow passes; no gameplay or save migration changes.
+
 ## Upgrade 0.148.3 — GPU CI recovery
 
 Use the [laptop GPU runner](GPU_RUNNER.md) for the complete main browser suite.
