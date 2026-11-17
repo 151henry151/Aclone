@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.9] - 2026-11-16
+
+### Fixed
+
+- Preserve freight trade forms and displayed prices across inventory updates; refresh stock counts in place and show revised quotes after a refusal, so clicking Buy cannot silently accept a changed price.
+
 ## [0.148.8] - 2026-11-16
 
 ### Fixed

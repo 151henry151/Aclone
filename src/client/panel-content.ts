@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Update delegated panel markup without replacing unchanged controls or their focus.
  * Dirty input values and native disclosure state belong to the player. */
-export function patchPanelContent(root: Element, html: string) {
+export function patchPanelContent(
+  root: Element,
+  html: string,
+  retain?: (current: Element, next: Element) => boolean,
+) {
   const template = document.createElement('template');
   template.innerHTML = html;
   const identity = (node: Node) => {
@@ -15,6 +19,7 @@ export function patchPanelContent(root: Element, html: string) {
   };
   const patch = (current: Node, next: Node) => {
     if (current instanceof Element && next instanceof Element) {
+      if (retain?.(current, next)) return;
       for (const { name } of [...current.attributes])
         if (!next.hasAttribute(name) && !(current instanceof HTMLDetailsElement && name === 'open'))
           current.removeAttribute(name);

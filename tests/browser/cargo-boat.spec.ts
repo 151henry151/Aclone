@@ -106,12 +106,23 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
     await buy.locator('[name="quantity"]').fill('10');
     await buy.getByRole('button', { name: 'Buy into hold', exact: true }).click();
     await expect.poll(() => me().boatHold?.stone).toBe(20);
-    // Editing a quantity must not silently accept a merchant's changed unit price.
+    // An accepted hold update must not replace the form or silently accept a new quote.
+    await expect(panel).toContainText('Stone: 20');
+    const tradeForm = await buy.elementHandle();
     await buy.locator('[name="quantity"]').fill('1');
     current().buildings.find((b) => b.id === d.id)!.sell.stone = 900;
+    me().inventory.wood = 1;
+    await buy.locator('[name="quantity"]').blur();
+    await expect(page.locator('.item-list')).toContainText('Wood');
+    expect(await tradeForm!.evaluate((form) => form.isConnected)).toBe(true);
+    await expect(buy.locator('[name="quantity"]')).toHaveValue('1');
+    await expect(buy.locator('option[value="stone"]')).toHaveAttribute('data-price', '600');
+    const cashBeforeRefusal = me().cash;
     await buy.getByRole('button', { name: 'Buy into hold', exact: true }).click();
     await expect(page.locator('#toast')).toContainText('The price changed');
     expect(me().boatHold?.stone).toBe(20);
+    expect(me().cash).toBe(cashBeforeRefusal);
+    await expect(buy.locator('option[value="stone"]')).toHaveAttribute('data-price', '900');
     current().buildings.find((b) => b.id === d.id)!.sell.stone = 600;
 
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();

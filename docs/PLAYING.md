@@ -885,6 +885,8 @@ or buy and sell directly with shops within 30 m of the shore entrance by default
 Transfers have a progress countdown; cancel before completion to move nothing.
 Full holds, unsuitable goods, empty sellers, unfunded buyers and changed quotes
 are refused. Stock and cash move only when the transfer finishes successfully.
+Stock counts update without replacing your freight form or accepting a new price
+while you edit. A price-change refusal shows the new quote; review it before retrying.
 
 Step ashore to leave freight with the visible moored vessel; return to that
 landing to board it again. The default coaster is too large for river docks.

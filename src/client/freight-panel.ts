@@ -14,6 +14,70 @@ const esc = (v: unknown) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
   );
 const hidden = (k: string, v: unknown) => `<input type="hidden" name="${k}" value="${esc(v)}">`;
+const tradeSelector = 'form[data-action="trade"]:has(input[name="storage"][value="hold"])';
+export const freightTradeForms = (root: ParentNode) => [
+  ...root.querySelectorAll<HTMLFormElement>(tradeSelector),
+];
+const tradeKey = (form: HTMLFormElement) =>
+  JSON.stringify(
+    ['slot', 'building', 'direction'].map(
+      (name) => (form.elements.namedItem(name) as HTMLInputElement).value,
+    ),
+  );
+export function retainFreightTrade(current: Element, next: Element) {
+  return (
+    current instanceof HTMLFormElement &&
+    next instanceof HTMLFormElement &&
+    current.matches(tradeSelector) &&
+    next.matches(tradeSelector) &&
+    !current.dataset.refreshQuote &&
+    tradeKey(current) === tradeKey(next)
+  );
+}
+
+/** Keep a click, edited quantity and displayed quote attached to the same form. */
+export function retainFreightTrades(previous: HTMLFormElement[], root: ParentNode) {
+  const forms = new Map(previous.map((form) => [tradeKey(form), form]));
+  for (const fresh of freightTradeForms(root)) {
+    const existing = forms.get(tradeKey(fresh));
+    if (existing && retainFreightTrade(existing, fresh)) fresh.replaceWith(existing);
+  }
+}
+
+/** Live stock changes must not silently accept a different unit price. */
+export function refreshFreightTradeStock(root: ParentNode, w: World, p: Player) {
+  const items = worldItems(w);
+  for (const form of freightTradeForms(root)) {
+    const value = (name: string) => (form.elements.namedItem(name) as HTMLInputElement).value;
+    const slot = Number(value('slot'));
+    const building = w.buildings.find((b) => b.id === value('building'));
+    if (!building) continue;
+    const buying = value('direction') === 'buy';
+    const stock = buying
+      ? building.stock
+      : p.vehicle === slot
+        ? (p.boatHold ?? {})
+        : (p.boatHolds?.[slot] ?? w.mooredBoats?.[`${p.id}:${slot}`]?.cargo ?? {});
+    const select = form.elements.namedItem('item') as HTMLSelectElement;
+    const selected = select.value;
+    const previous = new Map([...select.options].map((option) => [option.value, option]));
+    const entries = itemEntries(buying ? building.sell : building.buy, items, stock).filter(
+      ([id, price]) => items[id] && Number.isFinite(price) && price >= 0,
+    );
+    for (const [index, [id, price]] of entries.entries()) {
+      const option = previous.get(id) ?? new Option('', id);
+      option.dataset.price ??= String(price);
+      const text = `${items[id].name} · ${money(Number(option.dataset.price), w.settings.denariiPerSheckle)} each · ${stock[id] ?? 0} in ${buying ? 'shop' : 'hold'}`;
+      if (option.text !== text) option.text = text;
+      if (select.options[index] !== option)
+        select.insertBefore(option, select.options[index] ?? null);
+      previous.delete(id);
+    }
+    for (const option of previous.values()) option.remove();
+    if (entries.some(([id]) => id === selected)) select.value = selected;
+  }
+}
+
 export function freightPanel(w: World, p: Player) {
   const slots = (p.fleet ?? []).filter((slot) => vehicleDef(w, slot).holdCapacity),
     items = worldItems(w),

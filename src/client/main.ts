@@ -18,7 +18,13 @@ import { waterSourceRules } from '../shared/water-source-rules';
 import { springPanel, refreshSpringPanel } from './spring-panel';
 import { marineSafetyPanel } from './marine-safety-panel';
 import { ROWBOAT, rowboatRules } from '../shared/rowboat-rules';
-import { freightPanel } from './freight-panel';
+import {
+  freightPanel,
+  freightTradeForms,
+  retainFreightTrades,
+  retainFreightTrade,
+  refreshFreightTradeStock,
+} from './freight-panel';
 import { communicationRules } from '../shared/communication-rules';
 import { boatNavigationRules } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules } from '../shared/vehicle-running-rules';
@@ -695,10 +701,15 @@ async function connect() {
         panel &&
         actionView?.refresh &&
         view === panelGeneration
-      )
+      ) {
+        // A refused trade presents fresh quotes for retry. Successful snapshots
+        // retain the form and the prices the player was already looking at.
+        if (visit !== undefined && !msg.ok)
+          for (const form of freightTradeForms($('modal-host'))) form.dataset.refreshQuote = 'true';
         // The server sends the result before its state. A fixed delay can repaint
         // stale data on a slow connection, then never display the accepted change.
         pendingPanelRefresh = { view, after: stateRevision, trade: visit !== undefined };
+      }
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';
         localStorage.removeItem('aclone.pilot');
@@ -1641,25 +1652,27 @@ function modal(title: string, content: string, wide = false) {
   closeBuildPreview?.();
   closeBuildPreview = undefined;
   panelMemory.capture();
+  const viewKey = JSON.stringify([
+    account?.id ?? 'anonymous',
+    world?.id ?? 'space',
+    panel,
+    ['building', 'player'].includes(panel) ? selected : '',
+    tab,
+    panel === 'editor' ? creatorMemoryKey() : '',
+    panel === 'caretaker' ? caretakerUi.tab : '',
+  ]);
+  const previousTrades =
+    $('modal-host').dataset.viewKey === viewKey ? freightTradeForms($('modal-host')) : [];
   panelGeneration++;
   $('modal-host').innerHTML =
     `<div class="modal-backdrop"><section class="window ${wide ? 'large' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><span class="eyebrow">ACLONE / ${esc(world?.name ?? 'UNIVERSE')}</span>${button('×', 'close', 'aria-label="Close dialog"', 'close')}</header><h2>${esc(title)}</h2>${content}</section></div>`;
-  panelMemory.restore(
-    JSON.stringify([
-      account?.id ?? 'anonymous',
-      world?.id ?? 'space',
-      panel,
-      ['building', 'player'].includes(panel) ? selected : '',
-      tab,
-      panel === 'editor' ? creatorMemoryKey() : '',
-      panel === 'caretaker' ? caretakerUi.tab : '',
-    ]),
-    () => {
-      if (world && me) refreshActionVisibility(app, world, me);
-      // Populate quantity-dependent quotes before restoring scroll offsets.
-      refreshTaxInfo();
-    },
-  );
+  retainFreightTrades(previousTrades, $('modal-host'));
+  panelMemory.restore(viewKey, () => {
+    if (world && me) refreshActionVisibility(app, world, me);
+    // Populate quantity-dependent quotes before restoring scroll offsets.
+    refreshTaxInfo();
+    if (world && me) refreshFreightTradeStock($('modal-host'), world, me);
+  });
 }
 function field(
   label: string,
@@ -1771,6 +1784,7 @@ let charterSignature = '';
 let charterPanelRoot: Element | null = null;
 let expeditionSignature = '';
 function refreshTradingPrices() {
+  if (world && me) refreshFreightTradeStock($('modal-host'), world, me);
   if (world && me)
     for (const canoeRoot of app.querySelectorAll('.canoe-panel')) {
       const html = canoePanel(world, me, panel === 'inventory'),
@@ -1837,7 +1851,7 @@ function refreshTradingPrices() {
     if (boating) {
       const html = boatControls();
       if (boating.dataset.rendered !== html) {
-        patchPanelContent(boating, html);
+        patchPanelContent(boating, html, retainFreightTrade);
         boating.dataset.rendered = html;
       }
     }

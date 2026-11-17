@@ -12601,6 +12601,55 @@ turn/slide, straightening, slowdown and a short reverse. Keep the later artifici
 land-to-water fixture switch out of the driving demonstration; it is not evidence
 of a shoreline crossing. No player or property edits. Continue marked garage bay.
 
+### CI follow-up — freight quotes and software screenshot overhead
+
+Before further production edits, preserve the failed 47d121e1 workflow evidence.
+Hosted check passes all 2,578 tests; root smoke passes eight cases. Subpath smoke
+passes seven, but its walking flow spends 64.5 seconds taking three optional
+success screenshots and reaches its unchanged 180-second deadline during reload.
+Keep every walking, camera, boarding and persistence assertion and that deadline;
+capture those three success images on GPU runs, retaining failure screenshots and
+traces everywhere. Verify the complete smoke flow at the /aclone/ prefix.
+
+GPU shard one passes 36 cases including the unchanged interior frame budgets,
+but a delayed inventory refresh replaces the freight quote between editing and
+buying: the server correctly accepts the newer quote the UI silently submits.
+Extend cargo-boat browser coverage to retain the actual trade form across a saved
+hold/inventory update, preserve the displayed unit price and edited quantity,
+update stock counts, refuse a changed merchant price without moving cargo/cash,
+and refresh the quote after refusal. Keep the original loading, capacity, stock,
+mooring, reboarding and world-rule checks. Confirm the stronger test fails before
+production changes, then make freight forms stable across same-panel refreshes.
+Commands: relevant cargo/trading unit suites, cargo-boat browser flow and root/
+subpath walking smoke, TypeScript, changed-file Prettier, and the complete exact-
+SHA workflow before deployment. Leave later backlog items paused.
+
+Freight regression red: the retained form is disconnected after an inventory
+snapshot (29.4 s). The first fix preserves the form through full modal rebuilds,
+but a second in-place boating patch still changes its quote; the stronger price
+assertion catches that too. Preserve matching freight forms through both refresh
+paths, updating stocks independently and invalidating quotes after refusal. Keep
+both assertions. The second GPU shard completes all 37 cases successfully in
+18.9 minutes; six later shards remain queued while local verification uses the GPU.
+
+Local freight verification now passes: the complete cargo-boat flow (1.3 minutes),
+unchanged panel-content browser regression, 76 related cargo/trade unit tests,
+TypeScript and the prefixed production build. The software /aclone/ walking flow
+passes in 1.4 minutes without optional success-image readback; the GPU version
+passes in 27.7 seconds and retains all three screenshots. Inspect the actual hold
+panel and driver view. Keep the original deadlines and all assertions. Complete
+adjacent panel regressions before committing the separate freight and test fixes;
+collect the six remaining queued shards before the next recovery push, then
+require a fresh full workflow on that resulting SHA. No deployment yet.
+
+Adjacent panel checks: six pass; the repeat-trade scroll fixture fails before any
+trade because its sole carried catalogue-tail item sorts to the stocked-first
+list's top (scrollTop 0, required >100). Preserve the >100 precondition, <3 px
+post-trade drift, quantities and repeated-sale assertions. Seed enough valid,
+lightweight carried goods alphabetically before that sale item to exercise a
+real scrolled list under the shipped stocked-first ordering. This is fixture
+repair, not a change to player inventory ordering; verify the complete flow.
+
 ### Marked garage storage bay — criteria before production edits
 
 - At completed tractor garages (Spanner & Sons; exclude aircraft hangars and private

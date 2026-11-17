@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.9 — Stable freight quotes
+
+Preserve freight forms and their displayed unit prices while refreshing live stock.
+After a refused trade, show the revised quote for an explicit retry. Verify cargo
+loading, empty/full holds, shop refusals, mooring and reboarding, plus panel draft
+regressions. No save migration is needed; retain live 0.148.0 until the complete
+main workflow passes for the approved recovery SHA.
+
 ## Upgrade 0.148.8 — Verify the CI game server
 
 Use dedicated laptop port 33173 and require the spawned game process, exact
