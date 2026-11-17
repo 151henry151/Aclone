@@ -44,11 +44,13 @@ test('owners save bulk tiers and farm staff rules through the actual building me
     await policy.getByLabel('Wheat', { exact: true }).check();
     await policy.locator('[name="dailyLimit"]').fill('20');
     await policy.locator('[name="reserve"]').fill('100');
+    const originalPolicy = await policy.elementHandle();
     await policy.getByRole('button', { name: 'Save staff rules' }).click();
     await expect
       .poll(() => b.farmPolicy)
       .toEqual({ crops: ['wheat'], dailyLimit: 2000, reserve: 10000 });
     await expect(policy.locator('[data-farm-policy-status]')).toContainText('Wheat');
+    expect(await originalPolicy!.evaluate((form) => form.isConnected)).toBe(true);
     for (const box of await policy.locator('input[name="crop"]').all()) await box.uncheck();
     await policy.getByLabel('Hops', { exact: true }).check();
     await policy.getByLabel('Coffee', { exact: true }).check();
@@ -104,9 +106,11 @@ test('owners save bulk tiers and farm staff rules through the actual building me
     }
     await bulk.getByLabel('Level 1 quantity', { exact: true }).fill('25');
     await bulk.getByLabel('Level 1 discount', { exact: true }).fill('4');
+    const originalBulk = await bulk.elementHandle();
     await bulk.getByRole('button', { name: 'Save bulk discounts' }).click();
     await expect.poll(() => b.bulkDiscounts).toEqual([{ quantity: 25, percent: 4 }]);
     await expect(bulk.locator('[data-bulk-saved]')).toContainText('25+ items: 4%');
+    expect(await originalBulk!.evaluate((form) => form.isConnected)).toBe(true);
     await bulk.getByLabel('Discount policy').selectOption('off');
     await expect(bulk.getByLabel('Level 1 quantity', { exact: true })).toBeDisabled();
     await bulk.getByRole('button', { name: 'Save bulk discounts' }).click();

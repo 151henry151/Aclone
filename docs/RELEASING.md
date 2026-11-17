@@ -24,6 +24,12 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.6 — Stable business forms
+
+Preserve farm and bulk-discount forms across saves. Verify saved status, draft
+restoration, phone controls and discounted purchases. Keep the existing exact-SHA
+CI gate and live 0.148.0 until the recovery workflow passes. No migration is needed.
+
 ## Upgrade 0.148.5 — CI job cleanup
 
 Include the previous recovery changes and allow the hosted unit job enough time

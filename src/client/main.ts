@@ -478,19 +478,19 @@ let panelGeneration = 0;
 let stateRevision = 0;
 let pendingPanelRefresh: { view: number; after: number; trade: boolean } | undefined;
 let tradeListingsSignature = '';
-const actionViews = new Map<number, number>();
+const actionViews = new Map<number, { generation: number; refresh: boolean }>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
 let tradeVisit = 0;
 let lastTradeVisit: number | undefined;
-function send(action: Action) {
+function send(action: Action, options: { refreshPanel?: boolean } = {}) {
   if (ws?.readyState !== WebSocket.OPEN) {
     toast('Connection unavailable. Reconnect before making changes.', true);
     return;
   }
   const id = ++request;
   if (action.type === 'radio') radioRequests.set(id, action);
-  actionViews.set(id, panelGeneration);
+  actionViews.set(id, { generation: panelGeneration, refresh: options.refreshPanel !== false });
   if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
   if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
   if (actionViews.size > 128) actionViews.delete(actionViews.keys().next().value!);
@@ -683,7 +683,8 @@ async function connect() {
         !['Parp.', 'Done. Quietly competent.'].includes(msg.message)
       )
         toast(msg.message, !msg.ok);
-      const view = actionViews.get(msg.request);
+      const actionView = actionViews.get(msg.request);
+      const view = actionView?.generation;
       actionViews.delete(msg.request);
       if (
         !radioResult &&
@@ -692,6 +693,7 @@ async function connect() {
         panel !== 'bridges' &&
         panel !== 'earthworks' &&
         panel &&
+        actionView?.refresh &&
         view === panelGeneration
       )
         // The server sends the result before its state. A fixed delay can repaint
@@ -3664,21 +3666,28 @@ app.addEventListener('submit', async (e) => {
     data = Object.fromEntries(new FormData(form).entries());
   try {
     if (form.hasAttribute('data-farm-policy')) {
-      send({
-        type: 'farm',
-        building: selected,
-        operation: 'policy',
-        policy: farmPolicyFormValue(form),
-      });
+      // Accepted snapshots patch the saved summary; retain the form being edited.
+      send(
+        {
+          type: 'farm',
+          building: selected,
+          operation: 'policy',
+          policy: farmPolicyFormValue(form),
+        },
+        { refreshPanel: false },
+      );
       (document.activeElement as HTMLElement)?.blur();
       return;
     }
     if (form.hasAttribute('data-bulk-discounts')) {
-      send({
-        type: 'buildingAdmin',
-        building: selected,
-        bulkDiscounts: bulkDiscountFormValue(data),
-      });
+      send(
+        {
+          type: 'buildingAdmin',
+          building: selected,
+          bulkDiscounts: bulkDiscountFormValue(data),
+        },
+        { refreshPanel: false },
+      );
       (document.activeElement as HTMLElement)?.blur();
       return;
     }

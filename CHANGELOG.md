@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.6] - 2026-11-16
+
+### Fixed
+
+- Keep farm staff-rule and bulk-discount forms in place after saving, so live acknowledgements do not interrupt scrolling or the next edit; update the saved status from accepted world state.
+
 ## [0.148.5] - 2026-11-16
 
 ### Fixed
