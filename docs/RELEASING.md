@@ -24,6 +24,15 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.14 — Current player journeys in browser checks
+
+Update stale test interactions to the shipped menus, boarding labels and arrival
+behaviour, retaining their gameplay and failure assertions. The final corrected
+walking journey passes with real input on both GPU and software WebGL; the mobile
+CB, ford, reversing-light and crowded/single garage journeys pass too. Complete
+the remaining recovery workflow work and require its exact pushed SHA to pass
+all jobs before deployment. No save migration or gameplay rule changes.
+
 ## Upgrade 0.148.13 — Live trailer cargo after trades
 
 Refresh trailer summaries and handling controls after an accepted shop trade while

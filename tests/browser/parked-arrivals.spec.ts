@@ -573,7 +573,9 @@ test('an empty tractor stays behind while its driver walks to buy fuel, returns,
     await expect.poll(() => current().z).toBeLessThan(-9);
     await page.keyboard.up('w');
     await expect.poll(() => Math.abs(current().speed)).toBeLessThan(0.5);
-    await expect(page.getByRole('button', { name: 'Board vehicle', exact: true })).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }),
+    ).toBeDisabled();
     await expect(page.locator('#parked-status')).toContainText(/Walk to your tractor first/);
     expect(state().parkedVehicles![`${p.id}:0`].z).toBe(0);
     await page.screenshot({ path: 'output/parked-vehicles/browser/stranded-walk.png' });
@@ -584,18 +586,22 @@ test('an empty tractor stays behind while its driver walks to buy fuel, returns,
     await page.keyboard.press('Escape');
     await expect.poll(() => current().task).toBeUndefined();
     await expect(page.locator('#parked-status')).toBeVisible();
-    await page.keyboard.down('s');
-    await expect
-      .poll(() => Math.hypot(current().x, current().z))
-      .toBeLessThan(state().settings.parkingReturnRange!);
-    await page.keyboard.up('s');
+    // Departure faces away from the shop, toward the tractor left behind.
+    await page.keyboard.down('w');
+    try {
+      await expect
+        .poll(() => Math.hypot(current().x, current().z), { intervals: [100] })
+        .toBeLessThan(state().settings.parkingReturnRange!);
+    } finally {
+      await page.keyboard.up('w');
+    }
     await expect.poll(() => Math.abs(current().speed)).toBeLessThan(0.5);
     await page.screenshot({ path: 'output/parked-vehicles/browser/returned-to-tractor.png' });
     const fuel = current().inventory.fuel;
     await page.getByRole('button', { name: 'Refuel parked vehicle', exact: true }).click();
     await expect.poll(() => state().parkedVehicles![`${p.id}:0`].fuel).toBe(8);
     expect(current().inventory.fuel).toBe(fuel - 1);
-    await page.getByRole('button', { name: 'Board vehicle', exact: true }).click();
+    await page.getByRole('button', { name: 'Get in Puddle tractor', exact: true }).click();
     await expect.poll(() => current().task).toBeUndefined();
     expect(current().vehicle).toBe(0);
     await page.keyboard.press('F4');
@@ -692,6 +698,7 @@ test('outdoor garage services retain the tractor and hitch while ordinary entry 
       .first()
       .click();
     await expect.poll(() => current().fleetState?.[0].condition).toBe(100);
+    await page.locator('[data-fleet-disclosure="trailer-shop"] > summary').click();
     const buy = page
       .locator('form[data-action="trailer"]')
       .filter({ has: page.locator('input[name="kind"][value="box"]') });
@@ -702,6 +709,7 @@ test('outdoor garage services retain the tractor and hitch while ordinary entry 
       .getByRole('button', { name: 'Trade & services outside', exact: true })
       .first()
       .click();
+    await page.locator('[data-fleet-disclosure="owned-trailers"] > summary').click();
     const trade = page
       .locator('form[data-action="trade"]')
       .filter({ has: page.locator('input[name="storage"][value="trailer"]') })

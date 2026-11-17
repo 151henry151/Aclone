@@ -18,14 +18,18 @@ test('the actual world renderer keeps water under offshore boats after freezing 
         import * as T from '/node_modules/three/build/three.module.js';
         import {GameScene} from '/src/client/scene.ts';
         import {createWorld} from '/src/shared/simulation.ts';
+        import {defaultCreator} from '/src/shared/creator.ts';
         import {placeSea} from '/src/client/ground.ts';
         import {waitForTextures} from '/src/client/materials.ts';
         const w=createWorld('puddlewick','Puddlewick','server');
         w.settings.mapSize=18500;w.terrainMapSize=12500;w.buildings=[];
-        w.creator={scenery:false};
+        w.creator={...defaultCreator(),scenery:false};
         const game=new GameScene(document.getElementById('view'));
         game.renderer.setAnimationLoop(null);
-        game.buildWorld(w);
+        for (const pending of game.buildWorld(w)) {
+          if (pending) await pending;
+          else await new Promise(r=>requestAnimationFrame(r));
+        }
         game.space.visible=false;game.land.visible=true;game.scene.fog=null;
         game.scene.background=new T.Color('#adc6cb');
         game.scene.add(new T.HemisphereLight('#ffffff','#68889a',3));
@@ -38,7 +42,7 @@ test('the actual world renderer keeps water under offshore boats after freezing 
           game.camera.position.set(-24,18,6470);game.camera.lookAt(0,2,6496);
           game.renderer.render(game.scene,game.camera);
           const at=new T.Vector3().setFromMatrixPosition(game.water.matrixWorld);
-          return {x:at.x,z:at.z,local:game.water.position.z};
+          return {x:at.x,z:at.z,local:game.water.position.z,visible:game.water.visible,attached:game.water.parent===game.land};
         };window.ready=true;
       </script>`,
       }),
@@ -49,6 +53,8 @@ test('the actual world renderer keeps water under offshore boats after freezing 
       const at = await page.evaluate((phase) => (window as any).renderOcean(phase), phase);
       expect(Math.abs(at.z - 6500)).toBeLessThan(30);
       expect(at.z).toBe(at.local);
+      expect(at.visible).toBe(true);
+      expect(at.attached).toBe(true);
       await page.screenshot({ path: `test-results/offshore-${phase}.png` });
     }
     expect(errors).toEqual([]);

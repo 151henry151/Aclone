@@ -33,7 +33,12 @@ test('garage repairs and optional maps are usable on a phone', async ({ page }) 
     await page.keyboard.press('m');
     await expect(page.getByText(/This world requires a Parish map/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
-    await page.keyboard.press('e');
+    // Repairs are performed while seated outside; entering parks the tractor.
+    await page.getByRole('button', { name: 'Actions', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Trade & services outside', exact: true })
+      .click();
     await page.getByRole('button', { name: 'Service vehicle', exact: true }).click();
     await expect.poll(() => vehicleRecord(w, p).condition).toBe(75);
     await expect(page.getByText(/condition 75.0%/)).toBeVisible();

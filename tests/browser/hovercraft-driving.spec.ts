@@ -16,12 +16,21 @@ test('keyboard hovercraft drifts, settles, stops, reverses, floats and accepts l
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   let lastInput: any;
-  page.on('websocket', (socket) =>
+  let inputSequence = 0;
+  let inputAck = -1;
+  page.on('websocket', (socket) => {
     socket.on('framesent', ({ payload }) => {
       const msg = JSON.parse(String(payload));
-      if (msg.type === 'input') lastInput = msg.input;
-    }),
-  );
+      if (msg.type === 'input') {
+        lastInput = msg.input;
+        inputSequence = msg.sequence;
+      }
+    });
+    socket.on('framereceived', ({ payload }) => {
+      const msg = JSON.parse(String(payload));
+      if (typeof msg.inputAck === 'number') inputAck = msg.inputAck;
+    });
+  });
   try {
     const { account, token } = app.universe.register('Hovercraft driver');
     const { w, p } = hovercraftWorld('hovercraft-driving', account.id);
@@ -85,6 +94,10 @@ test('keyboard hovercraft drifts, settles, stops, reverses, floats and accepts l
     await expect.poll(() => p.speed, { intervals: [20] }).toBe(0);
     await page.keyboard.up('w');
     await expect.poll(() => lastInput?.throttle).toBe(0);
+    // Sending the release does not mean the authoritative movement tick saw it.
+    const releaseSequence = inputSequence;
+    await expect.poll(() => inputAck).toBeGreaterThanOrEqual(releaseSequence);
+    await expect.poll(() => p.speed).toBe(0);
     const blocked = { x: p.x, z: p.z };
     await page.waitForTimeout(500);
     expect(p.speed).toBe(0);

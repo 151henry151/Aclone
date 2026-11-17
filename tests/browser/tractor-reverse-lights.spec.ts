@@ -106,6 +106,7 @@ test('reverse up to a trailer at night with low graphics, hitch, and configure r
     await expect.poll(() => Math.abs(p.speed)).toBeLessThan(0.5);
     await expect.poll(async () => (await beam()).intensity).toBe(0);
     await page.keyboard.press('i');
+    await page.locator('[data-fleet-disclosure="owned-trailers"] > summary').click();
     await page.getByRole('button', { name: 'Hitch trailer', exact: true }).click();
     await expect.poll(() => w.trailers!.box.attached).toBe(p.id);
     expect(w.trailers.box.cargo).toEqual({ wood: 2 });

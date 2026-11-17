@@ -62,6 +62,8 @@ test('live livestock renders, henhouse care works, and stock changes leave the w
     await page.getByRole('button', { name: /Arrange breeding/ }).click();
     await expect.poll(() => b.breedingEnd).toBeGreaterThan(w.time);
     await page.getByRole('button', { name: 'Close dialog' }).click();
+    await expect.poll(() => p.inside).toBeUndefined();
+    await expect.poll(() => p.task).toBeUndefined();
     await page.keyboard.press('h');
     await page.screenshot({ path: 'test-results/livestock/in-game.png' });
     b.stock.chickens = 5;

@@ -52,7 +52,7 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     const build = page.getByRole('button', { name: 'Place foundation', exact: true });
     const status = page.locator('[data-build-estimate] [role="status"]');
     await expect(build).toBeDisabled();
-    await expect(status).toContainText('dry shoreline ground');
+    await expect(status).toContainText('dry shoreline foundation and an ocean-connected intake');
     await page.getByRole('button', { name: 'Close dialog' }).click();
     p.z = 144;
     p.y = terrainHeight(w, p.x, p.z);
@@ -71,7 +71,7 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     await page.getByLabel('Building rotation', { exact: true }).fill('0');
     await page.getByLabel('Building rotation', { exact: true }).dispatchEvent('change');
     await expect(build).toBeDisabled();
-    await expect(status).toContainText('Rotate the intake toward water');
+    await expect(status).toContainText('Rotate the intake toward the sea');
     await page.getByLabel('Building rotation', { exact: true }).fill('180');
     await page.getByLabel('Building rotation', { exact: true }).dispatchEvent('change');
     await expect(build).toBeEnabled();
@@ -116,7 +116,7 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     await page.getByRole('button', { name: 'Directory', exact: true }).click();
     await page
       .getByRole('dialog')
-      .getByRole('button', { name: /Shoreline waterworks/ })
+      .getByRole('button', { name: /Desalination plant/ })
       .click();
     await expect(page.getByRole('dialog')).toContainText('12 Water');
     await expect(page.getByRole('dialog')).toContainText('pump operator');

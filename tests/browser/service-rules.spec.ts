@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
-import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation';
+import { createWorld, addPlayer, makeBuilding, money } from '../../src/shared/simulation';
 import { vehicleRecord } from '../../src/shared/vehicle-services';
 import { creatorSchema } from '../../src/shared/creator';
 import { waitForWorld } from './fixtures/ready';
@@ -134,6 +134,9 @@ test('service rules control garage prices, parts failures and roadside readiness
     expect(p().cash).toBe(99556);
     await page.getByRole('button', { name: 'Refit ammunition · 4.56d', exact: true }).click();
     await expect.poll(() => p().cash).toBe(99100);
+    // The server accepts first; wait for its visible snapshot before scrolling
+    // the refreshed garage panel for the success screenshot.
+    await expect(page.locator('#cash')).toHaveText(money(99100, w().settings.denariiPerSheckle));
     await page
       .getByRole('heading', { name: 'Vehicle service', exact: true })
       .scrollIntoViewIfNeeded();

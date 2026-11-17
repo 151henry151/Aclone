@@ -43,7 +43,7 @@ test('nutrition fields and dairy care are usable from game panels', async ({ pag
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.keyboard.press('i');
     await expect(page.getByText(/Maximum health \+200 this life/)).toBeVisible();
-    await page.locator('[data-do=use][data-id="custom:herbal_tea"]').click();
+    await page.getByRole('dialog').locator('[data-do=use][data-id="custom:herbal_tea"]').click();
     await expect.poll(() => p.nutrition).toBe(200);
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.keyboard.press('e');

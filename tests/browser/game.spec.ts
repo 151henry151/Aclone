@@ -2,6 +2,9 @@
 import { test, expect } from '@playwright/test';
 import { waitForWorld } from './fixtures/ready';
 import { applyFields } from '../../src/shared/state-patch';
+import type { Player, World } from '../../src/shared/types';
+import { parkedBodyDistance, parkCurrentVehicle } from '../../src/shared/parked-vehicles';
+import { parkingRules } from '../../src/shared/parking-rules';
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aclone.quality', 'low'));
 });
@@ -232,6 +235,17 @@ test('pilot nameplates and disconnects match the live parish list', async ({ pag
 });
 
 test('walking character can move, change camera and return to the tractor', async ({ page }) => {
+  let position: Player | undefined;
+  let world: World | undefined;
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', ({ payload }) => {
+      const message = JSON.parse(String(payload));
+      if (message.world) world = message.world;
+      if (message.self) position = message.self;
+      else if (position && message.selfPatch) position = applyFields(position, message.selfPatch);
+      else if (message.world?.players?.[message.me]) position = message.world.players[message.me];
+    });
+  });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -251,12 +265,26 @@ test('walking character can move, change camera and return to the tractor', asyn
   const carried = Number(await bread.locator('strong').textContent());
   await bread.getByRole('button', { name: 'Discard 1', exact: true }).click();
   await expect(bread.locator('strong')).toHaveText(String(carried - 1));
+  await expect.poll(() => position?.vehicle).toBe(0);
+  const tractor = parkCurrentVehicle(structuredClone(world!), structuredClone(position!));
+  const returnRange = parkingRules(world!.settings).parkingReturnRange;
+  const distanceToTractor = () => parkedBodyDistance(world!, position!, tractor);
   await page.getByRole('button', { name: 'Switch to walking' }).click();
   await expect(page.locator('#driving')).toContainText('On foot');
+  await expect.poll(() => position?.vehicle).toBe(5);
+  await expect.poll(() => position?.task).toBeUndefined();
+  const boarding = page.getByRole('button', { name: 'Get in Puddle tractor', exact: true });
   await page.keyboard.down('ArrowDown');
-  await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
-  await page.waitForTimeout(800);
-  await page.keyboard.up('ArrowDown');
+  try {
+    await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
+    await page.waitForTimeout(800);
+    await expect.poll(distanceToTractor, { intervals: [100] }).toBeGreaterThan(returnRange + 1);
+  } finally {
+    await page.keyboard.up('ArrowDown');
+  }
+  await expect.poll(() => Math.abs(position?.speed ?? Infinity)).toBeLessThan(0.05);
+  await expect(boarding).toBeDisabled();
+  await expect(page.locator('#parked-status')).toContainText('Walk to your tractor first');
   // Success-image readback can take tens of seconds under SwiftShader. The GPU
   // run supplies these views; software smoke retains every action/assertion and
   // automatic failure screenshots/traces within the original test deadline.
@@ -266,6 +294,15 @@ test('walking character can move, change camera and return to the tractor', asyn
     await page.screenshot({ path: 'test-results/walking-first-person.png' });
   await page.keyboard.press('c');
   await page.keyboard.press('c');
+  // Walk back to the real boarding range, not into the tractor's solid body.
+  await page.keyboard.down('ArrowUp');
+  try {
+    await expect.poll(distanceToTractor, { intervals: [100] }).toBeLessThan(returnRange - 0.5);
+  } finally {
+    await page.keyboard.up('ArrowUp');
+  }
+  await expect.poll(() => Math.abs(position?.speed ?? Infinity)).toBeLessThan(0.05);
+  await expect(boarding).toBeEnabled();
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   await page.getByRole('button', { name: 'Return to tractor' }).click();
   await expect(page.locator('#driving')).toContainText('Puddle tractor');

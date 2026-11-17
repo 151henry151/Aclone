@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.14] - 2026-11-17
+
+### Fixed
+
+- Exercise current boarding buttons, collapsed fleet lists, contextual inventory and shoreline guidance in browser checks; wait for completed arrivals and accepted state before verifying the next action.
+- Verify a real walk out of tractor boarding range and back on GPU and software browsers, use current touch-button positions for CB radio, and finish the incremental ocean scene before checking offshore water.
+
 ## [0.148.13] - 2026-11-17
 
 ### Fixed

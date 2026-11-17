@@ -69,7 +69,10 @@ test('running rules persist and garage shows local wear empty history and invali
       },
       apply = () =>
         page.getByRole('button', { name: 'Apply changes to server', exact: true }).click();
-    const group = page.getByRole('group', { name: 'Vehicle running costs', exact: true }),
+    const group = page.getByRole('group', {
+        name: 'Vehicle running costs and reversing lights',
+        exact: true,
+      }),
       patch = {
         vehicleWearPerMetre: 0.01,
         trailerSpeedBase: 2,

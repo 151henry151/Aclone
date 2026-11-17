@@ -118,13 +118,14 @@ for (const crowded of [true, false])
         await expect(page.locator('[data-parked-vehicle]')).toHaveCount(1);
         if (crowded) await page.waitForTimeout(1500);
         await page.keyboard.press('Escape');
-        await page.getByRole('button', { name: 'Board vehicle', exact: true }).click();
+        await page.getByRole('button', { name: 'Get in Orchard Wren', exact: true }).click();
         await expect.poll(() => current().vehicle).toBe(24);
         await page.keyboard.press('Escape');
         await page
           .getByRole('button', { name: 'Trade & services outside', exact: true })
           .first()
           .click();
+        await page.locator('[data-fleet-disclosure="tractor-shop"] > summary').click();
         const choice = page.getByLabel('Tractor model');
         await expect(choice).toBeVisible();
         await choice.selectOption('25');

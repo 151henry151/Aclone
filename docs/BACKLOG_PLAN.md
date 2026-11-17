@@ -12666,6 +12666,270 @@ completed logs and supersede this stalled run with the locally verified recovery
 commits. A fresh pushed-main workflow must execute all shards; the old completed
 jobs alone do not establish acceptance, and the remaining shards are unverified.
 
+Fresh-run evidence on b2fab633: check and root software smoke pass; GPU interiors
+again pass all original budgets (low closed/open p95 37.5/37.6 ms; normal
+18.2/19.4 ms; zero >100 ms frames). Subpath walking now fails for a separate,
+correct refusal: the test holds reverse while waiting for a rendered speed label,
+walks six metres away, and tries to board without walking back. Preserve movement,
+camera, boarding, reload and the 180-second deadline. Observe real server position
+through WebSocket frames and actually walk forward back near the original walking
+position before requesting the tractor; release keys in finally and wait to stop.
+This corrects test navigation, without changing reach rules or teleporting. Keep
+the failure trace; verify software-prefix and GPU flows after the uninterrupted
+CI queue finishes, and collect other failures before another push.
+
+The same run also reproduces a tanker-browser fixture gap: its garage purchase
+waits for a Buy button inside the shipped, collapsed Specialist trailers list.
+The failure trace confirms the garage and tuned 800-weight capacity are present;
+the test never opens that list. Before production changes, correct the real UI
+steps: open Specialist trailers, buy and hitch, then open Your trailers wherever
+needed in the garage, refinery and inventory. Retain the 120-second GPU deadline,
+6000d purchase, 800-unit load, 10-unit unload, parked 790-unit load and rejected
+capacity reduction assertions. Run `TEST_GPU=1 npm run test:e2e --
+tests/browser/fuel-trailer.spec.ts` after the current CI queue drains. Keep the
+failure trace/screenshot in `output/ci-2026-11-15/github-b2fab633-tanker-evidence/`.
+No gameplay change is justified by this hidden-control failure.
+
+Shard four also reproduces an arrival-timing gap in `hay.spec.ts`: it places the
+farmer beside the barn 0.4 seconds after closing the farm, while the exit animation
+still owns the position. `finishArrival` restores the farm door position, so the
+expected barn target never appears. Keep the arrival animation and original
+timeouts. Wait for the server's inside/task state to clear before relocating the
+fixture to the barn, and finish the barn departure before its screenshot. Preserve
+buying eight plots, planting hay in plot eight and opening Dry bulk storage.
+Verify `TEST_GPU=1 npm run test:e2e -- tests/browser/hay.spec.ts` after CI drains;
+retain the red trace in `output/ci-2026-11-15/github-b2fab633-hay-evidence/`.
+
+The livestock-visible flow has the same confirmed timing gap: it requests entry
+1.35 seconds after closing the henhouse, and receives "Stop outside and finish
+your activity before entering" during departure. Wait for inside/task to clear
+before its exterior screenshot and re-entry; retain the original breeding and
+four-to-five-chicken display checks, error checks and deadlines. Include
+`tests/browser/livestock-visible.spec.ts` in the arrival-fixture validation and
+preserve `output/ci-2026-11-15/github-b2fab633-livestock-evidence/`.
+
+Shard five confirms two more stale fixtures. Nutrition's unscoped Use selector
+matches both the HUD shortcut and the inventory action; scope it to the open
+inventory dialog, retaining catalogue edits, +200 nutrition and dairy breeding.
+The offshore renderer fixture calls the now-incremental `buildWorld` generator
+without advancing it, so no water exists and `placeSea` throws. Consume the actual
+build job, including yielded GPU preparation, as coastal-visibility already does;
+use the complete default creator configuration. Preserve all three towing/hauling/
+loaded views and the offshore world/local water-position assertions. Also assert
+that the water is visible and attached to the published land scene. Validate
+`TEST_GPU=1 npm run test:e2e -- tests/browser/nutrition-livestock.spec.ts
+tests/browser/ocean.spec.ts` without extending timeouts. Keep red evidence under
+`output/ci-2026-11-15/github-b2fab633-{nutrition,ocean}-evidence/` and inspect the
+fresh ocean screenshots. No production rendering change is justified by an
+unstarted fixture generator.
+
+Shard six confirms a service-screenshot synchronization gap: all server-side
+service/map/refit outcomes pass, but the test scrolls the old heading while the
+accepted refit snapshot refreshes the panel. Before taking the screenshot, require
+the client cash readout to show the accepted 99100 balance; the snapshot handler
+updates the HUD and panel synchronously. Keep the server cash/parts/condition,
+prices, refused service and roadside repair checks. This adds a visible-result
+check rather than retrying or hiding a failed assertion. Validate the complete
+`tests/browser/service-rules.spec.ts` flow; retain the red trace in
+`output/ci-2026-11-15/github-b2fab633-service-evidence/`.
+
+Shard six also exhausts its unchanged 1200-second suite deadline after 33 passes
+and the service failure; two cases did not run. Those are unverified, not passes.
+Keep both individual test deadlines and the suite/job deadlines. Divide the same
+complete browser suite into twelve serial GPU shards instead of eight so slower
+files have headroom without extending acceptance limits. Before pushing, list the
+full suite and each shard with Playwright and prove every case is assigned exactly
+once, with no omissions or duplicates. Run the omitted snowy-town case in `snow-weather.spec.ts` and the
+mail/family/trade case in `social.spec.ts` locally after the current queue drains, then require all twelve jobs in the new exact-SHA CI
+run. Parked-vehicle rendering itself passed its unchanged budgets: low p95 36.6
+ms, normal 18.5 ms; observed maxima 40.9/42.6 ms. Preserve the complete root-six
+log, including its global-timeout and "2 did not run" result.
+
+Shard seven's running-cost test targets the old exact fieldset name; the shipped
+editor now calls it "Vehicle running costs and reversing lights". Update that
+exact locator, preserving the five custom values, reload persistence, actual
+driving wear equation, empty history and invalid-negative-value rejection. Run
+the complete `tests/browser/vehicle-running-rules.spec.ts` case after CI drains;
+keep `output/ci-2026-11-15/github-b2fab633-running-evidence/` as red evidence.
+
+The phone service fixture enters the garage with E, which correctly parks the
+tractor and leaves the player on foot; its service action then is unavailable.
+The shipped playing guide explicitly routes garage repairs through **Trade &
+services outside**. Use that actual phone button instead of entering; retain the
+50-to-75 condition change, Steel/cash-backed service, map purchase/hidden repeat
+purchase, visible map and phone screenshot. Verify the full
+`tests/browser/vehicle-services.spec.ts` flow, without changing parking or allowing
+remote parked-vehicle repairs. Preserve its red trace in
+`output/ci-2026-11-15/github-b2fab633-phone-service-evidence/`.
+
+The two water-source cases expect unavailable spring instructions in inventory,
+contradicting the shipped contextual-inventory requirement and its unit tests.
+Require the inventory spring section to be hidden when disabled, absent or out
+of reach, then open Activities and retain the original disabled/no-sources/range
+message assertions there. Keep all drinking, cooldown, editor, map and freshwater
+versus ocean construction checks. The waterworks fixture also expects old shoreline
+wording and the retired Shoreline waterworks name; use the current explicit dry
+foundation/ocean intake guidance and Desalination plant name, retaining all refusal,
+rotation, materials, labour, fuel and 12-Water production assertions. Validate both
+complete files on the GPU without extending deadlines. Red evidence is retained
+under `output/ci-2026-11-15/github-b2fab633-{water,northern-water,waterworks}-evidence/`.
+
+Local verification confirms the tanker and running-cost custom worlds retain
+`vehiclesPersist=false`, so they use the legacy E interaction without parking.
+Preserve that existing mode and fix only disclosures/labels in those fixtures.
+Puddlewick's phone-service fixture uses persistent vehicles and needs outside
+services. Keep the tanker attachment assertion. The attempted outside-service
+fixture's red trace is retained under `output/ci-2026-11-15/local-corrected-fixtures/`.
+
+The complete Playwright list contains 291 cases. Listing all twelve replacement
+shards assigns every case exactly once (26, 24, 25, then nine groups of 24), with no
+omissions or duplicates. Evidence: `output/ci-2026-11-15/shard-coverage/`.
+
+Shard eight catches a hovercraft stop assertion with a suspected input-ordering race: its blocked-position sample
+waits only for the browser to send throttle=0, not for the authority to process it.
+The unchanged exact-position assertion observes another 1.4 cm during that unacknowledged window. Require the server snapshot's input acknowledgement to reach the released
+sequence, then require zero speed before saving the blocked position. Retain exact
+x/z equality after 500 ms, the obstacle, all drift/reverse/fuel/water/legacy checks,
+and the original deadline. Verify the complete hovercraft browser flow and its
+movement unit tests; if position still changes after acknowledgement, investigate
+the physics rather than relaxing equality. Red trace:
+`output/ci-2026-11-15/root8-evidence/hovercraft-driving-keyboar-bc125-ats-and-accepts-legacy-rule/`.
+
+Two parked-arrival cases also target superseded UI: the stranded-driver test asks
+for “Board vehicle”, while the HUD now names “Get in Puddle tractor”; the outside
+service test searches the collapsed trailer shop and owned-trailer list without
+opening them. Use the current named boarding action and actual disclosure clicks.
+Retain the distant disabled action/reason, stationary empty tractor, purchased fuel,
+one-item refuel consumption, successful boarding/driving, outside repair/hitch/cargo,
+and ordinary entry parking the complete rig. Run both complete affected journeys
+without extending deadlines. Preserve their red traces in
+`output/ci-2026-11-15/root8-evidence/parked-arrivals-*/`.
+
+The completed eighth shard confirms that twelve shards are insufficient: the
+proposed eleventh already totals 1230 seconds of observed tests, with two cases
+still unmeasured. Use sixteen serial shards instead, preserving all suite/job and
+individual limits; repeat exact-once assignment verification for the final layout.
+The old eighth shard has 22 passes, three confirmed failures and ten unrun cases.
+Run the remaining microphone-denial, radio keyboard/mobile, road-alternate/ford,
+reverse-light, tractor-storage and world catalogue/story flows locally, alongside
+the old sixth shard's snowy-town and social cases. No unrun case counts as passed.
+
+The corrected spring flow exposes a production defect: deleting the only spring
+sets the authoritative list to zero, but the editor retains the deleted form and
+never shows “No springs”. `creatorClick` sends before its immediate `renderPanel`,
+so the action is registered against a panel generation that the render invalidates;
+the accepted snapshot is consequently ignored for panel refresh. The complete red
+browser trace is retained in `output/ci-2026-11-15/local-corrected-fixtures/`.
+Before production edits, completion requires that the same spring test show the
+empty editor after deletion and the new source after saving, while inventory stays
+contextual and Activities retains its explanatory states. Queue creator-click
+mutations until after the immediate local editor render, so their acknowledgements
+belong to the displayed view. Preserve local draft controls and ignore replies after
+the player leaves the view. Validate the complete water-source flow plus the world
+catalogue/story editor flows and relevant creator/panel tests; no reopening the
+editor or weakening the empty-state assertion to mask stale content.
+
+The tanker journey exposes a second production regression in the recent stable
+trade-panel work: the server holds 800 Fuel after a purchase, but the trailer panel
+still shows its old weight. The successful-trade refresh suppression intended for
+live inventory listings also suppresses trailer cargo/handling updates. Restore
+the accepted-snapshot refresh for trailer trades only, retaining PanelMemory's
+quantity, selection and disclosure state. Hold-trade form/quote retention remains
+unchanged. Require the original 800/800 visible result, then 790/800 after unloading,
+plus the unchanged capacity-refusal flow; verify the edited quantity and selected
+Fuel survive a partial-load refresh, then verify the buy form disappears when the
+tanker is full. A full tanker correctly has no buy form; do not retain an invalid
+action merely to inspect its draft. Exercise two 400-unit purchases to retain the
+original exact 800-unit/full-capacity outcome and the subsequent 10-unit unload. Preserve the red trace in
+`output/ci-2026-11-15/local-followup/fuel-trailer-garage-purcha-8e26a-e-same-fuel-tanker-capacity/`.
+Run the tanker journey and the freight quote-retention regression together after
+the fix; do not change prices, quantities, cargo rules or timeouts to obtain a pass.
+
+Follow-up browser evidence confirms deletion now refreshes the empty spring
+editor, but saving a replacement throws `form.id.startsWith is not a function`:
+the Spring ID input shadows `HTMLFormElement.id` in the new automotive prefix
+guard. Read the actual ID attribute for that guard, as the existing spring branch
+already does; retain both empty-list and newly saved row/value assertions.
+The stranded-driver case now reaches shop departure but reverses back into the
+shop: shipped departure correctly faces outwards. Walk forwards toward the parked
+tractor after exit, preserving the strict return range, fuel accounting and drive
+checks. Keep the red traces in `output/ci-2026-11-15/local-followup/`.
+
+The remaining local GPU batch confirms the tanker refresh and microphone failure
+states, snowy-town, social and catalogue/story flows. The walking smoke's newly
+introduced 1.5 m return-to-start predicate is invalid: the trace shows the pedestrian
+blocked by the parked tractor's solid body, with “Get in Puddle tractor” available.
+Replace that fixture-only target with an actual round trip outside boarding range:
+wait for completed dismount, walk backwards until the HUD boarding action becomes
+disabled, then walk forwards until it becomes enabled, stop, and board through
+Inventory. Retain movement, camera, reload-persistence and no-console-error checks.
+Run this complete journey on GPU and software under `/aclone/`; preserve existing
+deadlines and all production collision/range rules. Red evidence is in
+`output/ci-2026-11-15/local-remaining/game-walking-character-can-d6482-a-and-return-to-the-tractor/`.
+
+The previously unrun mobile CB test also fails on its second touch: opening the
+microphone hides “Enable listening”, moving the transmit button, but the fixture
+reuses the button's old screen coordinates. Read the visible button's current
+bounds before each touch and wait for the released audio status before repeating.
+Preserve touch release/cancel, controller disconnect/blur, channel selection and
+remapped-trigger assertions; use real touch events and unchanged deadlines. Red
+trace: `output/ci-2026-11-15/local-remaining/radio-mobile-touch-and-con-9e048-d-release-the-CB-microphone/`.
+
+The remaining reverse-light journey reaches hitching but targets a control inside
+the now-collapsed owned-trailer list. Open “Your trailers” through its real summary
+before clicking Hitch trailer. Retain dark/stopped and illuminated/reversing views,
+actual reverse approach, hitch/cargo checks, forward lights-off and saved world-rule
+assertions. Preserve the red trace under `local-remaining/tractor-reverse-lights-*`.
+The ford-driving attempt overlapped a package metadata edit which triggered Vite's
+full-page reload while the test held W. Rerun that unchanged test without edits in
+progress; do not count this interrupted attempt or change its crossing criteria.
+
+The crowded-fleet garage test also waits for the retired “Board vehicle” label;
+its red screenshot presents “Get in Orchard Wren”. Select that named control and
+open the tractor showroom disclosure before choosing a model. Exercise both the
+crowded and single-tractor journeys, preserving visible fleet count, map/waypoint,
+stored fuel, actual drive-away/dismount, world toggle persistence and insufficient
+cash checks. Red trace: `local-remaining/tractor-storage-garage-*`.
+
+The walking round trip initially passed, but inspecting its screenshot shows the
+HUD action was disabled by movement, not distance. Tighten the fixture to measure
+the authoritative parked-body distance against the world's own return range,
+stop outside it and assert the distance refusal, then walk back within that range
+and stop before boarding. Small test margins avoid edge rounding; no production
+range or body geometry changes. Recheck GPU and software before counting this
+criterion complete. The unchanged ford journey passes without the reload.
+
+### Local recovery verification — 2026-11-17
+
+- Preserve the full red run: [44000940336](https://github.com/151henry151/Aclone/actions/runs/44000940336)
+  at `b2fab63346b6176c8dd33076517552eb3fefd4b0`. It did not pass: twelve browser
+  cases were unrun as well as the confirmed failures. Live remains **0.148.0**.
+- The 32 relevant creator, HTTP creator, frame-inbox, contextual-inventory,
+  hovercraft-movement and spring unit tests pass. TypeScript and the client build
+  pass with the production fixes; changed files are formatted.
+- Corrected full browser journeys pass: tanker partial/full load, selection/quantity
+  retention, unload and capacity refusal; freight quote/draft retention; spring
+  delete/empty/save and northern-water contexts; hay/barn and livestock departure;
+  nutrition; actual offshore-water rendering; service prices; running rules; phone
+  services; desalination placement/production; hovercraft release acknowledgement;
+  stranded-tractor return/refuel and outside garage/trailer services.
+- Previously unrun snowy-town, social, catalogue/story, microphone failure, keyboard
+  radio and road-shortcut cases pass. The follow-up six-case batch passes the mobile
+  radio, unchanged ford, reversing-light and both tractor-storage journeys. The
+  earlier single-tractor attempt was interrupted while waiting for the same retired
+  boarding label; it is counted only after this successful complete rerun.
+- The final, stronger walking round trip verifies a stopped pedestrian outside the
+  world's body-distance boarding range, its refusal, actual walking back, boarding,
+  camera views and reload persistence. GPU: **34.9 s**; software `/aclone/`:
+  **1.8 min**, both within unchanged deadlines. Inspect the success screenshots;
+  the earlier disabled-while-moving result does not satisfy this stronger criterion.
+- Evidence: `output/ci-2026-11-15/local-{corrected-fixtures,followup,panel-fixes,remaining,last-corrections,walking-range-gpu,walking-range-software,walking-final-gpu,walking-final-software}*`.
+  Intermediate red attempts remain preserved. The road-ford attempt interrupted by
+  Vite's package-edit reload is superseded by its unchanged successful rerun.
+- Keep the GPU runner free of local test processes for the full pushed-SHA run.
+  Local passes do not close the CI gate. Do not deploy, announce completion or
+  start the garage bay until the entire workflow succeeds.
+
 ### Marked garage storage bay — criteria before production edits
 
 - At completed tractor garages (Spanner & Sons; exclude aircraft hangars and private

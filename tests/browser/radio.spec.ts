@@ -230,16 +230,22 @@ test('mobile touch and configurable controller bindings hold and release the CB 
     const keyed = () =>
       radioView(f.app.worlds.get(f.w.id)!, f.app.worlds.get(f.w.id)!.players[f.a.id]).keyed.length;
     expect(keyed()).toBe(0);
+    const cdp = await context.newCDPSession(page);
+    const touchStart = async () => {
+      await ptt.scrollIntoViewIfNeeded();
+      const box = (await ptt.boundingBox())!;
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+      });
+    };
     await ptt.focus();
-    await ptt.scrollIntoViewIfNeeded();
-    const box = (await ptt.boundingBox())!,
-      cdp = await context.newCDPSession(page);
-    const touch = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touch] });
+    await touchStart();
     await expect.poll(keyed).toBe(1);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await expect.poll(keyed).toBe(0);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touch] });
+    await expect(radio.locator('[data-radio-audio]')).toContainText('Sound is off');
+    await touchStart();
     await expect.poll(keyed).toBe(1);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
     await expect.poll(keyed).toBe(0);

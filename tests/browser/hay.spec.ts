@@ -55,6 +55,10 @@ test('farm expansion and hay planting are usable through the building panel', as
     await plot.getByRole('button', { name: 'Plant seeds' }).click();
     await expect.poll(() => farm.plots?.[7]?.crop).toBe('hay');
     await page.getByRole('button', { name: 'Close dialog' }).click();
+    // Finish the real departure before positioning the next independent fixture.
+    // Otherwise finishArrival restores the farm-door position over the barn setup.
+    await expect.poll(() => p.inside).toBeUndefined();
+    await expect.poll(() => p.task).toBeUndefined();
     await page.screenshot({ path: 'test-results/hay-farm-and-barn.png' });
     p.x = barn.x;
     p.z = barn.z + 11;
@@ -65,6 +69,8 @@ test('farm expansion and hay planting are usable through the building panel', as
     await page.keyboard.press('e');
     await expect(page.getByText(/Dry bulk storage/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
+    await expect.poll(() => p.inside).toBeUndefined();
+    await expect.poll(() => p.task).toBeUndefined();
     await page.screenshot({ path: 'test-results/hay-barn.png' });
     expect(errors).toEqual([]);
   } finally {
