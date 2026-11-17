@@ -484,7 +484,10 @@ let panelGeneration = 0;
 let stateRevision = 0;
 let pendingPanelRefresh: { view: number; after: number; trade: boolean } | undefined;
 let tradeListingsSignature = '';
-const actionViews = new Map<number, { generation: number; refresh: boolean }>();
+const actionViews = new Map<
+  number,
+  { generation: number; refresh: boolean; trailerTrade: boolean }
+>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
 let tradeVisit = 0;
@@ -496,7 +499,11 @@ function send(action: Action, options: { refreshPanel?: boolean } = {}) {
   }
   const id = ++request;
   if (action.type === 'radio') radioRequests.set(id, action);
-  actionViews.set(id, { generation: panelGeneration, refresh: options.refreshPanel !== false });
+  actionViews.set(id, {
+    generation: panelGeneration,
+    refresh: options.refreshPanel !== false,
+    trailerTrade: action.type === 'trade' && action.storage === 'trailer',
+  });
   if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
   if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
   if (actionViews.size > 128) actionViews.delete(actionViews.keys().next().value!);
@@ -708,7 +715,12 @@ async function connect() {
           for (const form of freightTradeForms($('modal-host'))) form.dataset.refreshQuote = 'true';
         // The server sends the result before its state. A fixed delay can repaint
         // stale data on a slow connection, then never display the accepted change.
-        pendingPanelRefresh = { view, after: stateRevision, trade: visit !== undefined };
+        pendingPanelRefresh = {
+          view,
+          after: stateRevision,
+          // Trailer trades also change cargo summaries and handling controls.
+          trade: visit !== undefined && !actionView.trailerTrade,
+        };
       }
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';

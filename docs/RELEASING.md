@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.13 — Live trailer cargo after trades
+
+Refresh trailer summaries and handling controls after an accepted shop trade while
+preserving applicable draft selections. The tanker journey verifies two partial
+loads, retained item/quantity, a full hold, unloading and custom-capacity refusal;
+the independent freight quote-retention flow also passes. No migration or price
+changes are required. Retain the complete exact-SHA gate before deployment.
+
 ## Upgrade 0.148.12 — Accepted spring edits
 
 Refresh creator changes against the currently displayed editor generation and

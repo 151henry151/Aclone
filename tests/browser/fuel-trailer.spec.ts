@@ -134,6 +134,12 @@ test('garage purchase, refinery loading, parking and F10 tuning use the same fue
     await expect(tuning).toHaveCount(1);
     await page.keyboard.press('Escape');
     await page.keyboard.press('e');
+    await page.locator('[data-fleet-disclosure="trailer-shop"] > summary').click();
+    const openOwnedTrailers = async () => {
+      const list = page.locator('[data-fleet-disclosure="owned-trailers"]');
+      await expect(list).toBeVisible();
+      if ((await list.getAttribute('open')) === null) await list.locator('summary').click();
+    };
     const purchase = page
       .locator('form[data-action="trailer"]')
       .filter({ has: page.locator('[name="kind"][value="fuel"]') });
@@ -143,6 +149,8 @@ test('garage purchase, refinery loading, parking and F10 tuning use the same fue
     const t = Object.values(w.trailers!)[0];
     expect(p.cash).toBe(4400000);
     expect(t.kind).toBe('fuel');
+    expect(t.attached).toBe(p.id);
+    await openOwnedTrailers();
     await expect(page.getByText('0 / 800 weight', { exact: false })).toBeVisible();
     await page.screenshot({ path: 'test-results/fuel-garage-empty.png' });
     await page.keyboard.press('Escape');
@@ -155,18 +163,26 @@ test('garage purchase, refinery loading, parking and F10 tuning use the same fue
     garage.production = undefined;
     w.revision++;
     await page.keyboard.press('e');
+    await openOwnedTrailers();
     const buy = page
       .locator('form[data-action="trade"]')
       .filter({ has: page.locator('[name="storage"][value="trailer"]') })
       .filter({ has: page.locator('[name="direction"][value="buy"]') });
     await buy.locator('[name="item"]').selectOption('fuel');
-    await buy.locator('[name="quantity"]').fill('800');
+    await buy.locator('[name="quantity"]').fill('400');
+    await buy.getByRole('button').click();
+    await expect.poll(() => t.cargo.fuel).toBe(400);
+    await expect(page.getByText('400 / 800 weight', { exact: false })).toBeVisible();
+    await expect(buy.locator('[name="quantity"]')).toHaveValue('400');
+    await expect(buy.locator('[name="item"]')).toHaveValue('fuel');
     await buy.getByRole('button').click();
     await expect.poll(() => t.cargo.fuel).toBe(800);
     await expect(page.getByText('800 / 800 weight', { exact: false })).toBeVisible();
+    await expect(buy).toHaveCount(0);
     await page.screenshot({ path: 'test-results/fuel-refinery-full.png' });
     await page.keyboard.press('Escape');
     await page.keyboard.press('i');
+    await openOwnedTrailers();
     const unload = page
       .locator('form[data-action="trailer"]')
       .filter({ has: page.locator('[name="operation"][value="unload"]') });

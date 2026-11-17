@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.13] - 2026-11-17
+
+### Fixed
+
+- Refresh trailer cargo, weight and available handling actions after shop trades while preserving the selected goods and quantity for actions that remain available.
+
 ## [0.148.12] - 2026-11-17
 
 ### Fixed

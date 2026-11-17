@@ -6,10 +6,11 @@ Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slid
 and holding a heading straightens it. World builders can tune the response or
 restore the former instant pivot.
 
-The 0.148.12 CI recovery checkpoint is being verified on main and is not live yet.
+The 0.148.13 CI recovery checkpoint is being verified on main and is not live yet.
 Main CI uses the [laptop GPU runner](docs/GPU_RUNNER.md) for full browser coverage,
 with hosted software smoke checks and an exact-commit deployment gate.
-The pending recovery also fixes spring editing and accepted editor refreshes.
+The pending recovery also fixes spring editing, accepted editor refreshes and
+stale trailer cargo displays after shop trades.
 See the [verification gate and remaining failures](docs/BACKLOG_PLAN.md#ci-recovery--priority-interruption-2026-11-15).
 
 Version 0.147.1 repairs the highway tractor and semitrailer’s connected running gear,
