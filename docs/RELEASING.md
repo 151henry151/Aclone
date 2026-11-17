@@ -24,6 +24,12 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.5 — CI job cleanup
+
+Include the previous recovery changes and allow the hosted unit job enough time
+for its setup and post-test cache upload. All individual test limits remain
+unchanged. Keep the complete exact-SHA gate and live 0.148.0 until it passes.
+
 ## Upgrade 0.148.4 — Home browser fixture
 
 Retain the 0.148.3 GPU CI gate and all earlier recovery fixes. This follow-up changes

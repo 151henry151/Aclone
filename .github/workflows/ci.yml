@@ -8,7 +8,8 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The complete unit suite took 544 s; leave room for setup and cache cleanup.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:

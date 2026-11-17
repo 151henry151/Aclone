@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.5] - 2026-11-16
+
+### Fixed
+
+- Allow the hosted check job to finish setup and cache cleanup around the full unit suite, which passed all 2,573 tests before the former job limit expired; preserve test concurrency and assertion deadlines.
+
 ## [0.148.4] - 2026-11-16
 
 ### Fixed

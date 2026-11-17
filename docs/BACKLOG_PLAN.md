@@ -293,6 +293,14 @@ bootstrap run once its download is cached, so the full suite tests this correcte
 main commit rather than repeating the known failing fixture. Retain all logs and
 require every job on the resulting SHA before release/backlog continuation.
 
+Hosted unit job diagnosis: run 43985997626 passes **2,573/2,573** tests, zero
+failed/cancelled/skipped, in 544.52 seconds. The enclosing ten-minute job expires
+in setup-node's post-test cache upload, not in an assertion. Allow 15 minutes for
+this job's setup, unchanged two-file test concurrency and cleanup; retain every
+unit deadline and assertion. Acceptance is a successful completed hosted check,
+including cleanup, on the final SHA. This specific infrastructure correction is
+not a relaxation of browser or graphics acceptance.
+
 Current remaining order (supersedes the historical numbered order):
 
 1. Taking off from the runway — done/live 0.147.0; verification and release below.
