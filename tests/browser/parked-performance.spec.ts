@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const run = promisify(execFile);
-test('parked fleet stays within the matched active-fleet town frame budget', async () => {
+test('parked fleet stays within the matched active-fleet town frame budget', async ({}, testInfo) => {
   test.setTimeout(900000);
   for (const quality of ['low', 'normal']) {
     const measurements: Record<string, any> = {};
@@ -29,6 +29,17 @@ test('parked fleet stays within the matched active-fleet town frame budget', asy
         },
       );
       writeFileSync(out + '/run.log', stdout + stderr);
+      // Retain measurements before assertions: ignored output/ is not part of
+      // the CI failure artifact, while Playwright attachments are.
+      for (const [file, contentType] of [
+        ['run.log', 'text/plain'],
+        ['results.json', 'application/json'],
+        ['fleet.png', 'image/png'],
+      ])
+        await testInfo.attach(`${quality}-${mode}-${file}`, {
+          path: `${out}/${file}`,
+          contentType,
+        });
       const result = JSON.parse(readFileSync(out + '/results.json', 'utf8'));
       expect(result.errors).toEqual([]);
       expect(result.results).toHaveLength(1);

@@ -13070,16 +13070,33 @@ jobs finish and the affected browser, TypeScript, formatting and build are verif
 Do not deploy 0.148.16: shard 5 failed. Continue diagnosing any additional failures
 from this run before preparing the next checkpoint.
 
+### Parked-fleet performance recovery — 2026-11-17
 
-Export boundary: the unchanged browser journey passes in **17.7 s**, saving and
-reopening the 60-second rule, displaying 160 remaining Tools and credited revenue,
-then zero stock with unchanged revenue. Both stock/revenue screenshots were
-visually inspected; retain the three images in `export-fractional-evidence/` and
-the browser log. The six export-rule unit tests pass. Prepare a separate export
-fix checkpoint; no default, time tolerance or cargo cap changes.
+The same run's GPU shard 11 fails the original matched-performance gate:
+normal quality active p95 **17.8 ms**, parked p95 **19.6 ms**, allowed maximum
+**19.58 ms** (10% above active). Low quality passes at 37.8/36.6 ms. All four
+measurements meet the absolute frame budget and zero >100 ms hitches; the 17
+other shard cases pass. Preserve the failed log and trace under
+`output/ci-2026-11-15/github-18f05a36-root11*`. This remains a failure even though
+the overrun is small; do not round it away, increase the budget or retry to green.
 
-TypeScript, changed-file Prettier and build pass. Prepare checkpoint 0.148.17;
-keep live 0.148.0 pending the remaining recovery fixes and full CI.
+Next completion criteria, before any performance edits:
+
+- After the current CI run releases the GPU, reproduce the unchanged
+  `TEST_GPU=1 npm run test:e2e -- tests/browser/parked-performance.spec.ts` in
+  isolation and retain all four profiler JSON files, logs and real fleet images.
+  The failed CI artifact contains the test trace but omits the profiler's ignored
+  `output/` results; preserve these explicitly in future test evidence.
+- Inspect CPU profiles, rendering work and the sampling fixture before identifying
+  a cause. The fixture currently adds per-mesh render callbacks only to parked
+  vehicles; assess their measured cost rather than assuming either a gameplay
+  regression or harmless noise. Keep every parked model visibly drawn.
+- Preserve 32 resident actors / 21 parked vehicles, both quality levels, sample
+  count >200, p50 ≤50 ms, p95 ≤66.7 ms, zero >100 ms frames, no browser errors,
+  and the original 10% matched p95 limit. Make only evidence-supported fixes and
+  validate the unchanged acceptance gate, with relevant regression coverage.
+- Keep this concern separate from the export-boundary fix in logical commits.
+  Neither is deployment-ready until local checks and full exact-SHA CI pass.
 
 ### Trailer handling control recovery — 2026-11-17
 
@@ -13110,6 +13127,20 @@ Completion criteria before production edits:
 - Make a separate logical fix from export scheduling and fleet performance.
   Keep deployment blocked until all local criteria and exact-SHA full CI pass.
 
+### Recovery verification after run 44176394444
+
+The complete 0.148.16 run finishes with **16 passing jobs / 3 failures**; all cases
+ran, including the repaired night-time hitch test. Final metadata is saved in
+`output/ci-2026-11-15/ci-18f05a36-final.json`. The laptop runner is stopped only
+while isolated local GPU verification runs; restart it before pushing.
+
+Export boundary: the unchanged browser journey passes in **17.7 s**, saving and
+reopening the 60-second rule, displaying 160 remaining Tools and credited revenue,
+then zero stock with unchanged revenue. Both stock/revenue screenshots were
+visually inspected; retain the three images in `export-fractional-evidence/` and
+the browser log. The six export-rule unit tests pass. Prepare a separate export
+fix checkpoint; no default, time tolerance or cargo cap changes.
+
 Trailer controls: the explicit snapshot regression fails at the expected enabled
 Hitch after stopping (`trailer-live-red-eligibility.log`). An earlier fixture
 attempt used an incorrect exact select label; correct that selector before the
@@ -13122,5 +13153,29 @@ image, with enabled Hitch and preserved focused cargo draft. Focused unit tests
 pass after adapting one exact HTML assertion to the button's new data attribute;
 both enabled and disabled assertions remain.
 
-TypeScript, changed-file Prettier and build pass. Prepare checkpoint 0.148.18;
-keep live 0.148.0 until the full final-SHA CI workflow passes.
+Fleet performance: the isolated unchanged gate passes low **37.4/36.6 ms** and
+normal **17.4/18.1 ms** active/parked p95, all 21 parked vehicles drawn and no
+frames above 100 ms. Preserve every JSON/log/image in `parked-reproduce-metrics/`.
+A separate diagnostic CPU profile records parked p95 18.1 ms; parked update totals
+218 ms across 906 frames, the per-mesh measurement callbacks total only 30 ms.
+This does **not** establish a production regression or prove the earlier CI
+overrun harmless. Retain the strict existing acceptance gate and attach full
+profiler output to CI before assertions, since previous artifacts omitted it.
+No rendering code, measurement duration, assertion or budget changes are justified
+by this evidence. Full CI on the final pushed SHA remains mandatory.
+
+The attachment-enabled performance test passes in **3.1 minutes**: low p95
+**37.2/36.7 ms**, normal **18.1/17.4 ms**, active/parked respectively. Confirm all
+12 attachments (JSON, log and real image for each of four cases) exist under
+`parked-evidence-green/`, with all 21 parked vehicles actually drawn and zero
+frames above 100 ms. The fleet screenshot was visually inspected. The unchanged
+gate passes; no claim that rendering was accelerated is made by this maintenance
+change. Keep CI authoritative if the relative overrun recurs.
+
+Commit the fixes separately: **3763f158 / 0.148.17** corrects export scheduling;
+**5962e0e2 / 0.148.18** refreshes trailer controls. Checkpoint **0.148.19** retains
+benchmark evidence and records this validation. All 37 distinct focused unit cases
+pass (the one updated HTML-attribute assertion was rerun with all 11 trailer tests).
+TypeScript and build pass; format changed files and verify the final version/docs
+before pushing. The complete workflow on the final main SHA remains the release
+gate. Live is still **0.148.0**; do not publish the prepared announcement yet.

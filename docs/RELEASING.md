@@ -24,6 +24,15 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.19 — Retained fleet benchmark evidence
+
+Attach profiler JSON, logs and real fleet screenshots to Playwright results before
+checking frame budgets, so failed CI retains the information needed to investigate
+small relative-performance overruns. Keep the existing measurement duration, scene,
+quality settings, visible-fleet assertions and 10% matched p95 limit unchanged.
+No rendering change or save migration is included. Local isolated checks pass;
+require the complete workflow for this exact main SHA before releasing the batch.
+
 ## Upgrade 0.148.18 — Live trailer handling controls
 
 Refresh hitch/unhitch and cargo handling eligibility in the existing open trailer

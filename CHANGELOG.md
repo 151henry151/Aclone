@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.19] - 2026-11-17
+
+### Changed
+
+- Retain fleet benchmark measurements, logs and screenshots in browser CI evidence before checking performance budgets; keep every existing threshold and visible-vehicle requirement unchanged.
+
 ## [0.148.18] - 2026-11-17
 
 ### Fixed
