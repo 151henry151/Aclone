@@ -1383,7 +1383,9 @@ kbd {
   bottom: 245px;
   transform: translate(-50%, 10px);
   opacity: 0;
-  transition: 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
   pointer-events: none;
   background: #d5c18e;
   color: #263726;

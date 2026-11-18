@@ -13179,3 +13179,85 @@ pass (the one updated HTML-attribute assertion was rerun with all 11 trailer tes
 TypeScript and build pass; format changed files and verify the final version/docs
 before pushing. The complete workflow on the final main SHA remains the release
 gate. Live is still **0.148.0**; do not publish the prepared announcement yet.
+
+Pushed all three logical fixes to **main** at
+`5efcf66791e8f07ba6663de9fa513a06a7bdadf5` (**0.148.19**). The laptop runner is
+back online. Full verification is running at
+[44205254423](https://github.com/151henry151/Aclone/actions/runs/44205254423).
+Changed-file Prettier and TypeScript/build pass; discovery lists **293 tests in
+239 browser files**. Keep live 0.148.0 and the prepared Discord post unpublished
+until this exact workflow succeeds. This post-push status note is pending commit
+with the next release record.
+
+### Recovery CI 0.148.19 — mobile garage overflow (2026-11-17)
+
+Run **44205254423**, GPU shard **root-6**, fails
+`tests/browser/garage-storage.spec.ts:226`: after resizing to **390 × 844**,
+`document.documentElement.scrollWidth <= window.innerWidth` is false. The
+preceding storage/retrieval, blocked-exit, cargo/fuel preservation, remote-storage
+refusal, construction, private-owner permission and visible mobile retrieval
+checks pass. Seventeen other tests in this shard pass. This checkpoint must not
+deploy. The failure screenshot was inspected; it shows the mobile storage cards
+and reachable retrieval button, but does not establish the overflowing element.
+The disconnected toast is captured after test cleanup closes the fixture server;
+do not infer a networking defect from that screenshot alone.
+
+Retain the job log in `output/ci-2026-11-15/github-5efcf667-root6.log` and the
+complete downloaded screenshot, trace, video and error context under
+`output/ci-2026-11-15/github-5efcf667-root6/`. Once the GPU is free, reproduce the
+unchanged garage-storage journey and capture document/viewport dimensions plus
+bounds of overflowing elements before cleanup. Establish whether the overflow is
+persistent or part of responsive layout settling before choosing a fix. Add or
+extend a red regression for the confirmed cause before production edits. Preserve
+the no-horizontal-overflow criterion, mobile retrieval visibility and all existing
+storage assertions; do not hide the failure with arbitrary waits, force-clicks or
+by removing the width check. Verify the affected desktop/mobile browser flows,
+relevant unit tests, TypeScript, formatting and build, then commit this concern
+separately with release documentation. Leave the laptop GPU available while the
+remaining CI shards run. This is a known failure; avoid repeated notifications.
+
+Run 44205254423 finishes **18/19 jobs passing**; the three preceding failures
+(export timing, live trailer controls and fleet performance) pass. Stop the idle
+runner for isolated local GPU verification. The unchanged garage journey passes
+in 22.0 seconds, but frame-by-frame measurements reproduce transient document
+widths of **393–406 px** on the **390 px** viewport after the renderer has resized.
+The overflowing `#toast` uses `transition: 0.2s`, which interpolates all CSS
+properties, including its compact width limit, font and position. Retain these
+measurements in `garage-overflow-samples.json` and the diagnostic red log. The
+first pre-paint sample also sees the old canvas size before ResizeObserver runs;
+this does not justify a renderer change.
+
+Add `tests/browser/toast-layout.spec.ts` using the actual desktop/mobile CSS and
+actual storage-confirmation text. Pause the real CSS transitions at 0/50/100/150/200
+ms; require both toast edges and document width to stay within 390 px at every
+sample. Load styles with markup to avoid an artificial entrance transition. Its red run
+fails with the left edge at **−10.109375 px**, recorded in
+`toast-layout-red-initial.log`. Make only the notification transition change: animate
+opacity and transform, immediately apply responsive geometry. Keep the original
+`garage-storage.spec.ts` completely unchanged after removing diagnostic sampling.
+Completion commands: hardware-GPU browser tests `toast-layout`, `garage-storage`
+and `mobile` (all pass; actual store/retrieve, refusals, empty storage, construction,
+permissions and portrait/landscape touch flows remain intact), relevant garage
+unit tests, `npx tsc --noEmit`, build and changed-file Prettier. Inspect the real
+mobile storage screenshot; record results before commit/push. Never deploy the
+failed 0.148.19 checkpoint.
+
+Local verification: unchanged garage storage passes **24.1 s** and the complete
+phone controls/sheets/portrait-landscape journey passes **36.9 s**. The focused
+transition-bounds regression passes **0.372 s** with all five intermediate bounds
+checks intact. Its standalone CSS-only fixture could not capture a screenshot in
+headless hardware GL (protocol capture error), so keep visual proof in the actual
+game journey, not a synthetic notification image. Preserve and inspect the actual
+390-pixel storage screenshot, showing the complete confirmation within 12-pixel
+margins and a visible Retrieve outside button; copy it and desktop/mobile journey
+images to `garage-overflow-evidence/`. All **11 garage unit tests** pass. The only
+production change is the two-property toast transition; the garage journey,
+server restrictions and document-width assertion remain unchanged. Finish final
+TypeScript/build/format checks before pushing **0.148.20**; live remains 0.148.0.
+
+Final checks: TypeScript and the **0.148.20** production build pass. Prettier ran
+on every changed file and `git diff --check` is clean. Preserve the full final
+build/unit/browser logs under `output/ci-2026-11-15/toast-*` and
+`garage-overflow-*`. Commit the responsive notification fix, regression and
+related release docs as one logical slice, then restart the laptop runner and
+push main. Require a fresh complete CI pass on that exact SHA before deployment.

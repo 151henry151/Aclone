@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.20] - 2026-11-17
+
+### Fixed
+
+- Keep garage confirmations and other notifications within the screen when switching to a phone-sized layout; retain their fade and slide animation without animating layout dimensions.
+
 ## [0.148.19] - 2026-11-17
 
 ### Changed

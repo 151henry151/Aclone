@@ -697,7 +697,7 @@ Puddlewick’s countryside includes eight richer areas with wood, stone, gravel 
 
 Use **HUD ⚙** in the upper-right corner, or **F9 → HUD & layout**, to choose individual panels. Chat, minimap, health and employment, parish players, inventory, the getting-started guide, vehicle controls, location/time/weather and action shortcuts can each be hidden independently. Choices are saved in this browser. The guide and player roster start hidden; **Show all panels** restores everything and **Essential panels** restores the compact default.
 
-The minus buttons on chat, minimap and player status hide just that panel. **Enter** restores chat from the game view; **F2** also opens chat when a HUD button has keyboard focus. **H** toggles the whole scenery view. **F9** always opens the menu. Smaller desktop windows use narrower panels, shorter scrollable lists and wrapped controls; phones retain their Map, Chat and Pilot drawers.
+The minus buttons on chat, minimap and player status hide just that panel. **Enter** restores chat from the game view; **F2** also opens chat when a HUD button has keyboard focus. **H** toggles the whole scenery view. **F9** always opens the menu. Smaller desktop windows use narrower panels, shorter scrollable lists and wrapped controls; phones retain their Map, Chat and Pilot drawers. Confirmation and error notifications adapt immediately to the screen width when resizing or rotating, while retaining their fade and slide.
 
 ## Soundings and offshore navigation
 

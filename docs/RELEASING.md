@@ -24,6 +24,16 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.20 — Responsive notification bounds
+
+Limit notification transitions to opacity and transform so switching to the phone
+layout applies its width and position immediately. Preserve the existing fade and
+vertical slide. Verify intermediate transition bounds, the unchanged garage storage
+journey and touch gameplay in portrait/landscape. No save migration or world-rule
+change is required. The preceding checkpoint passed 18/19 CI jobs; its sole failure
+was mobile horizontal overflow. Require the complete workflow on this fix's exact
+main SHA before deploying the pending recovery batch.
+
 ## Upgrade 0.148.19 — Retained fleet benchmark evidence
 
 Attach profiler JSON, logs and real fleet screenshots to Playwright results before
