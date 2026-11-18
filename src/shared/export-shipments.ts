@@ -15,7 +15,11 @@ export function exportShipments(w: World, at: number) {
   if (!isPublicPuddlewick(w)) return;
   const interval = economyRules(w.settings).exportShipmentInterval;
   const previous = w.exportShipmentAt ?? (w.exportShipment ?? 0) * EXPORT_INTERVAL;
-  const due = Math.floor((at - previous) / interval);
+  let due = Math.floor((at - previous) / interval);
+  // Fractional edit times can round the subtraction across a boundary. Compare
+  // absolute departure times before accepting the count, without shipping early.
+  if (previous + (due + 1) * interval <= at) due++;
+  if (previous + due * interval > at) due--;
   if (due <= 0) return;
   w.exportShipmentAt = previous + due * interval;
   // Retain the legacy half-hour cursor for older save readers.

@@ -780,6 +780,8 @@ processed departures through reloads; legacy half-hour cursors convert without
 replay. Missing settings retain the default. Portable designs carry the rule,
 not shipment history. Existing cargo reserves, settlement caps and the maximum
 48-departure downtime catch-up remain in force.
+Departure times retain the fractional part of the edit time: a 60-second interval
+set at world time 4.002 seconds is due at 64.002 seconds, with no early payment.
 
 Government import pricing exposes `governmentImportPremium` (25%, range 0–500),
 `governmentWaterFloor` (1,000 hundredths / 10d), `governmentBreadFloor`

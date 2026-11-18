@@ -20,11 +20,11 @@ passes; do not create another Completed heading.
 ### CI recovery — priority interruption, 2026-11-15
 
 Latest status (2026-11-17): live remains **0.148.0**. Recovery fixes through
-0.148.15 are pushed but not deployed. Full run 44024638297 passed 18/19 jobs;
-only the reversing-light browser fixture failed. Its screenshot-timing defect is
-reproduced and fixed locally for checkpoint **0.148.16**; the full exact-SHA gate
-still applies. The garage bay has not started. See the final GPU shard recovery
-record at the end of this plan.
+0.148.16 are pushed but not deployed. Full run 44176394444 passed 16/19 jobs;
+export timing, the parked-fleet relative performance check and stale trailer
+controls failed. Local follow-ups and evidence are recorded at the end of this
+plan. The reversing-light check now passes. Keep the full exact-SHA gate; the
+garage bay has not started.
 
 Henry requires checking CI after every deployment and repairing failures before
 continuing. The locally verified 0.147.0–0.148.0 releases are live, but their
@@ -13033,3 +13033,50 @@ run. List-only coverage assigns all **292** cases exactly once to the sixteen
 shards (`output/ci-2026-11-15/shard-coverage-16-followup/`). No production files,
 workflow permissions or deadlines changed. Do not deploy until the pushed follow-up
 commit's whole workflow passes.
+
+### Fractional export boundary recovery — 2026-11-17
+
+Run 44176394444 on `18f05a36` failed GPU shard 5: the export Rules browser
+journey expected 160 tools after a shipment but retained 200. Preserve its log and
+trace under `output/ci-2026-11-15/github-18f05a36-root5*`. Other shards continue;
+leave the laptop GPU free and keep live 0.148.0 until the full release gate passes.
+
+Completion criteria before production changes:
+
+- Reproduce fractional edit-time boundaries in `tests/export-rules.test.ts`:
+  setting the interval to 60 at world time 4.002 must ship at 64.002, never
+  immediately before it. Subtraction currently gives 59.99999999999999.
+- Verify exact and immediately preceding representable timestamps for single and
+  multiple departures, repeated calls without duplicate payment, and bounded
+  catch-up. Retain existing persistence, empty stock and rule-edit checks.
+- Correct only the due-departure calculation if the regression confirms the gap;
+  do not add a time tolerance, change the configured interval or relax assertions.
+- Run `node --import tsx --test tests/export-rules.test.ts`, then the unchanged
+  `tests/browser/export-rules.spec.ts` once the GPU runner is free. In the browser,
+  save/reopen the 60-second setting, verify visible stock 200 → 160 and revenue,
+  then empty stock with no additional revenue. Retain real screenshots.
+- Run TypeScript, changed-file Prettier and build; record red/green evidence,
+  update release docs and push a logical fix. Require full exact-SHA CI before
+  deployment and announcement. The garage bay remains paused.
+
+Deterministic red evidence: `export-fractional-red.log` reports cursor 4.002 instead
+of 64.002 at the exact first departure; the other five export-rule tests pass.
+The minimal calculation fix checks the candidate count against absolute departure
+times in both directions, with no epsilon or changed rule. All six relevant tests
+now pass (`export-fractional-green.log`), including 15 anchor/count combinations
+at the boundary and the immediately preceding representable timestamp. Source,
+test and documentation changes remain **uncommitted** until the unaffected GPU
+jobs finish and the affected browser, TypeScript, formatting and build are verified.
+Do not deploy 0.148.16: shard 5 failed. Continue diagnosing any additional failures
+from this run before preparing the next checkpoint.
+
+
+Export boundary: the unchanged browser journey passes in **17.7 s**, saving and
+reopening the 60-second rule, displaying 160 remaining Tools and credited revenue,
+then zero stock with unchanged revenue. Both stock/revenue screenshots were
+visually inspected; retain the three images in `export-fractional-evidence/` and
+the browser log. The six export-rule unit tests pass. Prepare a separate export
+fix checkpoint; no default, time tolerance or cargo cap changes.
+
+TypeScript, changed-file Prettier and build pass. Prepare checkpoint 0.148.17;
+keep live 0.148.0 pending the remaining recovery fixes and full CI.

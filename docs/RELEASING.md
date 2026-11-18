@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.17 — Fractional export timing
+
+Compare absolute departure timestamps when correcting floating-point rounding in
+the export schedule. Keep configured intervals, cargo limits, no-early-payment
+and no-duplicate-payment behavior unchanged. No save migration is required.
+Local regression and browser checks pass; live remains 0.148.0 until all recovery
+fixes pass the complete exact-SHA CI gate.
+
 ## Upgrade 0.148.16 — Screenshot-independent reversing check
 
 Keep the complete recovery batch pending until all jobs pass for this main SHA.

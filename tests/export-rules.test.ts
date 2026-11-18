@@ -60,6 +60,35 @@ test('shorter interval sells actual cargo once at its boundary and survives relo
     store.close();
   }
 });
+test('fractional export boundaries ship exactly when due without early or duplicate payment', () => {
+  const immediatelyBefore = (value: number) => {
+    const bytes = new DataView(new ArrayBuffer(8));
+    bytes.setFloat64(0, value);
+    bytes.setBigUint64(0, bytes.getBigUint64(0) - 1n);
+    return bytes.getFloat64(0);
+  };
+  for (const anchor of [4.002, 7.123, 12345.678]) {
+    for (const departures of [1, 2, 3, 48, 49]) {
+      const { w, p, port } = setup();
+      port.stock.tools = 10000;
+      w.time = anchor;
+      act(w, p.id, { type: 'settings', patch: { exportShipmentInterval: 60 } });
+      const boundary = anchor + departures * 60;
+      // Test either side independently, so a prior call cannot move the cursor.
+      const before = structuredClone(w);
+      exportShipments(before, immediatelyBefore(boundary));
+      assert.equal(before.exportShipmentAt, anchor + (departures - 1) * 60);
+      exportShipments(w, boundary);
+      assert.equal(w.exportShipmentAt, boundary);
+      assert.equal(port.stock.tools, 10000 - Math.min(48, departures) * 40);
+      assert.ok(port.investment > 0);
+      const cash = port.investment;
+      exportShipments(w, boundary);
+      assert.equal(port.investment, cash);
+      assert.equal(port.stock.tools, 10000 - Math.min(48, departures) * 40);
+    }
+  }
+});
 test('changing interval restarts from edit time without retroactive exports; unchanged saves keep schedule', () => {
   const { w, p, port } = setup();
   w.time = 1800;

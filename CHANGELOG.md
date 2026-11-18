@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.17] - 2026-11-17
+
+### Fixed
+
+- Dispatch public export shipments at the configured interval even when a fractional rule-edit time causes floating-point rounding; preserve cargo limits and prevent early or duplicate payments.
+
 ## [0.148.16] - 2026-11-17
 
 ### Fixed
