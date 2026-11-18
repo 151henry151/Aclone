@@ -2,11 +2,12 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.1** includes **marked tractor garage storage bays**: stop the whole rig
+Checkpoint **0.149.2** includes **marked tractor garage storage bays**: stop the whole rig
 inside the yellow dashes and choose **Store vehicle** directly on desktop or phone.
 World builders control spare room and the menu-only opt-out. Relevant local tests,
 browser journeys and build checks pass; complete CI and deployment are pending.
 The startup follow-up ensures long loading gaps cannot skip fog and shader preparation.
+Legacy automatic-storage coverage explicitly selects the supported menu-only policy.
 Production remains **0.148.21**.
 
 Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slide,

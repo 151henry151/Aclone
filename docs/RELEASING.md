@@ -24,6 +24,13 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.2 — Exercise legacy tractor storage explicitly
+
+The legacy crowded-fleet browser fixture now selects `garageBayRequired: false`,
+matching the policy it tests. Retain its one-outdoor-tractor, stored fuel, swapping,
+map, waypoint, purchase refusal and saved-rule assertions. Required-bay coverage
+continues to verify explicit deposits. Production storage rules are unchanged.
+
 ## Upgrade 0.149.1 — Preserve shader preparation after a long load
 
 Keep the complete main CI gate. The forced preparation frame establishes fog and

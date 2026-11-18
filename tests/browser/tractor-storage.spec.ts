@@ -40,6 +40,8 @@ for (const crowded of [true, false])
         hungerRate: 0,
         thirstRate: 0,
         vehiclesPersist: true,
+        // This journey covers the supported legacy automatic-spare storage policy.
+        garageBayRequired: false,
         arrivalAnimation: 'off',
         respawnX: 300,
         respawnZ: 300,

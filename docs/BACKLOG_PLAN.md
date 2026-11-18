@@ -13602,3 +13602,10 @@ establish the cause of CI's slower parked sample or prove it harmless. Preserve
 the original strict gate; add the already-collected raw frame/render durations
 and CDP counters to future CI artifacts so a recurrence can be correlated rather
 than inferred from aggregate p95 alone. No sampling or budget changes are planned.
+
+Checkpoint **0.149.1**, commit **cbb0e7f1**, records the preparation-frame fix
+after all four final startup/actor journeys, 27 relevant units, TypeScript/build
+and changed-file formatting passed. Prepare **0.149.2** separately for the
+legacy tractor-storage fixture opt-out; its unchanged crowded-fleet and purchase
+journeys both pass. No production storage behavior changes in this follow-up.
+Neither checkpoint is deployed or announced.

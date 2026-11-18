@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.2] - 2026-11-18
+
+### Fixed
+
+- Run the legacy automatic tractor-storage browser journey with its explicit bay-policy opt-out, preserving coverage of both supported storage policies.
+
 ## [0.149.1] - 2026-11-18
 
 ### Fixed
