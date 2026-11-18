@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.21] - 2026-11-18
+
+### Fixed
+
+- Keep displayed shop quotes and quantity drafts stable after successful trades, including delayed responses. A refused trade refreshes prices for an explicit retry without charging for the rejected purchase.
+
 ## [0.148.20] - 2026-11-17
 
 ### Fixed

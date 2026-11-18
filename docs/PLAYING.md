@@ -599,6 +599,10 @@ use F2 to start chat when a HUD button has focus.
 An owned business keeps its stock, sale prices, purchase bids and included-tax
 breakdown on **Main**. Its quantity field previews totals; use **Stockroom** to
 move your own goods. You cannot trade with yourself.
+Successful trades update stock counts without replacing your quantity draft or
+displayed quote. If a shop changes its price, the next trade at the old quote is
+refused without transferring money or goods. Review the refreshed price before
+clicking again.
 
 In **Building Admin**, use **Remove from sale** to withdraw a property listing.
 Your asking price, stock and investment remain intact for later relisting.

@@ -488,7 +488,6 @@ window.addEventListener('keydown', () => void radioConsole.unlock(), { capture: 
 let panelGeneration = 0;
 let stateRevision = 0;
 let pendingPanelRefresh: { view: number; after: number; trade: boolean } | undefined;
-let tradeListingsSignature = '';
 const actionViews = new Map<
   number,
   { generation: number; refresh: boolean; trailerTrade: boolean }
@@ -570,16 +569,9 @@ const stateInbox = new FrameInbox<StatePresentation>((state) => {
     else if (!document.activeElement?.matches('input,select,textarea')) {
       pendingPanelRefresh = undefined;
       const b = world?.buildings.find((building) => building.id === selected);
-      // Counts and ordering update in place, but changed quotes/rules still need
-      // a new listing before the player can retry a price-change refusal.
-      if (
-        !trade ||
-        panel !== 'building' ||
-        tab !== 'Main' ||
-        !b ||
-        tradeListingsSignature !== tradeListingsKey(b)
-      )
-        renderPanel();
+      // Successful trades update counts/order in place and retain the quote the
+      // player saw. A refused trade explicitly refreshes prices before retrying.
+      if (!trade || panel !== 'building' || tab !== 'Main' || !b) renderPanel();
     }
   }
   if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
@@ -724,7 +716,7 @@ async function connect() {
           view,
           after: stateRevision,
           // Trailer trades also change cargo summaries and handling controls.
-          trade: visit !== undefined && !actionView.trailerTrade,
+          trade: visit !== undefined && msg.ok && !actionView.trailerTrade,
         };
       }
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
@@ -2567,14 +2559,6 @@ function productionStatus(w: World, b: Building) {
     .join(' · ');
   return `Next production check in ${Math.floor(remaining / 60)}m ${remaining % 60}s. Stockroom: ${stock}.`;
 }
-function tradeListingsKey(b: Building) {
-  return JSON.stringify([
-    b.buy,
-    b.sell,
-    world?.settings.transactionItemLimit,
-    world?.settings.denariiPerSheckle,
-  ]);
-}
 function buildingWindow(b: Building) {
   if (!me || !world) return;
   const near = b.kind === 'boathouse' ? nearBoathouse(world, me, b) : distance(me, b) < 18,
@@ -2582,7 +2566,6 @@ function buildingWindow(b: Building) {
     caretaker = caretakerBuilding === b.id && me.authority >= 20,
     owned = selfOwned || caretaker;
   buildingAccessSignature = buildingAccessKey(b);
-  tradeListingsSignature = tradeListingsKey(b);
   const tabs = [
     'Main',
     ...(owned

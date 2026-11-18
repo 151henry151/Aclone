@@ -24,6 +24,17 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.21 — Stable shop quotes
+
+Retain ordinary shop listings after successful trades even when the server price
+changes while a response or quantity edit is pending. Refusals explicitly refresh
+quotes before retry. No save migration or server pricing-rule changes are needed.
+The regression holds real ordered WebSocket responses while editing a quantity,
+then checks connected controls, the old submitted quote, refusal with unchanged
+cash/inventory, and a separate purchase at the refreshed price. Keep the existing
+item-order, mobile stockroom, bulk-sale and freight journeys intact.
+Require a complete green workflow on this exact main commit before deployment.
+
 ## Upgrade 0.148.20 — Responsive notification bounds
 
 Limit notification transitions to opacity and transform so switching to the phone

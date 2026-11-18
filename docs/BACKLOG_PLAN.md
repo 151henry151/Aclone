@@ -13261,3 +13261,91 @@ build/unit/browser logs under `output/ci-2026-11-15/toast-*` and
 `garage-overflow-*`. Commit the responsive notification fix, regression and
 related release docs as one logical slice, then restart the laptop runner and
 push main. Require a fresh complete CI pass on that exact SHA before deployment.
+
+Push **4b7387312b67f8f7f7b72ded526f7dc6f972353d**, checkpoint **0.148.20**, to
+main after all local checks pass. The laptop runner is online and running the new
+[complete workflow 44226077744](https://github.com/151henry151/Aclone/actions/runs/44226077744).
+Discovery confirms **294 browser tests in 240 files** using the project's tsx-aware
+`npm run test:e2e -- --list` command. Keep production **0.148.0** and the prepared
+0.148.20 Discord summary unpublished until this exact workflow passes. This
+post-push status is pending commit with the next release record.
+
+### Recovery CI 0.148.20 — shop quote timing (2026-11-17)
+
+Run **44226077744**, GPU shard **root-7**, fails
+`tests/browser/item-order.spec.ts:91`: after selling one Water and changing the
+server's Water sale quote from 100 to 150, the test expects “The price changed”
+but receives “Bought 1 Water for 1.5d in total.” Seventeen other tests in this
+shard pass. The repaired mobile garage shard passes. Do not deploy this SHA.
+
+Retain `output/ci-2026-11-15/github-4b738731-root7.log` and the complete downloaded
+trace/error context under `github-4b738731-root7/`. No final game screenshot was
+retained by this fixture (it closes its page in cleanup); inspect the trace's
+snapshots and filmstrip for visible quote and action timing. Code inspection
+finds the pending successful-trade refresh can rebuild ordinary shop listings
+when `tradeListingsSignature` changes, whereas freight forms explicitly retain
+successful quotes. This is a candidate explanation, not a confirmed root cause.
+The test waits for authoritative inventory after the sale, not for the client to
+consume its result/state; establish the exact message/DOM order before deciding
+whether this is a production quote-retention gap or a test synchronization gap.
+
+After the GPU is free, reproduce the original item-order journey with instrumented
+result/state events and displayed/submitted quote, without arbitrary sleeps or
+force-clicks. Express the intended quote contract in a deterministic regression:
+no purchase may silently use an undisplayed changed quote; preserve item identity,
+stocked-first/alphabetical ordering, connected buttons and quantity/focus/drafts;
+a genuinely stale submitted quote must be refused without inventory/cash changes,
+then display the new quote for an explicit retry. Keep the full current refusal,
+retry, mobile stockroom transfer and empty-inventory assertions. Confirm red for
+the actual gap before production edits, run affected ordinary/freight trade flows,
+relevant unit tests, TypeScript, build and formatting. Keep this fix a separate
+logical release commit. Leave the GPU for remaining CI shards and do not repeatedly
+notify this already reported failure.
+
+Run **44226077744** completes with **18/19 jobs passing**; only the ordinary-shop
+quote case fails. Inspecting the CI trace resolves the timing: the Water Buy
+locator first resolves at **100**, detaches during click actionability, and then
+resolves to a replacement at **150**. The delayed successful-sale refresh changes
+the controls between intent and click. This is not an absent server price check.
+
+Add `shop-quote-retention.spec.ts`: hold real ordered server messages after a sale,
+focus and edit quantity, change the server quote, then deliver responses and
+snapshots. Keep controls and quote stable after focus leaves. On old production
+code this deterministically fails because the original button is disconnected;
+the attached message log shows the replacement quote **150**. Evidence is in
+`output/ci-2026-11-15/shop-quote-red*`. The production fix distinguishes successful
+trade refreshes from refusals, retaining successful listings and explicitly
+refreshing refused quotes for retry. Remove the obsolete quote-signature rebuild
+path; retain stock ordering, trailer cargo refresh and server validation.
+
+Verify the focused regression plus the unchanged item-order, trade-feedback and
+cargo-boat journeys on hardware GPU, relevant trade unit tests, TypeScript, build
+and formatting. Record outcomes before committing **0.148.21**. Production remains
+**0.148.0**; no announcement is published from a failed checkpoint.
+
+Local verification: the unchanged item-order journey passes **18.5 s**, both
+trade-feedback journeys pass (**17.7 s / 15.7 s**), and the final focused regression
+passes **17.4 s**, including actual submitted prices **100 / 150**, unchanged cash
+and inventory on refusal, connected controls and retained quantity. Strengthen the
+snapshot proof with a visible carried-count marker; the same final regression
+fails on old code with a disconnected button (`shop-quote-red-dom.log`). An earlier
+attempt used a marker absent from the building panel; retain that diagnostic log
+but do not count it as the bug reproduction.
+
+The full unchanged cargo-boat journey passes **1.3 min** after a clean restart.
+Its first local attempt was invalidated by an accidental package-version edit
+triggering Vite's page reload during the journey; retain the failed log, and do
+not classify that as a game regression. The clean run leaves the files stable and
+preserves all freight refusal, cargo, mooring and reboarding checks. All **20**
+relevant unit tests pass. Inspect the actual price-refusal screenshot and preserve
+it alongside mobile stockroom proof in `shop-quote-evidence/`. Finish build and
+format checks before the single logical 0.148.21 commit/push, then restore the GPU
+runner for the complete workflow. No performance budgets or existing journey
+assertions have changed.
+
+Final TypeScript and **0.148.21** build pass, changed-file Prettier passes, and
+`git diff --check` is clean. Remote main still matches the previous checkpoint;
+no other agent changes are included. Commit the shop quote fix, regression and
+release documentation together, then push main and require the complete new CI
+workflow before deploying. Prepared Discord assets now target 0.148.21 but remain
+unpublished.
