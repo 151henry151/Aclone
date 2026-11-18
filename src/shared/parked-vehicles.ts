@@ -1,3 +1,4 @@
+import { markedGarage } from './garage-bay';
 import {
   parkedFootprintBlocked,
   trailerFootprint,
@@ -142,7 +143,9 @@ export function switchPersistentVehicle(
       ? parkCurrentVehicle(
           w,
           p,
-          building?.kind === 'garage' && isTractor(slot) ? building.id : undefined,
+          building?.kind === 'garage' && !markedGarage(w, building) && isTractor(slot)
+            ? building.id
+            : undefined,
         )
       : undefined;
   if (target) {
@@ -222,6 +225,9 @@ export function storeSpareTractors(w: World, p: Player) {
   for (const v of Object.values(w.parkedVehicles ?? {})) {
     if (v.owner !== p.id || !isTractor(v.slot) || v.slot === current) continue;
     if (v.garageStored) continue;
+    // The bay policy requires an explicit deposit of physical outdoor vehicles.
+    // Existing stored property and legacy tanks remain retrievable.
+    if (parkingRules(w.settings).garageBayRequired && !v.inside) continue;
     if (v.inside !== GARAGE_STORAGE) {
       v.inside = GARAGE_STORAGE;
       changed = true;
@@ -307,15 +313,19 @@ export function parkAtHome(
           heading: t.heading + angle,
         };
       });
-    const point = kerbParking(
-      w,
-      b,
-      p.vehicle,
-      parkedKey(p.id, p.vehicle),
-      (point) =>
-        movedRig(point).every((t) => clearParkingTrailer(w, t, parkedKey(p.id, p.vehicle))) &&
-        accepts(point),
-    );
+    const point = markedGarage(w, b)
+      ? accepts(p)
+        ? { x: p.x, y: p.y, z: p.z, heading: p.heading }
+        : undefined
+      : kerbParking(
+          w,
+          b,
+          p.vehicle,
+          parkedKey(p.id, p.vehicle),
+          (point) =>
+            movedRig(point).every((t) => clearParkingTrailer(w, t, parkedKey(p.id, p.vehicle))) &&
+            accepts(point),
+        );
 
     if (!point) throw Error('No safe clear parking place by this building');
     for (const t of movedRig(point)) Object.assign(w.trailers![t.id], t);

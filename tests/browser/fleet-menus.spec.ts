@@ -1,3 +1,4 @@
+import { garageBay } from '../../src/shared/garage-bay';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
 import { mkdtempSync, rmSync, mkdirSync } from 'node:fs';
@@ -62,13 +63,14 @@ test('fleet menus collapse long lists, retain disclosure state and work at a han
   });
   let b = makeBuilding('garage', 'garage', 0, 0);
   w.buildings = [b];
+  const bay = garageBay(w, b)!;
   const key = p.id + ':38';
   w.parkedVehicles = {
     [key]: {
       owner: p.id,
       slot: 38,
-      x: 18,
-      z: 10,
+      x: bay.x,
+      z: bay.z,
       y: 0,
       heading: 0,
       fuel: 17,

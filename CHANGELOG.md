@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.0] - 2026-11-18
+
+### Added
+
+- Mark tractor garage storage bays with yellow dashes on concrete. Stop your whole vehicle and trailer rig inside, then use Store vehicle directly from desktop or phone controls to store it and walk into the garage.
+- Let world builders set spare bay room (3 metres per side by default, 0–10 metres allowed) or restore menu-only storage. Bay size follows configured vehicle, trailer and coupling dimensions.
+
+### Changed
+
+- With marked bays required, garage entry leaves vehicles where their drivers stopped. Swapping tractors no longer silently stores an outdoor machine; existing stored vehicles remain retrievable, and the optional legacy storage policy stays available.
+
 ## [0.148.21] - 2026-11-18
 
 ### Fixed

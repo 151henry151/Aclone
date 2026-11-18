@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const parkingFields = {
+  garageBayRequired: { label: 'Require the marked tractor garage storage bay' },
+  garageBayMargin: {
+    label: 'Garage bay spare room on each side (metres)',
+    min: 0,
+    max: 10,
+    step: 0.1,
+  },
   garageStorageEnabled: { label: 'Allow new garage storage' },
   garageStorageRange: {
     label: 'Garage storage handling reach (metres)',

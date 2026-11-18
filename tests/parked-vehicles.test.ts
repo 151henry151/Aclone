@@ -105,6 +105,7 @@ test('disabled persistence retains instant switching, while custom return reach 
 
 test('garage switching stores the old tractor and refuses remote recall of an outside one', () => {
   const { w, p } = setup();
+  w.settings.garageBayRequired = false; // Explicit legacy automatic-storage policy.
   const b = makeBuilding('garage', 'garage', 0, -12);
   w.buildings = [b];
   p.fleet = [0, 5, 24];
@@ -558,6 +559,7 @@ test('persistent land parking leaves the existing walking boat-tank refuelling b
 
 test('a garage visit drives a stored tractor out to a clear kerb and stores the arrival tractor', () => {
   const { w, p } = setup();
+  w.settings.garageBayRequired = false; // Explicit legacy automatic-storage policy.
   const b = makeBuilding('garage', 'garage', 0, -12);
   w.buildings = [b];
   p.fleet = [0, 5, 24];

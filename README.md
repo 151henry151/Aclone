@@ -2,18 +2,24 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Checkpoint **0.149.0** adds **marked tractor garage storage bays**: stop the whole rig
+inside the yellow dashes and choose **Store vehicle** directly on desktop or phone.
+World builders control spare room and the menu-only opt-out. Relevant local tests,
+browser journeys and build checks pass; complete CI and deployment are pending.
+Production remains **0.148.21**.
+
 Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slide,
 and holding a heading straightens it. World builders can tune the response or
 restore the former instant pivot.
 
-The 0.148.21 CI recovery checkpoint is being verified on main and is not live yet.
+Version **0.148.21** is live from main after [all 19 CI jobs passed](https://github.com/151henry151/Aclone/actions/runs/44246249077).
 Main CI uses the [laptop GPU runner](docs/GPU_RUNNER.md) for full browser coverage,
 with hosted software smoke checks and an exact-commit deployment gate.
-The pending recovery also fixes spring editing, accepted editor refreshes and
+The recovery release also fixes spring editing, accepted editor refreshes and
 stale trailer cargo displays after shop trades.
 Night-time hitching checks now release reverse independently of screenshot capture time.
 The export-timing follow-up handles fractional rule-edit times correctly; its
-regression and browser checks pass, with full CI verification still pending.
+regression, browser checks and complete CI verification pass.
 Trailer controls now follow stopping and coupling position while Inventory stays
 open, without losing cargo selections or quantity drafts.
 Fleet performance checks retain their full measurements and screenshots in CI
@@ -21,7 +27,7 @@ evidence; the original frame budgets remain unchanged.
 Responsive notifications keep their width within the screen while fading and sliding.
 Successful shop trades retain displayed quotes and quantity drafts even when responses
 arrive during editing; refused trades refresh prices for an explicit retry.
-See the [verification gate and remaining failures](docs/BACKLOG_PLAN.md#ci-recovery--priority-interruption-2026-11-15).
+See the [verification gate and release record](docs/BACKLOG_PLAN.md#ci-recovery--priority-interruption-2026-11-15).
 
 Version 0.147.1 repairs the highway tractor and semitrailer’s connected running gear,
 adds readable cab gauges, and brakes smoothly toward about **12 mph** when the rig
@@ -113,7 +119,7 @@ viewing direction and avoid overlap. World Builder controls label visibility and
 boarding reach. Reload to receive the updated controls.
 
 Version 0.140.0 adds **garage storage for land vehicles and trailers**. Park outside
-when you want, or visit Spanner & Sons and choose Store in garage. Build your own
+when you want, or use the marked bay at Spanner & Sons (menu-only storage remains a world option). Build your own
 vehicle-storage garage for a private fleet: five large shed designs, unlimited
 vehicle space by default. Retrieve vehicles outside with their fuel and cargo
 intact. World Builder controls storage rules. See [garage storage](docs/PLAYING.md#garage-storage).
@@ -208,9 +214,10 @@ Version 0.131.10 lets AI residents route around parked trailers and safely escap
 an existing overlap. Trailer placement changes trigger bounded replanning; owned
 trailers and their cargo stay where players leave them.
 
-Version 0.131.9 keeps only your current tractor outdoors in persistent-parking worlds. Switch
-models at a garage; spares stay invisibly stored with their own fuel, paint,
-condition and parked trailer cargo. World builders can disable this policy.
+Version 0.131.9 introduced automatic spare-tractor storage. The marked-bay policy
+supersedes automatic storage of outdoor machines; worlds can opt out of bays to
+retain that older policy. Existing stored spares keep their fuel, paint, condition
+and parked trailer cargo.
 See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)

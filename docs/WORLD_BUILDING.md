@@ -1957,15 +1957,12 @@ recovers its saved tank once. Residents follow parking by default (`parkingNpcs`
 and driving sign-off leaves a parked record unless `parkingSignOff` is disabled.
 
 **Store spare tractors in garages** (`garageStoresSpareTractors`, default true)
-keeps only the current/last-used tractor outdoors when persistence is enabled.
-Other owned tractors remain invisible and can be selected at any completed
-non-aircraft garage. Fuel, paint, condition and parked hitched trailer cargo stay
-with the machine. Existing crowded fleets are tidied on load or when this rule is
-enabled, without moving the current tractor or changing aircraft/boats. Storage
-works even before a world has a garage; build one to retrieve a spare. Disabling
-the rule permits multiple outdoor tractors again, while already stored machines
-remain safely retrievable at a garage. The existing resident-parking opt-out also
-applies. No per-frame fleet migration is added.
+retains its earlier automatic-storage behavior when `garageBayRequired` is false.
+When marked bays are required, physical outdoor tractors must be explicitly stored;
+switching models or loading a world does not silently remove them from the yard.
+Already stored vehicles and legacy spare tanks remain retrievable without a new
+licence or ownership grant. Disabling either storage policy never deletes property.
+The resident-parking opt-out still applies.
 
 Parking defaults are `parkingReturnRange: 3` metres for boarding/refuelling,
 `parkingDoorOffset: 1.4` metres to the driver's left, `parkingSearchRange: 30`
@@ -2253,10 +2250,32 @@ portable designs carry terrain and settings without copying paid agreements.
 
 ## Vehicle garage storage rules
 
+`garageBayRequired` defaults to **true**, including for old saves without the key.
+Completed tractor garages show a yellow dashed rectangle on concrete; aircraft
+hangars and private `vehicleStorage` buildings are excluded. Stop the entire owned
+vehicle/rig inside it and use **Store vehicle** on the HUD. The authoritative
+containment check includes rotated vehicle and articulated trailer corners. Fuel,
+condition, paint, cargo and the hitch remain attached to the stored records. Entry
+uses the normal safe walking route and failures leave the whole rig unchanged.
+
+`garageBayMargin` adds spare room on **each side**, default **3 m**, range **0–10 m**.
+Base dimensions follow the largest storable land vehicle and compatible complete
+rig in the world catalogues, including configured semitrailers and coupling offsets.
+The centre stays fixed when only the margin changes. The bay surface follows the
+terrain; it does not flatten or move existing property. Keep its frontage clear
+when designing a garage site. Changes are saved in SQLite and portable designs.
+
+Setting `garageBayRequired` false restores menu-only deposits and permits the
+optional automatic spare-tractor policy. Current outdoor vehicles are not moved
+when the bay is enabled. Stored vehicles remain retrievable under either policy.
+A driven bay deposit uses the bay itself as its reach check; ordinary menu handling
+still requires the player and target to be within the configured handling reach.
+
 Under parking rules, configure `garageStorageEnabled` (true by default),
 `garageStorageRange` (30 m; 1–100 m), and `garageStorageLimit` (0 means unlimited;
 otherwise a whole number up to 10,000 units per player per garage). The range applies
-between player and garage, vehicle and garage, and player and vehicle. Each stored
+between player and garage and player and vehicle for menu handling. With no marked
+bay, it also applies between vehicle and garage; a marked bay supplies that boundary. Each stored
 vehicle and each attached or independent trailer counts as a unit. Reducing a limit
 or disabling new storage does not prevent retrieval. Existing kerb-parking safety
 rules determine where retrieval can place a vehicle or complete rig.

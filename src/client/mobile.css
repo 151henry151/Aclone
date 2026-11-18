@@ -157,6 +157,15 @@
   font-size: 13px;
   min-height: 44px;
 }
+.mobile-ui #target button.primary {
+  background: #d6bd78;
+  color: #263224;
+  border-color: #d6bd78;
+}
+.mobile-ui #target button.primary:hover {
+  background: #ebd18c;
+  border-color: #ebd18c;
+}
 .mobile-ui .bottom-left {
   left: max(12px, env(safe-area-inset-left));
   bottom: calc(var(--dock) + 150px);

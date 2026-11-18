@@ -24,7 +24,30 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.0 — Marked tractor garage storage bays
+
+Pending full CI and deployment. Existing saves default to a required yellow storage
+bay at completed tractor garages, with 3 metres of spare room per side. World
+builders may change the margin or turn off the bay requirement to retain menu-only
+storage. No destructive migration runs: existing stored property remains available,
+and outdoor parked vehicles stay where their drivers left them.
+
+Verify direct desktop/phone storage of a complete rig, stable fuel/cargo, passenger
+and capacity refusals, walking entry/exit, blocked retrieval, custom rules and the
+unchanged private-garage/hangar journeys. Ordinary garage entry preserves the parked
+pose; tractor swaps cannot bypass the required bay. Bay paint follows terrain and
+configured dimensions; it does not flatten or move existing buildings. Puddlewick's
+current layout was checked read-only for building overlap. Deploy only the exact
+main SHA that passes the complete workflow, recheck production health/assets/CI,
+then publish the authorized announcement with real screenshots.
+
 ## Upgrade 0.148.21 — Stable shop quotes
+
+Released from main `6757dba02ef66e0e3cb8f2681732015d553b557e` on 2026-11-18.
+[Complete CI](https://github.com/151henry151/Aclone/actions/runs/44246249077) passed all 19 jobs before deployment and on the post-deploy recheck.
+The service, public version/assets and website are verified; the
+[announcement with real screenshots](https://discord.com/channels/1562183434254680175/1565527790785404968/1572528715265609860) is published and verified.
+See the final recovery release record in BACKLOG_PLAN.md for backup paths and evidence.
 
 Retain ordinary shop listings after successful trades even when the server price
 changes while a response or quantity edit is pending. Refusals explicitly refresh

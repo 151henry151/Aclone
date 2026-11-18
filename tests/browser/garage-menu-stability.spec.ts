@@ -1,3 +1,4 @@
+import { garageBay } from '../../src/shared/garage-bay';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
 import { mkdtempSync, rmSync, mkdirSync } from 'node:fs';
@@ -62,13 +63,14 @@ test('collapsed garage remains stable during fleet movement and mounts the showr
   });
   let b = makeBuilding('garage', 'garage', 0, 0);
   w.buildings = [b];
+  const bay = garageBay(w, b)!;
   const key = p.id + ':38';
   w.parkedVehicles = {
     [key]: {
       owner: p.id,
       slot: 38,
-      x: 18,
-      z: 10,
+      x: bay.x,
+      z: bay.z,
       y: 0,
       heading: 0,
       fuel: 17,
@@ -157,15 +159,15 @@ test('collapsed garage remains stable during fleet movement and mounts the showr
     await page.keyboard.press('Enter');
     await expect(disclosure('garage-storage')).toHaveAttribute('open', '');
     const machine = page.locator('[data-garage-unit="Vehicle:38"]');
-    await expect(machine).toContainText('21 m from garage');
+    await expect(machine).toContainText(`${Math.round(Math.hypot(bay.x, bay.z))} m from garage`);
     const retrieve = machine.getByRole('button', { name: 'Store in garage' });
     await retrieve.focus();
     const button = await retrieve.elementHandle();
     w.parkedVehicles![key].x = 500;
-    await expect(machine).toContainText('500 m from garage');
+    await expect(machine).toContainText(`${Math.round(Math.hypot(500, bay.z))} m from garage`);
     await expect(retrieve).toBeDisabled();
     expect(await button!.evaluate((el) => el.isConnected)).toBe(true);
-    w.parkedVehicles![key].x = 18;
+    w.parkedVehicles![key].x = bay.x;
     await expect(retrieve).toBeEnabled();
     await retrieve.click();
     await expect.poll(() => w.parkedVehicles![key].inside).toBe(b.id);

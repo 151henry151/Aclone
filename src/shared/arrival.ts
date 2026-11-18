@@ -1,6 +1,6 @@
 import { arrivalRoute, arrivalPathLength, arrivalPathPose, type WalkPoint } from './arrival-route';
 import { boatSlot } from './boats';
-import { storeHangarArrival } from './garage-storage';
+import { storeBayArrival, storeHangarArrival } from './garage-storage';
 import { beginVehicleMount } from './vehicle-mount';
 import { say } from './messages';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -49,7 +49,13 @@ export function arrivalPosition(p: Player, time: number) {
   return { x, y, z };
 }
 
-export function approachBuilding(w: World, p: Player, b: Building, home = false) {
+export function approachBuilding(
+  w: World,
+  p: Player,
+  b: Building,
+  home = false,
+  storeInBay = false,
+) {
   const walkingIn = p.vehicle === 5 && parkingRules(w.settings).arrivalWalkIn;
   if (
     p.task ||
@@ -63,7 +69,7 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     throw Error('Stop outside and finish your activity before entering');
   if (boatSlot(p.vehicle, w)) throw Error('Disembark at a boathouse before entering a building');
   if (b.construction) throw Error('Supply the construction materials first');
-  if (!withinArrivalRange(w, p, b))
+  if (!storeInBay && !withinArrivalRange(w, p, b))
     throw Error(`Move within ${parkingRules(w.settings).arrivalRange} metres of this building`);
   const original = { x: p.x, y: p.y, z: p.z };
   const previousVehicle = p.vehicle;
@@ -76,7 +82,11 @@ export function approachBuilding(w: World, p: Player, b: Building, home = false)
     y: travelHeight(w, v.x - Math.cos(v.heading) * offset, v.z + Math.sin(v.heading) * offset),
   });
   let path = arrivalRoute(w, b, original, to, true);
-  if (
+  if (storeInBay) {
+    storeBayArrival(w, p, b, () => {
+      path = arrivalRoute(w, b, driverSide(p), to, true);
+    });
+  } else if (
     !storeHangarArrival(w, p, b, () => {
       path = arrivalRoute(w, b, driverSide(p), to, true);
     })

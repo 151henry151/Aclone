@@ -723,6 +723,8 @@
   "earthworksNpcFeePerVolume": 100,
   "earthworksNpcMaximumContracts": 1,
   "garageStorageEnabled": true,
+  "garageBayRequired": true,
+  "garageBayMargin": 3,
   "garageStorageRange": 30,
   "garageStorageLimit": 0,
   "parkingBoardHeight": 3,

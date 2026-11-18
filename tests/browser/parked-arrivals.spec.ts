@@ -8,7 +8,6 @@ import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulatio
 import { creatorSchema } from '../../src/shared/creator';
 import { waitForWorld } from './fixtures/ready';
 import { butcherRamp } from '../../src/shared/butcher';
-import { GARAGE_STORAGE } from '../../src/shared/parked-vehicles';
 test.use({ video: { mode: 'on', size: { width: 1440, height: 900 } } });
 test('a real approach parks the tractor, swings the door, opens the panel after entry, and reverses on Escape', async ({
   page,
@@ -214,7 +213,13 @@ test('a real approach parks the tractor, swings the door, opens the panel after 
     await expect.poll(() => current().vehicle).toBe(24);
     await expect.poll(() => current().task).toBeUndefined();
     expect(current().inside).toBeUndefined();
-    expect(app.worlds.get(w.id)!.parkedVehicles![`${p.id}:0`].inside).toBe(GARAGE_STORAGE);
+    const leftOutside = app.worlds.get(w.id)!.parkedVehicles![`${p.id}:0`];
+    expect(leftOutside.inside).toBeUndefined();
+    expect({ x: leftOutside.x, z: leftOutside.z, heading: leftOutside.heading }).toEqual({
+      x: 50,
+      z: 12,
+      heading: Math.PI,
+    });
     await expect
       .poll(() =>
         page.evaluate(() => {
@@ -226,7 +231,7 @@ test('a real approach parks the tractor, swings the door, opens the panel after 
           return visibleParked;
         }),
       )
-      .toEqual([]);
+      .toEqual([`${p.id}:0`]);
     await page.screenshot({ path: 'output/parked-vehicles/browser/garage-drive-out.png' });
     expect(errors).toEqual([]);
   } catch (error) {

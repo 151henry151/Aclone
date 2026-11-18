@@ -43,6 +43,7 @@ test('store and retrieve land vehicles and trailers, then build and inspect a pr
     thirstRate: 0,
     vehiclesPersist: true,
     garageStoresSpareTractors: false,
+    garageBayRequired: false, // The menu-only opt-out remains supported.
     arrivalAnimation: 'off',
     vehicleMaintenance: false,
   });

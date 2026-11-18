@@ -19,17 +19,18 @@ passes; do not create another Completed heading.
 
 ### CI recovery — priority interruption, 2026-11-15
 
-Latest status (2026-11-17): live remains **0.148.0**. Recovery fixes through
-0.148.16 are pushed but not deployed. Full run 44176394444 passed 16/19 jobs;
-export timing, the parked-fleet relative performance check and stale trailer
-controls failed. Local follow-ups and evidence are recorded at the end of this
-plan. The reversing-light check now passes. Keep the full exact-SHA gate; the
-garage bay has not started.
+Latest status (2026-11-18): **0.148.21 is live** from main commit
+`6757dba02ef66e0e3cb8f2681732015d553b557e`. The complete
+[workflow 44246249077](https://github.com/151henry151/Aclone/actions/runs/44246249077) passes **19/19 jobs**, confirmed again after deployment.
+Production health, exact server checkout, JavaScript/CSS assets and the matching
+website are verified. The [Discord recovery announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1572528715265609860) is verified with
+two real 1440×900 screenshots. Recovery is complete; the marked garage storage bay
+is now in implementation; see the latest garage-bay section below. Historical failures and fixes below remain as an
+audit trail, not current blockers.
 
 Henry requires checking CI after every deployment and repairing failures before
-continuing. The locally verified 0.147.0–0.148.0 releases are live, but their
-GitHub browser checks are failing or pending; those releases are not CI-green.
-Pause the garage bay until this recovery gate passes.
+continuing. Keep the exact-SHA gate for every subsequent release. The current
+release passes it; prior failed runs remain recorded below.
 
 Completion criteria before fixes:
 
@@ -13349,3 +13350,125 @@ no other agent changes are included. Commit the shop quote fix, regression and
 release documentation together, then push main and require the complete new CI
 workflow before deploying. Prepared Discord assets now target 0.148.21 but remain
 unpublished.
+
+Push **6757dba02ef66e0e3cb8f2681732015d553b557e**, checkpoint **0.148.21**, to
+main after the local checks above. The laptop GPU runner is online and busy with
+the new [complete workflow 44246249077](https://github.com/151henry151/Aclone/actions/runs/44246249077).
+Leave it available while all jobs run. Keep production **0.148.0** and the prepared
+Discord recovery summary unpublished until this exact commit passes every job.
+This post-push status is pending commit with the next release record.
+
+### Recovery release verified — 2026-11-18
+
+Deploy **0.148.21**, exact main SHA
+`6757dba02ef66e0e3cb8f2681732015d553b557e`, only after complete workflow
+**44246249077** passes all **19 jobs**. Confirm remote main still names this SHA
+and the production checkout is clean at the previous 0.148.0 before starting.
+Run `DEPLOY_REF=<verified SHA> bash scripts/deploy-nogits.sh` and
+`bash scripts/deploy-website.sh`; both complete successfully. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261118-032547.sqlite`. Website backup:
+`/var/backups/aclone-website/site-20261118-032722.tar.gz`.
+
+Verify the active production service, exact checkout SHA, health
+`{"ok":true,"version":"0.148.21","worlds":5}`, public
+`index-inDprwiS.js` (JavaScript, embedded 0.148.21) and `index-CUCW8_pN.css`
+(CSS), then recheck the exact CI run: still **19/19 passed**. Retain machine-readable
+verification, CI response and deployment logs in `output/ci-2026-11-15/release/`.
+
+Publish and reread the authorized [announcements-channel recovery summary](https://discord.com/channels/1562183434254680175/1565527790785404968/1572528715265609860).
+Verify the bot identity, exact text, both embed titles/descriptions, image dimensions
+(**1440×900** each) and reachable PNGs; deduplicate before posting. The summary
+covers boathouse boarding, stable trading/editing/paint, trailer cargo and hitch
+controls, entrances/doors, indoor rendering work, phone notifications, export
+timing and spring editing. It does not claim every performance problem is solved.
+No player grants or piloted spaceflight changes are made. Disable the temporary
+recovery follow-up now that release and announcement are verified. The marked
+garage bay remains the next separately scoped backlog feature.
+
+These post-deployment README/plan/releasing records are local changes for the next
+logical commit; the deployed application remains the exact CI-verified SHA above.
+
+### Marked garage bay implementation — 2026-11-18
+
+Henry requested the next backlog item after the verified recovery release. Main
+is the working branch. Production stays 0.148.21 until this feature's exact pushed
+SHA passes the complete workflow and deployment verification.
+
+- Deterministic red tests reproduce garage entry moving and rotating the stopped
+  tractor; further red evidence catches the legacy automatic tractor swap storing
+  an outdoor machine despite the new bay requirement. Evidence lives in excluded
+  `output/garage-bay/`.
+- Shared geometry sizes the bay from configured vehicle and compatible rig bodies,
+  including coupling offsets. All corners must fit. The same rectangle drives the
+  server, HUD and two-draw terrain-following concrete/paint model.
+- Direct storage preflights ownership, speed, activity, containment, capacity and
+  the safe pedestrian route. Fuel, paint, condition, cargo and hitch are retained.
+  Entry preserves the parked pose; tractor swaps no longer bypass a required bay.
+  Existing stored property and the explicit menu-only opt-out remain supported.
+- A private read-only Puddlewick snapshot places the default Spanner & Sons bay at
+  (-120.7, 18.62), 9.7 × 23.1 metres, with level 0.15 m terrain and no building
+  footprint overlaps. No live property or player state was edited.
+- Local unit/storage compatibility checks pass. The real keyboard-driven full-size
+  semitrailer journey stores from the HUD, opens the garage, verifies blocked and
+  clear retrieval, exits on foot, and saves/reopens custom bay rules. Phone controls
+  work; final contrast polish and the full relevant browser run are in progress.
+- Legacy automatic-storage assertions are retained under the explicit opt-out;
+  fleet menu fixtures now place deposit vehicles inside the new required bay,
+  preserving disclosure, distance, focus, disabled-state and mobile assertions.
+  The initial combined browser run was stopped after confirming that obsolete
+  outside-bay fixtures correctly produced disabled deposit buttons; evidence is
+  retained. No acceptance deadline, assertion or performance budget was weakened.
+
+Remaining: final browser/UI checks, TypeScript/build/format, version/release docs,
+logical main commit/push, complete exact-SHA CI, deployment/production verification
+and the authorized announcement with real screenshots. Keep the backhoe model and
+piloted spaceflight untouched until this release is complete.
+
+### Garage bay release verification — 2026-11-18
+
+Prepare **0.149.0** as one logical feature release on main. The phone contrast
+regression finishes the real CSS transition deterministically: old styling gives
+only **1.11:1**, while the highlighted action passes the unchanged **4.5:1** minimum.
+A separate red unit test catches storing with a passenger aboard; storage now
+refuses atomically until the passenger leaves. The panel computes shared bay
+geometry once per refresh, rather than once per vehicle row.
+
+The first complete related browser batch passed 10/11 journeys. Its sole remaining
+assertion expected zero visible parked vehicles after a garage tractor swap. The
+server record already passed its exact unchanged-pose assertion; the scene correctly
+showed that same vehicle. Update the obsolete disappearance expectation to the exact
+parked vehicle ID, preserving all movement, door, camera, mounting and input checks.
+The final rerun passed this journey, garage menu stability, direct rig storage,
+phone contrast, touch/controller arrivals and reconnect (six cases). Its command
+session then terminated with SIGTERM before the final two cases completed. Those
+two unchanged cases are run separately; final outcomes are recorded below before
+pushing. No test deadline or assertion was changed.
+
+Final relevant units: **92 passed** across bay, garage storage, arrivals, parked
+vehicles, mounting, disclosures, tractor storage, hangars and contextual boarding;
+**6 parking UI checks passed** separately. TypeScript and the 0.149.0 production
+build pass; changed-file formatting and diff whitespace checks pass. An optional
+broader local unit run ended with SIGTERM (exit 143), with no test failure or final
+summary; it is **not** counted as a successful full suite. The hosted complete unit
+job remains required in CI. Logs and red/green evidence are in `output/garage-bay/`.
+
+Prepared but unpublished announcement assets are in `output/garage-bay/release/`.
+Both desktop 1440×900 and phone 390×844 screenshots were visually inspected; the
+phone action is readable and the live rig/storage flow is real. Do not post the
+prepared live wording until deployment is verified. The previous recovery monitor
+is paused and completed; this release needs its own exact-SHA CI tracking.
+
+The remaining empty-tank/refuel and outdoor-service browser cases both pass
+(**2/2**, 58.8 seconds), completing the eight final cases across the two runs.
+The earlier complete batch also verified fleet disclosures, legacy garage storage,
+private construction/permissions, hangar arrival/retrieval and rear-door routing.
+All **98 relevant unit checks** pass. Final TypeScript/build and changed-file
+Prettier pass; no application source changed during these browser runs. The local
+full-suite attempt remains inconclusive; require the full hosted CI suite.
+
+Commit the bay feature, direct regressions, policy-aware fixture updates and
+0.149.0 version/docs as one logical main commit. Restart the laptop GPU runner
+before pushing. Keep production 0.148.21 until the exact pushed SHA passes all
+19 CI jobs, then deploy with the documented scripts and verify health, version,
+assets and CI again. Only then publish the prepared deduplicated announcement and
+mark the backlog item complete. No backhoe or piloted-spaceflight work is included.

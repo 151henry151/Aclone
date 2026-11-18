@@ -992,20 +992,18 @@ beside it. The control explains missing fuel, a full tank or an out-of-range
 vehicle. The amount per Fuel follows the world's item definition. Other players
 can help when the world's roadside-refuelling policy allows it.
 
-By default, only your current (last-used) tractor stays outside, wherever you leave
-it. Your other tractors wait invisibly in garage storage with their fuel, paint,
-condition and any parked hitched trailer intact. Visit any completed tractor garage
-and choose **Trade & services outside** to switch models. Selecting a spare stores
-the previous tractor, even if you arrived on foot, and drives the chosen machine
-out to a clear point. Buying another tractor works the same way. Your currently
-parked tractor must still be boarded where you left it; selecting that same model
-at a distant garage does not recall it.
+With marked bays required (the default), tractors stay where you park them, even
+when you select a different tractor at a garage. Store a machine by driving the
+whole rig into the yellow bay and choosing **Store vehicle**. Existing spare
+tractors already in garage storage remain available at a completed tractor garage;
+select one through **Trade & services outside** to drive it out to clear space.
+Your outdoor tractor must still be boarded where you left it.
 
-World builders can turn **Store spare tractors in garages** off to keep several
-tractors parked outdoors. Already stored spares remain safely in storage until
-retrieved. Individually stored machines can appear in garage interiors; shared
-spare storage is invisible. Boats and aircraft keep their existing parking,
-mooring, crew, lifeboat and refuelling rules.
+World builders can turn off **Require the marked tractor garage storage bay** to
+restore the earlier menu-only policy. In that mode, **Store spare tractors in
+garages** can automatically store all but the last-used tractor. Stored machines
+keep their fuel, paint, condition and trailer cargo. Boats, aircraft and private
+vehicle-storage garages keep their own storage and boarding flows.
 
 Press **E/Ctrl**, click a building or use the touch/controller interaction to park
 at a clear kerb and walk to its entrance. The panel opens after you enter. For garage repairs, trailer purchases, bulk
@@ -1284,12 +1282,20 @@ Enter. Position updates keep those summaries and your scroll position stable.
 Open storage rows show current distance and availability. Closing and reopening
 the showroom retains your selected tractor.
 
-Park land vehicles and trailers outside wherever you leave them, or bring them to
-Spanner & Sons (a tractor garage) and use **Vehicle storage → Store in garage**.
-Stop and step out first. By default, you and the vehicle must be within 30 metres
-of the garage and each other. An attached trailer stays with its complete parked
-rig; unhitch it first to store it separately. Boats and aircraft use their own
-facilities.
+At Spanner & Sons and other completed tractor garages, drive your vehicle and its
+whole trailer inside the **yellow dashed bay**, then stop. **Store vehicle** appears
+on the HUD, including on phones. One click stores the owned rig, walks you to the
+door and opens the garage menu. When you leave, you are on foot. Pressing E/Ctrl to
+visit the garage without storing leaves the vehicle where you stopped, at the same
+angle. A moving vehicle or a trailer crossing the dashes is not ready to store.
+
+The bay fits the largest configured land vehicle or compatible rig, plus 3 metres
+of spare room on every side by default. World builders can change the margin or
+turn off the bay requirement. In that older mode, stop and step out, then use
+**Vehicle storage → Store in garage** within the handling range (30 metres by
+default). With bays enabled, parked deposits also have to fit inside the dashes.
+Unhitch an independent trailer before storing it separately. Private storage
+garages and aircraft hangar arrival storage keep their existing behavior.
 
 Choose **Retrieve outside** at the garage where you stored it, then walk over to
 board or hitch it. Retrieval needs safe, clear space outside; a blocked exit leaves

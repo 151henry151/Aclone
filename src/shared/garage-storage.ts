@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building, Action } from './types';
+import {
+  landStorageVehicle,
+  garageBay,
+  garageBayContains,
+  garageBayStoreReason,
+} from './garage-bay';
+export { landStorageVehicle } from './garage-bay';
+import { vehicleFootprint, trailerFootprint } from './vehicle-footprint';
 import { parkingRules } from './parking-rules';
-import { vehicleDef } from './vehicle-config';
 import {
   parkedKey,
   parkCurrentVehicle,
@@ -17,9 +24,6 @@ import { isTractor, switchVehicle } from './tractors';
 import { parkingBlocker } from './ground-parking';
 export const storageGarage = (b?: Building) =>
   !!b && !b.construction && (b.kind === 'vehicleStorage' || b.kind === 'garage');
-export function landStorageVehicle(w: World, slot: number) {
-  return ![5, 6, 7, 29, 34].includes(slot) && [0, 1, 4, 5].includes(vehicleDef(w, slot).mode);
-}
 function need(value: unknown, reason: string): asserts value {
   if (!value) throw Error(reason);
 }
@@ -29,6 +33,7 @@ function checkDeposit(
   b: Building,
   target: { x: number; z: number },
   incoming: number,
+  inBay = false,
 ) {
   const r = parkingRules(w.settings);
   need(r.garageStorageEnabled, 'New garage storage is disabled in this world');
@@ -37,7 +42,7 @@ function checkDeposit(
     'Only the private garage owner may store vehicles here',
   );
   need(
-    Math.hypot(target.x - b.x, target.z - b.z) <= r.garageStorageRange &&
+    (inBay || Math.hypot(target.x - b.x, target.z - b.z) <= r.garageStorageRange) &&
       Math.hypot(target.x - p.x, target.z - p.z) <= r.garageStorageRange,
     'Bring the vehicle within the garage storage handling range',
   );
@@ -81,6 +86,19 @@ export function storeHangarArrival(
   p.engine = false;
   p.lights = false;
   return true;
+}
+export function storeBayArrival(w: World, p: Player, b: Building, beforeStore: () => void) {
+  const reason = garageBayStoreReason(w, p, b);
+  need(!reason, reason ?? 'Cannot store here');
+  const rig = Object.values(w.trailers ?? {}).filter((t) => t.attached === p.id && !t.parkedWith);
+  checkDeposit(w, p, b, p, 1 + rig.length, true);
+  beforeStore();
+  const slot = p.vehicle;
+  parkCurrentVehicle(w, p, b.id).garageStored = true;
+  switchVehicle(p, 5, true, w);
+  p.homeParking = { building: b.id, slot };
+  p.engine = false;
+  p.lights = false;
 }
 export function garageStorageAction(w: World, p: Player, a: Action) {
   const b = w.buildings.find((b) => b.id === a.building),
@@ -134,7 +152,16 @@ export function garageStorageAction(w: World, p: Player, a: Action) {
   );
   if (store) {
     need(!stored, 'This vehicle is already stored; retrieve it first');
-    checkDeposit(w, p, b, target, 1 + rig.length);
+    const bay = garageBay(w, b);
+    if (bay)
+      need(
+        garageBayContains(bay, [
+          ...(v ? [vehicleFootprint(w, v.slot, v)] : [trailerFootprint(t!, w)]),
+          ...rig.map((t) => trailerFootprint(t, w)),
+        ]),
+        'Park the whole vehicle and trailer inside the yellow bay',
+      );
+    checkDeposit(w, p, b, target, 1 + rig.length, !!bay);
     if (v) {
       v.inside = b.id;
       v.garageStored = true;

@@ -1,3 +1,4 @@
+import { markedGarage } from './garage-bay';
 import { importScarceTools } from './tool-imports';
 import { toolImportFields, toolImportRules, validToolImportPool } from './tool-import-rules';
 import {
@@ -1640,10 +1641,11 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       lodgingAction(w, p, nearby(w, p, a.building), a);
       break;
     }
+    case 'storeGarageBay':
     case 'approach': {
       const b = w.buildings.find((b) => b.id === a.building);
       requireThat(b, 'Building not found');
-      approachBuilding(w, p, b);
+      approachBuilding(w, p, b, false, type === 'storeGarageBay');
       break;
     }
     case 'exitBuilding':
@@ -2070,6 +2072,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       p.fleet = fleet;
       if (
         garageDeparture &&
+        !markedGarage(w, parkingBuilding!) &&
         p.homeParking?.building === parkingBuilding!.id &&
         p.homeParking.slot !== slot
       ) {

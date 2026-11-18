@@ -1,3 +1,4 @@
+import { garageBayStoreReason } from '../shared/garage-bay';
 import { patchPanelContent } from './panel-content';
 import { toolImportShop } from '../shared/tool-imports';
 import { toolImportRules } from '../shared/tool-import-rules';
@@ -1053,6 +1054,13 @@ function updateHud() {
       : vehicleDef(world, me.vehicle).mode === 2
         ? '<span class="hint">W/S throttle · A/D rudder · ↓ pull up · ↑ nose down · ←/→ bank · B brakes · F7 guide</span>'
         : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
+  const storageBay = world.buildings.find(
+    (b) => b.kind === 'garage' && !garageBayStoreReason(world!, me!, b),
+  );
+  if (storageBay)
+    targetHtml =
+      button('Store vehicle', 'store-garage-bay', `data-id="${storageBay.id}"`, 'wide primary') +
+      targetHtml;
   targetHtml += outdoorServiceButton(target?.id);
   $('task-control').hidden = !me.task || !!panel || !!mobile.drawer;
   $('task-control').classList.toggle('arrival-progress', !!(me.task?.arrival || me.task?.mount));
@@ -3271,6 +3279,16 @@ app.addEventListener('click', async (e) => {
       case 'tab':
         tab = id!;
         renderPanel();
+        break;
+      case 'store-garage-bay':
+        if (world && me && id) {
+          const b = world.buildings.find((b) => b.id === id);
+          if (b && !garageBayStoreReason(world, me, b)) {
+            requestedArrival = id;
+            send({ type: 'storeGarageBay', building: id });
+            arrivalRequest = request;
+          }
+        }
         break;
       case 'building-outside':
         if (outdoorServiceButton(id)) {

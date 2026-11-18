@@ -32,6 +32,7 @@ function setup(kind = 'garage') {
     vehiclesPersist: true,
     arrivalAnimation: 'off',
     garageStoresSpareTractors: false,
+    garageBayRequired: false, // Exercise the supported legacy menu-only policy.
   });
   const p = addPlayer(w, 'owner', 'Owner');
   Object.assign(p, { vehicle: 5, x: 16, z: 10, y: 0, online: true, inventory: {}, speed: 0 });

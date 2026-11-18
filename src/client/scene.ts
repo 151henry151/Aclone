@@ -1,3 +1,5 @@
+import { garageBay } from '../shared/garage-bay';
+import { garageBayModel } from './garage-bay-model';
 import { ConstructionGhost } from './construction-ghost';
 import { EarthworkGuide } from './earthwork-guide';
 import { earthworkDust } from '../shared/earthworks-work';
@@ -601,6 +603,9 @@ export class GameScene {
       ':' +
       JSON.stringify(world.terrain) +
       JSON.stringify(world.coastalBluffs ?? []) +
+      JSON.stringify(
+        world.buildings.filter((b) => b.kind === 'garage').map((b) => garageBay(world, b)),
+      ) +
       JSON.stringify([
         world.springs,
         world.settings.springsEnabled,
@@ -1083,6 +1088,8 @@ export class GameScene {
       yield;
       if (!this.ocean.sprayObject.parent) this.scene.add(this.ocean.sprayObject);
       for (const b of w.buildings) {
+        const bay = garageBay(w, b);
+        if (bay) land.add(garageBayModel(w, bay));
         const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
         const g = custom ? creatorModel(custom, w) : this.building(b, w);
         g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;

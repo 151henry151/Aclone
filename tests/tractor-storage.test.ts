@@ -11,12 +11,17 @@ import { vehicleRecord } from '../src/shared/vehicle-services';
 import { tractorWaypoint } from '../src/client/parking-status';
 import { Store } from '../src/server/store';
 
+// Preserve the legacy automatic-spare policy behind its supported bay opt-out.
 function setup() {
   const w = createWorld('storage', 'Storage', 'owner');
   const p = addPlayer(w, 'owner', 'Owner');
   const garage = makeBuilding('garage', 'garage', 0, -12);
   w.buildings = [garage];
-  Object.assign(w.settings, { vehiclesPersist: true, arrivalAnimation: 'off' });
+  Object.assign(w.settings, {
+    vehiclesPersist: true,
+    arrivalAnimation: 'off',
+    garageBayRequired: false,
+  });
   Object.assign(p, {
     x: 0,
     z: 0,
