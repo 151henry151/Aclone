@@ -13080,3 +13080,47 @@ fix checkpoint; no default, time tolerance or cargo cap changes.
 
 TypeScript, changed-file Prettier and build pass. Prepare checkpoint 0.148.17;
 keep live 0.148.0 pending the remaining recovery fixes and full CI.
+
+### Trailer handling control recovery — 2026-11-17
+
+GPU shard 15 fails `tests/browser/highway-driving.spec.ts` at Hitch trailer:
+the existing test verifies server speed <0.05 m/s and coupling gap <1 m, then the
+inventory retains a disabled Hitch and Load with “Come to a full stop before
+handling a trailer” until its unchanged 120-second deadline. The screenshot and
+trace are preserved at `output/ci-2026-11-15/github-18f05a36-root15/`; the other
+19 shard cases pass. Code inspection finds the inventory signature omits speed
+and trailer refresh tracks reach only. Confirm the stale-control diagnosis with
+an explicit regression rather than hiding it by waiting to open Inventory.
+
+Completion criteria before production edits:
+
+- Extend the actual inventory browser journey to open a nearby compatible trailer
+  while handling is prohibited, then receive a stopped snapshot while the menu
+  stays open. Hitch and Load must enable and the obsolete refusal must disappear.
+  Also verify the reverse transition disables actions, and that alignment/range
+  refusals update when coupling geometry changes within handling reach.
+- Keep the disclosure open, preserve its summary/control identity, focus and
+  quantity/selected-item drafts while eligibility updates. Verify server actions
+  still enforce the same speed, ownership and coupling rules. Run the regression
+  red before the smallest UI change; do not force-click or relax deadlines.
+- Once the laptop GPU is free, run the focused regression and unchanged complete
+  highway-driving journey, including real keyboard reverse/brake/hitch/load,
+  articulated driving, controller and phone brakes, cargo, lights and screenshots.
+  Run directly affected unit tests, TypeScript, formatting and build.
+- Make a separate logical fix from export scheduling and fleet performance.
+  Keep deployment blocked until all local criteria and exact-SHA full CI pass.
+
+Trailer controls: the explicit snapshot regression fails at the expected enabled
+Hitch after stopping (`trailer-live-red-eligibility.log`). An earlier fixture
+attempt used an incorrect exact select label; correct that selector before the
+recorded regression, without production changes. The fix updates existing hitch
+and cargo buttons/refusal text only while the trailer disclosure is open; it keeps
+nodes, focus, selected Steel and quantity 7 intact. The new regression passes in
+14.2 s; unchanged highway-driving and inventory-context journeys pass in
+32.0/20.7 s, including keyboard/controller/phone controls. Inspect the real ready
+image, with enabled Hitch and preserved focused cargo draft. Focused unit tests
+pass after adapting one exact HTML assertion to the button's new data attribute;
+both enabled and disabled assertions remain.
+
+TypeScript, changed-file Prettier and build pass. Prepare checkpoint 0.148.18;
+keep live 0.148.0 until the full final-SHA CI workflow passes.

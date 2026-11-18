@@ -52,14 +52,14 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       html += `<section class="notice"><h4>${esc(d.name)}</h4><p>Stored in ${esc(w.buildings.find((b) => b.id === stored)?.name ?? 'tractor garage storage')} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight. Retrieve at the garage before hitching or handling cargo.</p></section>`;
       continue;
     }
-    html += `<section class="notice"><h4>${d.name}</h4><p><span data-trailer-distance="${esc(t.id)}">${Math.round(distance)}</span>m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
+    html += `<section class="notice" data-trailer-controls="${esc(t.id)}"><h4>${d.name}</h4><p><span data-trailer-distance="${esc(t.id)}">${Math.round(distance)}</span>m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
     if (distance > trailerHandlingReach(w, t)) {
       html += '</section>';
       continue;
     }
     const handling = trailerHandlingReason(p),
       hitchReason = t.attached ? handling : hitchRefusal(w, p, t);
-    html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', t.attached ? 'unhitch' : 'hitch')}<button${hitchReason ? ' disabled' : ''}>${t.attached ? 'Unhitch here' : 'Hitch trailer'}</button></form>${hitchReason ? `<p>${esc(hitchReason)}</p>` : ''}`;
+    html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', t.attached ? 'unhitch' : 'hitch')}<button data-trailer-hitch${hitchReason ? ' disabled' : ''}>${t.attached ? 'Unhitch here' : 'Hitch trailer'}</button></form><p data-trailer-hitch-reason${hitchReason ? '' : ' hidden'}>${esc(hitchReason ?? '')}</p>`;
     html += `<p>${
       itemEntries(t.cargo, items, t.cargo)
         .filter(([, n]) => n > 0)
@@ -94,7 +94,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
         ([id, n]) => n > 0 && (operation === 'unload' || trailerAccepts(w, t, id, 1)),
       );
       if (choices.length)
-        html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', operation)}${storage}<label>${label} ${b?.owner === p.id ? 'building stock' : 'inventory'}<select name="item">${choices.map(([id, n]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} (${n})</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="10000" value="1" required></label><button${handling ? ' disabled' : ''}>${label}</button></form>`;
+        html += `<form data-action="trailer">${hidden('id', t.id)}${hidden('operation', operation)}${storage}<label>${label} ${b?.owner === p.id ? 'building stock' : 'inventory'}<select name="item">${choices.map(([id, n]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} (${n})</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="10000" value="1" required></label><button data-trailer-handle${handling ? ' disabled' : ''}>${label}</button></form>`;
     }
     if (b && b.owner !== p.id && t.attached === p.id) {
       for (const direction of ['buy', 'sell']) {
@@ -125,5 +125,26 @@ export function refreshTrailerDistances(host: HTMLElement, w: World, p: Player) 
     if (!t) continue;
     const text = String(Math.round(Math.hypot(t.x - p.x, t.z - p.z)));
     if (el.textContent !== text) el.textContent = text;
+  }
+}
+
+/** Eligibility can change while a player edits cargo. Keep the controls and
+ * drafts intact rather than rebuilding the disclosure when speed/geometry changes. */
+export function refreshTrailerControls(host: HTMLElement, w: World, p: Player) {
+  const handling = trailerHandlingReason(p);
+  for (const section of host.querySelectorAll<HTMLElement>('[data-trailer-controls]')) {
+    const hitch = section.querySelector<HTMLButtonElement>('[data-trailer-hitch]');
+    if (!hitch) continue;
+    const t = w.trailers?.[section.dataset.trailerControls!];
+    if (!t) continue;
+    const reason = t.attached ? handling : hitchRefusal(w, p, t);
+    if (hitch.disabled !== !!reason) hitch.disabled = !!reason;
+    const notice = section.querySelector<HTMLElement>('[data-trailer-hitch-reason]');
+    if (notice) {
+      if (notice.textContent !== (reason ?? '')) notice.textContent = reason ?? '';
+      if (notice.hidden !== !reason) notice.hidden = !reason;
+    }
+    for (const button of section.querySelectorAll<HTMLButtonElement>('[data-trailer-handle]'))
+      if (button.disabled !== !!handling) button.disabled = !!handling;
   }
 }

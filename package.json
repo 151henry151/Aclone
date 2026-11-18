@@ -1,6 +1,6 @@
 {
   "name": "aclone",
-  "version": "0.148.17",
+  "version": "0.148.18",
   "private": true,
   "type": "module",
   "description": "A small, persistent universe with an unreasonable number of tractors.",

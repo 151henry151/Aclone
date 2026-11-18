@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.148.18 — Live trailer handling controls
+
+Refresh hitch/unhitch and cargo handling eligibility in the existing open trailer
+controls as speed and coupling geometry change. Preserve drafts, focus and the
+disclosure, with all server restrictions unchanged. No migration is required.
+Verify the snapshot-transition regression and complete keyboard/controller/mobile
+highway-driving journey, then require the full exact-SHA CI gate before deployment.
+
 ## Upgrade 0.148.17 — Fractional export timing
 
 Compare absolute departure timestamps when correcting floating-point rounding in

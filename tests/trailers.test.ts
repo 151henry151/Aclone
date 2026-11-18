@@ -356,7 +356,7 @@ test('the trailer panel shows the hitch reason before the player clicks', async 
   p.x = 0;
   p.z = -200;
   const ready = trailerPanel(w, p);
-  assert.match(ready, /<button>Hitch trailer<\/button>/);
+  assert.match(ready, /<button data-trailer-hitch>Hitch trailer<\/button>/);
   assert.doesNotMatch(ready, /disabled>Hitch trailer/);
 });
 test('a trailer cannot sweep through a building when the tractor has cleared it', () => {

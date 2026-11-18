@@ -426,6 +426,9 @@ a rescue. Other explanations remain in Activities and these guides.
 Click or tap its heading (or focus it and press Enter) to expand it. The menu
 remembers your choice across updates and reopening. An empty bag says so without
 a discard warning; robocrow controls appear when you carry one or are piloting it.
+Hitch, unhitch and cargo handling controls update as you stop or change coupling
+position, even with Inventory open. The reason for a refusal changes in place;
+your selected cargo, quantity and keyboard focus stay intact.
 
 ## Helping other players
 

@@ -42,7 +42,12 @@ import { canoePanel } from './canoe-panel';
 import { fuelPanel } from './fuel-panel';
 import { alpineWeather } from '../shared/alpine-weather';
 import { tenderOf } from '../shared/boat-tender';
-import { trailerPanel, trailerWithinReach, refreshTrailerDistances } from './trailer-panel';
+import {
+  trailerPanel,
+  trailerWithinReach,
+  refreshTrailerDistances,
+  refreshTrailerControls,
+} from './trailer-panel';
 import { towingPanel } from './towing-panel';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { hasMotor } from '../shared/vehicle-config';
@@ -1506,6 +1511,7 @@ function refreshTrailerReach(b?: Building) {
   }
   trailerReachRoot = root;
   trailerReachSignature = signature;
+  if (root?.open) refreshTrailerControls(root, world, me);
 }
 let buildingAccessSignature = '';
 function buildingAccessKey(b: Building) {

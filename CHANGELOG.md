@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.148.18] - 2026-11-17
+
+### Fixed
+
+- Update trailer hitching and cargo controls when you stop or realign a vehicle with Inventory open; retain the selected goods, quantity, focus and expanded trailer list.
+
 ## [0.148.17] - 2026-11-17
 
 ### Fixed
