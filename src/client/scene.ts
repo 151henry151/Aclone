@@ -1624,7 +1624,11 @@ export class GameScene {
     const animationDt = Math.max(0, (now - this.lastTime) / 1000);
     if (now - this.lastTime > 1000) this.resumeMotion();
     const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
-    const renderTime = pacedRenderTime(now, this.renderTime, interval, displayTime);
+    // Preparation must establish fog and lights even when resumeMotion reset the
+    // pacing clock during a long load. Ordinary animation still obeys its cap.
+    const renderTime = preparing
+      ? now
+      : pacedRenderTime(now, this.renderTime, interval, displayTime);
     if (renderTime === undefined) return;
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
     this.renderTime = renderTime;

@@ -24,6 +24,14 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.1 — Preserve shader preparation after a long load
+
+Keep the complete main CI gate. The forced preparation frame establishes fog and
+lighting even when resume handling resets its clock; normal gameplay retains its
+frame cap. Verify ordinary and deterministic long-gap actor arrival, zero late
+walking/umbrella shaders or atlas allocation, neutral input during loading and
+missing-texture fallback. No save migration or player changes are required.
+
 ## Upgrade 0.149.0 — Marked tractor garage storage bays
 
 Pending full CI and deployment. Existing saves default to a required yellow storage

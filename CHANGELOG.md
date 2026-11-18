@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.1] - 2026-11-18
+
+### Fixed
+
+- Prepare fog and lighting before shader warm-up even after a long load resets the frame clock, preventing first-use walking and umbrella shader compilation during play.
+
 ## [0.149.0] - 2026-11-18
 
 ### Added

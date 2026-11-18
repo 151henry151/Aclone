@@ -13472,3 +13472,133 @@ before pushing. Keep production 0.148.21 until the exact pushed SHA passes all
 19 CI jobs, then deploy with the documented scripts and verify health, version,
 assets and CI again. Only then publish the prepared deduplicated announcement and
 mark the backlog item complete. No backhoe or piloted-spaceflight work is included.
+
+Push **234d775e63e464291645c59ed6e7de7d758d9d2d** to main as **0.149.0**.
+[Complete workflow 44379714039](https://github.com/151henry151/Aclone/actions/runs/44379714039)
+is queued/running across 19 jobs; the laptop GPU runner is online and running the
+first shard. Leave the GPU available. The separate temporary follow-up
+`finish-aclone-garage-bay-release` is active every ten minutes, quiet while checks
+are pending, and tracks this exact SHA through fixes or verified deployment and
+announcement. It disables itself when those release steps are complete. The old
+recovery follow-up remains paused. Production is still **0.148.21**; the prepared
+0.149.0 announcement has not been sent. This post-push status is a local release
+record for the next logical commit.
+
+### Garage release CI: actor fog warm-up failure — 2026-11-18
+
+Run **44379714039**, SHA **234d775e**, must not deploy. GPU root-1 job
+**135068300318** failed `actor-warmup.spec.ts:11`: first walking resident and
+rain umbrella triggered **6 shader compilations**, against the unchanged zero
+requirement. The other 19 shard tests passed. The complete hosted `check` job
+(formatting, TypeScript and full unit suite) passed; remaining browser jobs are
+still running/queued. Leave the laptop GPU free until the complete run finishes.
+
+Evidence is retained in `output/garage-bay/ci-234d775e/`: job log, original
+artifact trace, decoded `actor-shaders.json`, late GLSL sources and
+`shader-full-diffs.json`. The trace records **310 → 316** shader compilations
+and **1 → 1** umbrella atlases. Four late shader sources differ from already
+warmed sources only by `#define USE_FOG`; the other two match existing sources
+exactly. This points to a missing fog variant during preparation, not an atlas
+allocation. The test world has no buildings, so it does not draw the new bay.
+
+Code inspection identifies a candidate to reproduce, not an established cause:
+`prepareWorld()` forces `renderTime = -Infinity` before `frame(true)`, but a
+startup gap over one second calls `resumeMotion()`, resetting both clocks before
+frame pacing. Pacing can then return before fog is established. Hidden-tab
+handling is another early return to distinguish. No production fix has been
+made based solely on this inspection.
+
+After CI frees the GPU, reproduce the unchanged actor journey and instrument
+preparation timing/fog. If confirmed, add a deterministic red regression for
+the relevant startup/resume transition, fix that cause in a separate logical
+commit, and retain the zero late-shader, zero new-atlas and no-browser-error
+requirements. Attach profiler JSON and real images before assertions so they
+survive future CI failures. Run relevant warm-up/frame-pacing tests and the
+real hardware browser journey, TypeScript/build/format and release documentation
+checks before pushing main. Never weaken budgets or retry just to obtain green.
+Production remains **0.148.21** and the bay announcement remains unpublished.
+
+### Garage release CI: parked-fleet performance recurrence — 2026-11-18
+
+Run **44379714039** also failed GPU root-10 job **135068300149** in
+`parked-performance.spec.ts:59`; 17 other shard tests passed. Normal-quality
+parked p95 is **20.100000143 ms** versus active **17.599999905 ms**, exceeding
+the unchanged 10% limit **19.359999895 ms**. Low active/parked p95 is
+**37.700000048 / 36.799999952 ms** and passes. All absolute budgets pass;
+there are zero frames above 100 ms, no long tasks and no browser errors.
+
+Unlike the earlier recovery failure, all twelve profiler log/JSON/image
+attachments are retained. Job log, trace and attachments are saved under
+`output/garage-bay/ci-234d775e/root-10`; `fleet-summary.json` collects the
+measurements without the long terrain-key lists. Both normal-quality screenshots
+were inspected and show the matching town/camera/fleet layout. Both modes use
+1280×800, pixel ratio 1.25, the Quadro M1200, 39 buildings, 248 ground tiles and
+no streaming. All **21** parked vehicles are drawn. Active/parked draw calls are
+1005/774, triangles 2,860,861/2,646,073, render CPU p95 13.2/16.4 ms and total
+task time 11.54/10.31 seconds. These aggregate values do not establish the cause.
+
+After the remaining CI jobs finish, reproduce and profile in isolation, retaining
+CPU/frame evidence and runner conditions to distinguish application work from
+scheduling or hardware variability. Compare against this retained failed sample
+and the previous recovery evidence; do not dismiss a recurrence because a later
+sample happens to pass. Fix a confirmed cause separately from actor warm-up,
+with appropriate regression coverage and unchanged population, visible geometry,
+quality, sampling, deadlines and **10%** relative budget. No retry solely to green
+or threshold rounding. This SHA remains blocked from deployment; production stays
+**0.148.21**. Keep the GPU free for the rest of the current workflow.
+
+### Garage CI repair verification — 2026-11-18
+
+The complete run **44379714039** finished **16/19 jobs passing**. In addition
+to actor warm-up and parked performance, root-16 job **135068304253** failed the
+legacy tractor-storage browser fixture at line 108 (six parked bodies instead of
+one before interaction); its other 15 cases passed. Evidence is under
+`output/garage-bay/ci-234d775e/root-16` and `root-16.log`. The fixture omitted
+`garageBayRequired: false`, although it explicitly exercises automatic spare
+storage. The default bay policy correctly retains physical outdoor vehicles.
+The unchanged local journey reproduced the same failure; setting the supported
+legacy opt-out restores that journey without changing any assertion or production
+storage behavior. The required-bay tests remain separate and unchanged.
+
+The actor issue is now reproduced deterministically. A 1500 ms preparation gap
+with equal synchronous browser clock readings resets the forced render timestamp
+in `resumeMotion()`. Both preparation frames return before establishing fog
+(`hidden: false`, `fogAfter: false`); the first walker then compiles **310 → 316**
+shaders, exactly matching CI. A long gap without a controlled equal timestamp
+alone passed and was not accepted as a red regression. Evidence is in
+`actor-gap-red-fixed-clock/`, including original trace and extracted preparation
+JSON. Preparation frames now bypass pacing, preserving ordinary gameplay caps.
+
+The normal actor journey, deterministic gap regression and both legacy tractor
+journeys pass (**4/4**, 1.5 minutes), with **27/27** relevant warm-up, pacing,
+settling and tractor-storage units passing. Actor diagnostics now attach JSON and
+real screenshots before assertions; file-backed JSON also survives successful
+cases. Final checks and separate logical versioned commits remain pending.
+
+The idle laptop runner was stopped after confirming the workflow finished and
+runner `busy: false`; hardware preflight reports Quadro M1200. Isolated matched
+normal-quality CPU profiling plus host clock/temperature sampling is underway in
+`output/garage-bay/fleet-diagnosis/`. This is diagnostic evidence, not a substitute
+for the unchanged acceptance test or complete CI. Production remains 0.148.21.
+
+The final actor/startup browser batch passes **4/4** in 1.3 minutes, including
+both clock paths, held-input neutrality, missing-texture fallback and switching
+graphics during loading. File-backed actor JSON and real rain-walker images are
+retained and visually inspected. Prepare separate checkpoint **0.149.1** for the
+forced preparation-frame fix; ordinary rendering caps remain unchanged.
+
+Performance investigation: matched diagnostic CPU profiles (with profiler
+overhead, not acceptance results) show active/parked p95 **21.4/19.2 ms**,
+render CPU p95 **17.8/13.6 ms**, and less parked total CPU work. GPU samples
+remain at 1150/2505 MHz under load, approximately 62–68°C. A suspected indexed
+geometry expansion was rejected for the real benchmark tractor: both before and
+after batching have **7,342 vertices / 2,478 triangles**, with 32→22 meshes.
+No batching or renderer optimization is justified by that hypothesis.
+
+The unchanged isolated gate passes low **37.7/37.3 ms** and normal **25.4/18.0 ms**
+active/parked, all 21 parked vehicles drawn and no >100 ms frames. Preserve
+`fleet-acceptance/`, `fleet-diagnosis/` and `geometry-before.json`. This does not
+establish the cause of CI's slower parked sample or prove it harmless. Preserve
+the original strict gate; add the already-collected raw frame/render durations
+and CDP counters to future CI artifacts so a recurrence can be correlated rather
+than inferred from aggregate p95 alone. No sampling or budget changes are planned.
