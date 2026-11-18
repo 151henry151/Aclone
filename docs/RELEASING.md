@@ -24,6 +24,15 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.3 — Retain detailed fleet timing evidence
+
+Capture the existing frame timestamps, render CPU durations and CDP counters in
+`expanded-town-frames.json` after measurement, then attach them before checking
+fleet budgets. All four active/parked, low/normal cases retain logs, summary JSON,
+raw timing JSON and real screenshots. No scene workload, sample duration, quality,
+visibility check or deadline changes. No performance acceleration is claimed;
+investigate a recurrence with these samples and require the complete CI gate.
+
 ## Upgrade 0.149.2 — Exercise legacy tractor storage explicitly
 
 The legacy crowded-fleet browser fixture now selects `garageBayRequired: false`,

@@ -80,8 +80,10 @@ TEST_GPU=1 node --import tsx scripts/verify-ci-gpu.ts
 ```
 
 The full main run retains all individual test deadlines and graphics thresholds.
-The parked-fleet test attaches each active/parked, low/normal profiler JSON, log
-and fleet screenshot before assertions. These copies live with Playwright results
+The parked-fleet test attaches each active/parked, low/normal profiler JSON, log,
+raw frame/render timing JSON with CDP counters, and fleet screenshot before
+assertions. The raw samples are already collected by the benchmark and saved only
+after measurement; no sampling or acceptance threshold changes. These copies live with Playwright results
 and are included in failed-job artifacts; ignored local `output/` is not uploaded.
 Keep the exact-SHA CI gate in [RELEASING](RELEASING.md), including its post-deploy
 check. Diagnose failures before continuing to the next backlog item.

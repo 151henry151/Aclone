@@ -13609,3 +13609,25 @@ and changed-file formatting passed. Prepare **0.149.2** separately for the
 legacy tractor-storage fixture opt-out; its unchanged crowded-fleet and purchase
 journeys both pass. No production storage behavior changes in this follow-up.
 Neither checkpoint is deployed or announced.
+
+Checkpoint **0.149.2**, commit **5c556d5e**, isolates the legacy storage fixture
+correction. Prepare **0.149.3** as a separate diagnostic maintenance checkpoint:
+retain existing frame timestamps, render CPU durations and CDP metrics in all
+four benchmark cases, saving after measurement and attaching before assertions.
+This changes neither rendering nor acceptance. The original CI parked-performance
+cause remains unestablished; no acceleration or resolved-regression claim is made.
+Require the complete workflow for the final main SHA, and inspect retained raw
+samples if the relative budget fails again. Final diagnostics-enabled benchmark,
+TypeScript/build/format and push remain pending below.
+
+Final **0.149.3** verification passes: TypeScript/build, changed-file formatting
+and the unchanged diagnostics-enabled fleet gate (**1/1**, 3.1 minutes). Low
+active/parked p95 is **37.9/36.6 ms**, normal **18.9/19.1 ms**, with all 21
+parked vehicles drawn and zero frames above 100 ms. All **16** attachments are
+retained; raw render timestamps and CPU sample counts match each summary, are
+finite and ordered, and include start/end CDP metrics. The final normal parked
+screenshot was inspected. Evidence is in `output/garage-bay/fleet-final/` and
+`fleet-final.log`. These passes verify the diagnostic change and unchanged gate;
+they do not establish the earlier CI performance failure's cause. Push the three
+separate logical checkpoints only after final diff review, then require complete
+CI on the actual pushed SHA. Production remains **0.148.21**.

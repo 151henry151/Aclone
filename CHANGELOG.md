@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.3] - 2026-11-18
+
+### Changed
+
+- Retain individual fleet frame times, render durations and browser performance counters with CI evidence so performance failures can be investigated beyond summary percentiles. Scene workload, sampling and all acceptance limits are unchanged.
+
 ## [0.149.2] - 2026-11-18
 
 ### Fixed

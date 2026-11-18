@@ -291,6 +291,19 @@ try {
           Object.entries(data).filter(([key]) => !['renders', 'cpu', 'longTasks'].includes(key)),
         ),
       };
+      // Keep the already-collected samples and CDP counters for diagnosing
+      // relative-budget failures. Writing happens after measurement; sampling,
+      // scene workload and all acceptance budgets remain unchanged.
+      writeFileSync(
+        `${out}/${name}-${location.name}-frames.json`,
+        JSON.stringify({
+          renders: data.renders,
+          cpu: data.cpu,
+          longTasks: data.longTasks,
+          metricsStart,
+          metricsEnd,
+        }),
+      );
       results.push(row);
       console.log(JSON.stringify(row));
       writeFileSync(
