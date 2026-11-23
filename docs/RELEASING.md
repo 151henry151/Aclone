@@ -26,6 +26,11 @@ run passed. Keep diagnostic downloads out of commits.
 
 ## Upgrade 0.149.3 — Retain detailed fleet timing evidence
 
+Released with marked garage bays from main `65acc1b69d0280a83d3d1c0ed7193667dbabffca` on 2026-11-18 (America/New_York; 2026-11-19 UTC).
+[Complete CI](https://github.com/151henry151/Aclone/actions/runs/44411753207) passed all 19 jobs before and after deployment.
+Production service, exact SHA, health/version, JavaScript/CSS and the website are verified.
+The [feature announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1572781314502041682) is verified with two real screenshots.
+
 Capture the existing frame timestamps, render CPU durations and CDP counters in
 `expanded-town-frames.json` after measurement, then attach them before checking
 fleet budgets. All four active/parked, low/normal cases retain logs, summary JSON,
@@ -50,7 +55,7 @@ missing-texture fallback. No save migration or player changes are required.
 
 ## Upgrade 0.149.0 — Marked tractor garage storage bays
 
-Pending full CI and deployment. Existing saves default to a required yellow storage
+Released with 0.149.3 after complete CI and production verification. Existing saves default to a required yellow storage
 bay at completed tractor garages, with 3 metres of spare room per side. World
 builders may change the margin or turn off the bay requirement to retain menu-only
 storage. No destructive migration runs: existing stored property remains available,

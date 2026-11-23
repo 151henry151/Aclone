@@ -19,13 +19,13 @@ passes; do not create another Completed heading.
 
 ### CI recovery — priority interruption, 2026-11-15
 
-Latest status (2026-11-18): **0.148.21 is live** from main commit
+Recovery release (2026-11-18): **0.148.21 was released** from main commit
 `6757dba02ef66e0e3cb8f2681732015d553b557e`. The complete
 [workflow 44246249077](https://github.com/151henry151/Aclone/actions/runs/44246249077) passes **19/19 jobs**, confirmed again after deployment.
 Production health, exact server checkout, JavaScript/CSS assets and the matching
 website are verified. The [Discord recovery announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1572528715265609860) is verified with
 two real 1440×900 screenshots. Recovery is complete; the marked garage storage bay
-is now in implementation; see the latest garage-bay section below. Historical failures and fixes below remain as an
+is now complete and live in **0.149.3**; see the final garage-bay release record below. Historical failures and fixes below remain as an
 audit trail, not current blockers.
 
 Henry requires checking CI after every deployment and repairing failures before
@@ -382,7 +382,7 @@ Current remaining order (supersedes the historical numbered order):
 2. A real highway tractor, and a gradual step off the pavement — done/live 0.147.1;
    verification and release below.
 3. Hovercraft turns should drift — done/live 0.148.0; verification and release below.
-4. Pull into a marked bay to store a vehicle at Spanner & Sons.
+4. Pull into a marked bay to store a vehicle at Spanner & Sons — done/live 0.149.3.
 5. A backhoe that reads as a backhoe.
 6. Remaining hard-coded gameplay numbers — reconcile the delivered fieldsets
    against the current section and complete only confirmed remaining gaps.
@@ -13631,3 +13631,46 @@ screenshot was inspected. Evidence is in `output/garage-bay/fleet-final/` and
 they do not establish the earlier CI performance failure's cause. Push the three
 separate logical checkpoints only after final diff review, then require complete
 CI on the actual pushed SHA. Production remains **0.148.21**.
+
+Post-push checkpoint: **0.149.3** is on main at
+**65acc1b69d0280a83d3d1c0ed7193667dbabffca**, containing the three separate
+repair/diagnostic commits. Full CI **44411753207** is queued/running; the laptop
+GPU runner is restarted and online. The temporary garage-release follow-up now
+tracks this exact SHA/run and retains the unresolved performance investigation
+criteria. Leave the GPU free while CI runs. Deployment and announcement remain
+pending; production stays **0.148.21**.
+
+### Marked garage bay — released and verified, 2026-11-18
+
+**0.149.3 is live**, deployed from exact main SHA
+`65acc1b69d0280a83d3d1c0ed7193667dbabffca`. The complete
+[workflow 44411753207](https://github.com/151henry151/Aclone/actions/runs/44411753207)
+passed **19/19 jobs**, including actor warm-up, the unchanged strict parked-fleet
+budget and legacy tractor storage, before deployment and on the post-deploy recheck.
+Main still matched this SHA and the production checkout was clean before upgrade.
+
+The documented game deployment made a consistent SQLite backup at
+`/var/lib/aclone/backups/pre-deploy-20261118-200943.sqlite`, built the exact SHA
+and restarted the service. Its first public check saw a transient 502 during
+startup; the journal then confirmed 0.149.3 listening normally. Independent
+subsequent checks verified active service, exact clean checkout, public health
+`ok: true`, version **0.149.3**, five worlds, and HTTP 200 JavaScript/CSS assets
+`index-CXrr3vvi.js` / `index-5ZCY6oEP.css`. No additional restart was needed.
+The documented website deployment also passed, with matching 0.149.3 page/assets;
+backup: `/var/backups/aclone-website/site-20261118-201031.tar.gz`.
+
+The [announcements-channel feature summary](https://discord.com/channels/1562183434254680175/1565527790785404968/1572781314502041682)
+is published and independently fetched/verified by the deduplicating script,
+including exact text and both images: desktop **1440×900**, phone **390×844**.
+Both real screenshots were visually reviewed before posting. Only the four
+explicit announcement files were copied; the private Puddlewick snapshot was not
+uploaded. Evidence, logs and receipts stay excluded in
+`output/garage-bay/release/`. No player grants or live property edits were made.
+
+The marked bay backlog item is complete. Earlier performance failures remain
+documented with cause unestablished; this release passes the unchanged gate and
+makes no acceleration claim. The temporary garage release follow-up is
+paused after verified completion; the previous recovery follow-up stays paused.
+The backhoe model is the next backlog item and was not started by this monitor.
+Post-release status documentation is retained locally without advancing the
+CI-verified/deployed code SHA.

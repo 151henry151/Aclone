@@ -72,9 +72,9 @@ A hovercraft currently corners like a wheeled tractor. Turning the nose should n
 
 **Tests.** At speed, a sustained turn leaves part of the velocity along the old heading for a noticeable interval, and the path is wider than the same turn with drift off. Coming out of the turn, the velocity settles back along the nose. A tractor given the same stick does not drift. Drift off matches the current pivot.
 
-## In progress — Pull into a marked bay to store a vehicle at Spanner & Sons
+## Verified — Pull into a marked bay to store a vehicle at Spanner & Sons
 
-**Status (2026-11-18):** Implemented and locally verified for 0.149.0 on main; awaiting the complete CI gate and deployment. The existing live release is 0.148.21. See the latest garage-bay record in BACKLOG_PLAN.md.
+**Status (2026-11-18):** Complete and live in **0.149.3**, main `65acc1b69d0280a83d3d1c0ed7193667dbabffca`. All 19 [CI jobs](https://github.com/151henry151/Aclone/actions/runs/44411753207) passed before deployment and on the post-deploy recheck. Production health, version, exact SHA, game/website assets and the [announcement with real desktop/phone screenshots](https://discord.com/channels/1562183434254680175/1565527790785404968/1572781314502041682) are verified. See the final garage-bay release record in BACKLOG_PLAN.md.
 
 Parking outside the garage rewrites the vehicle into a neat spot facing away from the building. Storing it should mean driving into a marked bay, then one button.
 
