@@ -49,7 +49,9 @@ Outside arena/comic knockouts, death starts a new life. Puddlewick preserves cas
 
 ## How do I set a password or reset it by email?
 
-**Pilot & preferences:** set at least 12 characters; changing an existing password needs the current one. With operator-configured email, add an address and verify it. **Forgot your password?** sends a single-use, 30-minute reset only to a verified address. Keep a private exported pilot key; password sign-in/reset can invalidate old keys. Never send credentials to an NPC; they cannot manage accounts. [Host mail setup](HOSTING.md#accounts-and-recovery-email).
+**Pilot & preferences:** set at least 12 characters; changing an existing password needs the current one. With operator-configured email, add an address and verify it. **Forgot your password?** sends a single-use, 30-minute reset only to a verified address. Keep a private exported pilot key; password sign-in/reset can invalidate old keys. Never send credentials to an NPC; they cannot manage accounts.
+
+**Switching alts (0.149.4+):** save each pilot's recovery key, then use **Pilot & preferences → Sign out of this browser**. This only forgets that browser's session; it preserves the saved key and other devices. **Restore pilot** accepts the key or the full downloaded recovery file. Use the original server: keys are not interchangeable across servers. **Sign out of all devices** revokes old keys and now requires a password. If a key was already revoked by global sign-out or password login/reset, use password sign-in or verified-email recovery, then export a fresh key. A revoked key cannot be made valid by pasting it again. [Host mail setup](HOSTING.md#accounts-and-recovery-email).
 
 ## How do I keep healthy, store food and use a home?
 

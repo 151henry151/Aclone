@@ -1,3 +1,4 @@
+import { parsePilotKey } from './pilot-recovery';
 import { garageBayStoreReason } from '../shared/garage-bay';
 import { patchPanelContent } from './panel-content';
 import { toolImportShop } from '../shared/tool-imports';
@@ -756,12 +757,35 @@ async function connect() {
     }, 2500);
   });
 }
+function signOutBrowser() {
+  clearTimeout(reconnectTimer);
+  const previous = ws;
+  ws = undefined;
+  previous?.close();
+  radioConsole.reset();
+  radioRequests.clear();
+  sound.clear();
+  keys.clear();
+  mobile.reset();
+  $('connection').textContent = 'DISCONNECTED';
+  token = '';
+  account = undefined;
+  accountStatus = undefined;
+  world = undefined;
+  me = undefined;
+  stateInbox.clear();
+  for (const key of ['aclone.pilot', 'aclone.world']) localStorage.removeItem(key);
+  sessionStorage.removeItem('aclone.arrival');
+  closePanel();
+  panelMemory.clear();
+  login();
+}
 function login() {
   mobile.close();
   scene.setSpace();
   $('world-hud').hidden = true;
   $('overlay').innerHTML =
-    `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p>${location.hostname === 'nogits.com' || location.hostname === 'www.nogits.com' ? '<p><a href="https://hromp.com/continue-aclone/">Already play on hromp.com? Bring that pilot here.</a></p>' : ''}<form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
+    `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p>${location.hostname === 'nogits.com' || location.hostname === 'www.nogits.com' ? '<p><a href="https://hromp.com/continue-aclone/">Already play on hromp.com? Bring that pilot here.</a></p>' : ''}<form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><p class="note">Paste the key or the complete downloaded recovery file. Use the server where you created this pilot. Password sign-in and signing out of all devices invalidate older keys.</p><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
 }
 let lastVisitedWorld = '';
 function recentlyVisited(id: string) {
@@ -1577,12 +1601,16 @@ function openPanel(name: string) {
   parishMap = undefined;
   if (name === 'options' && token) {
     accountStatus = undefined;
+    const securityToken = token;
     void api('/api/auth/status')
       .then((r) => {
+        if (token !== securityToken) return;
         accountStatus = r;
         if (panel === 'options') renderPanel();
       })
-      .catch((e) => toast(e.message, true));
+      .catch((e) => {
+        if (token === securityToken) toast(e.message, true);
+      });
   }
   scene.paused = true;
   panel = name;
@@ -2134,7 +2162,7 @@ function renderPanel() {
                 .join(' · ') ?? ''
             }</p>${button('Operating leases: ' + (world.contractRules?.leases ? 'on' : 'off'), 'leasesToggle')}${button('Property auctions: ' + (world.contractRules?.auctions ? 'on' : 'off'), 'auctionsToggle')}`
           : ''
-      }${button('Sign out of all devices', 'confirmLogout')}`,
+      }<p>Signing out of this browser keeps saved keys and other devices working. Signing out of all devices revokes every saved key; you will need your password.</p>${button('Sign out of this browser', 'confirmLocalLogout')}${button('Sign out of all devices', 'confirmLogout')}`,
     );
     return;
   }
@@ -2168,7 +2196,7 @@ function renderPanel() {
         )
         .join(
           '',
-        )}<p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Drunk visual effects: ' + scene.drunkVision.label, 'drunkEffects')}<p class="note">Automatic respects your device’s reduced-motion setting. Reduced removes sway and double vision; Off disables the visual effect. Steering impairment still applies.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account && !accountStatus ? '<p>Loading account security…</p>' : account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}`,
+        )}<p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Drunk visual effects: ' + scene.drunkVision.label, 'drunkEffects')}<p class="note">Automatic respects your device’s reduced-motion setting. Reduced removes sway and double vision; Off disables the visual effect. Steering impairment still applies.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account && !accountStatus ? '<p>Loading account security…</p>' : account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}<p>To switch pilots, save your key and sign out of this browser. Other devices and saved keys keep working.</p>${button('Sign out of this browser', 'localLogout')}<p>Sign out of all devices revokes all saved keys. Set a password first; use it to sign in again.</p>${button('Sign out of all devices', 'logout', accountStatus?.password ? '' : 'disabled')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}`,
     );
     return;
   }
@@ -3664,17 +3692,15 @@ app.addEventListener('click', async (e) => {
       // In the galaxy there is no world whose offline rules need showing.
       case 'confirmLogout':
         await api('/api/auth/logout', { method: 'POST', body: '{}' });
-        token = '';
-        account = undefined;
-        accountStatus = undefined;
-        world = undefined;
-        me = undefined;
-        localStorage.removeItem('aclone.pilot');
-        localStorage.removeItem('aclone.world');
-        ws?.close();
-        closePanel();
-        panelMemory.clear();
-        login();
+        signOutBrowser();
+        break;
+      case 'localLogout':
+        if (world && me) {
+          openPanel('worldRules');
+          break;
+        }
+      case 'confirmLocalLogout':
+        signOutBrowser();
         break;
       case 'exportKey':
         download(
@@ -3791,8 +3817,9 @@ app.addEventListener('submit', async (e) => {
           : 'Email verified. You can now use email recovery.',
       );
     } else if ((form.getAttribute('id') ?? '') === 'restore-form') {
-      token = String(data.key).trim();
-      const r = await api('/api/session');
+      const candidate = parsePilotKey(String(data.key));
+      const r = await api('/api/session', { headers: { authorization: 'Bearer ' + candidate } });
+      token = candidate;
       account = r.account;
       localStorage.setItem('aclone.pilot', token);
       localStorage.removeItem('aclone.world');

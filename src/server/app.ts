@@ -263,7 +263,12 @@ export async function createApp(options: AppOptions) {
   const auth = (req: IncomingMessage) => {
     const token = req.headers.authorization?.replace(/^Bearer /, '') ?? '';
     const a = universe.authenticate(token);
-    if (!a) throw Error('Sign in with your pilot key');
+    if (!a)
+      throw Error(
+        token
+          ? 'This pilot key is invalid or has been revoked. Check that this is the server where you created your pilot. If you signed in with a password or signed out of all devices, use your password and download a new key.'
+          : 'Sign in with your pilot key',
+      );
     return a;
   };
   const send = (p: Peer, data: unknown, handshake = false) => {
@@ -603,6 +608,10 @@ export async function createApp(options: AppOptions) {
         }
         if (path === '/api/auth/logout') {
           const a = auth(req);
+          if (!accounts.status(a.id).password)
+            throw Error(
+              'Add a password before signing out of all devices. To switch pilots, sign out of this browser.',
+            );
           accounts.rotate(a.id);
           revoke(a.id);
           return json(res, 200, { ok: true });

@@ -59,6 +59,12 @@ password reset and **Sign out of all devices** revoke previously saved keys,
 including retained device keys. Clearing browser storage also removes its saved
 key; use the surviving account's normal sign-in or recovery then.
 
+The **Sign out of this browser** option is intended for switching alts:
+export the current pilot's key first, sign out locally, then restore the other
+pilot's key or complete recovery file. Local sign-out does not revoke keys or
+sign out other devices, and the normal offline survival rules still apply.
+Global sign-out requires a password because it invalidates every saved key.
+
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
 ## Biplane flight

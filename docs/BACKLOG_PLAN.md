@@ -13674,3 +13674,33 @@ paused after verified completion; the previous recovery follow-up stays paused.
 The backhoe model is the next backlog item and was not started by this monitor.
 Post-release status documentation is retained locally without advancing the
 CI-verified/deployed code SHA.
+
+### Pilot restore — 0.149.4, 2026-11-23
+
+The supplied Discord screenshot reports failed pilot-key restores when switching
+alts and an unplayable rainy night. Henry clarified that the latter means low frame
+rate/stuttering, not visibility; whether global sign-out preceded the key failure
+is unknown. Henry authorized commit, push and deployment on 2026-11-23.
+Keep the account and rendering changes in separate logical patch releases.
+The earlier garage-release records above remain intact.
+
+Confirmed account defect: `/api/auth/logout` revoked the only credential of a
+pilot without a password. The new HTTP regression returned 200 on old code and
+now refuses that lockout while preserving password-backed revocation. A valid raw
+key already restored successfully in the browser; the exact reporter's key was
+not inspected. New browser-only sign-out closes the connection and clears input,
+audio/radio and current local session state without revoking keys. The existing
+world offline-survival warning still applies. Restore accepts a key or the full
+exported recovery document (including password-input newline stripping), validates
+it before saving it, and leaves legacy credential validity to the server. Invalid
+or revoked credentials now explain server identity and password recovery. A stale
+account-security response cannot overwrite the newly selected pilot's status.
+Previously revoked keys are not resurrected: existing lockouts still require a
+valid password, verified-email recovery, or operator-assisted ownership recovery.
+
+Account verification: recovery parser and account HTTP/device-key unit checks
+pass. Desktop/phone alt switching, local parish sign-out with saved progress,
+retained device keys and the built-client password/global-sign-out browser journey
+pass. TypeScript/build and changed-file formatting pass. Evidence is retained in
+`output/bug-reports-2026-11-23/`; do not stage it. Commit and push are authorized;
+complete CI and verified deployment remain required. Production is still 0.149.3.

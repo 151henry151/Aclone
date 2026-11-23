@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.4] - 2026-11-23
+
+### Fixed
+
+- Switch pilots with browser-only sign-out without invalidating saved keys or other devices. Restoring a pilot accepts the complete downloaded recovery file, validates the key before saving it, and explains invalid or revoked keys. Global sign-out requires a password so key-only pilots cannot discard their only recovery credential.
+
 ## [0.149.3] - 2026-11-18
 
 ### Changed

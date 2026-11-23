@@ -24,6 +24,17 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.4 — Safe pilot recovery and alt switching
+
+Deploy client and server together, then refresh browsers. No save migration or
+account/key rotation occurs during deployment. Browser-only sign-out preserves
+saved keys and other devices; global sign-out now requires a password. Restore
+accepts raw keys or complete exported recovery files and validates before saving.
+Already-revoked keys still require the pilot's normal recovery method.
+Verify desktop/phone alt switching, progress retained after local sign-out,
+retained device keys and password-backed global revocation. Require complete CI
+on the exact pushed SHA before deploying; production remains 0.149.3 meanwhile.
+
 ## Upgrade 0.149.3 — Retain detailed fleet timing evidence
 
 Released with marked garage bays from main `65acc1b69d0280a83d3d1c0ed7193667dbabffca` on 2026-11-18 (America/New_York; 2026-11-19 UTC).

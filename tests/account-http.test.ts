@@ -95,3 +95,35 @@ test('HTTP email verification and password reset revoke an active game connectio
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('global sign-out cannot discard the only recovery credential; password-backed revocation still works', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-logout-'));
+  const app = await createApp({ dataDir: dir, port: 0 });
+  try {
+    const base = 'http://127.0.0.1:' + (await app.listen());
+    const { account, token } = app.universe.register('Key only pilot');
+    const request = (path: string, body = {}) =>
+      fetch(base + path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token },
+        body: JSON.stringify(body),
+      });
+    const denied = await request('/api/auth/logout');
+    assert.equal(denied.status, 400);
+    assert.match(((await denied.json()) as any).error, /password/i);
+    assert.equal(app.universe.authenticate(token)?.id, account.id);
+    assert.equal(
+      (await request('/api/auth/configure', { password: 'a long recovery password' })).status,
+      200,
+    );
+    assert.equal((await request('/api/auth/logout')).status, 200);
+    assert.equal(app.universe.authenticate(token), undefined);
+    const invalid = await fetch(base + '/api/session', {
+      headers: { authorization: 'Bearer ' + token },
+    });
+    assert.match(((await invalid.json()) as any).error, /invalid|revoked/i);
+  } finally {
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

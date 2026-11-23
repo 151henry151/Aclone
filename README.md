@@ -2,6 +2,9 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Checkpoint **0.149.4** adds safer pilot recovery and browser-only alt switching.
+Complete CI and deployment are pending; production remains **0.149.3**.
+
 Release **0.149.3** includes **marked tractor garage storage bays**: stop the whole rig
 inside the yellow dashes and choose **Store vehicle** directly on desktop or phone.
 World builders control spare room and the menu-only opt-out. Relevant local tests,
@@ -560,6 +563,13 @@ Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, i
 4. Stock inventory or your selected home/room before logging off. Puddlewick consumes those supplies automatically anywhere; go inside for 20% slower needs. Other worlds choose their own rules. **Hunger, thirst and starvation continue offline.**
 
 Beer and wine can impair steering and produce scene sway, distortion and double vision; visual comfort controls are in **Pilot & preferences**. Buildings use distinct masonry, timber and metal finishes suited to their trade. Models share detail textures for siding, shop windows, machinery and animal coats to reduce geometry while retaining animated parts and night lighting. On entering a world, a short loading screen prepares scenery and lighting before driving controls become available. Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
+
+Since 0.149.4, **Pilot & preferences → Sign out of this browser** lets you
+switch alts while keeping saved keys and other devices valid. Save each pilot's
+recovery key first. **Restore pilot** accepts either the key alone or the complete
+downloaded file, on the server where the pilot was created. **Sign out of all
+devices** requires a password and revokes old keys; password sign-in/reset also
+invalidates old keys. See the [release notes](CHANGELOG.md#01494---2026-11-23).
 
 ## Public website
 
