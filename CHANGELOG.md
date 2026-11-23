@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.5] - 2026-11-23
+
+### Fixed
+
+- Reduce rain-umbrella rendering from eight draws to four per walker by combining matching finishes and animating the combined parts. Preserve the canopy artwork, ribs, caps, handle, folding, hand grip and first-person rain shelter; cull offscreen parts using fold-aware bounds and avoid redundant whole-body matrix updates while carrying an umbrella.
+
 ## [0.149.4] - 2026-11-23
 
 ### Fixed

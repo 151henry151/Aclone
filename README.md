@@ -2,7 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.4** adds safer pilot recovery and browser-only alt switching.
+Checkpoint **0.149.5** includes safer pilot recovery and browser-only alt switching,
+and reduces each rain umbrella from eight draw calls to four while preserving its
+artwork, folding and first-person shelter. Offscreen umbrellas are culled.
+Intermittent browser-frame stalls remain under investigation.
 Complete CI and deployment are pending; production remains **0.149.3**.
 
 Release **0.149.3** includes **marked tractor garage storage bays**: stop the whole rig

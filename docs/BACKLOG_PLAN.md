@@ -13704,3 +13704,58 @@ retained device keys and the built-client password/global-sign-out browser journ
 pass. TypeScript/build and changed-file formatting pass. Evidence is retained in
 `output/bug-reports-2026-11-23/`; do not stage it. Commit and push are authorized;
 complete CI and verified deployment remain required. Production is still 0.149.3.
+
+### Night-rain rendering — 0.149.5, 2026-11-23
+
+Rain diagnosis and fix:
+
+- The initial forced-weather benchmark changed `creator.weather`, which also
+  rebuilds scenery. Its nine-second transition and late shader counts are not
+  evidence of the natural-weather report. The natural transition regression
+  passes with zero late shaders both before and after these changes.
+- Natural rain opens eleven umbrellas in the 32-resident fixture, adding 88 draws.
+  In the controlled same-process isolation, rain with umbrellas was 19.4 ms p95,
+  with only umbrella drawing suppressed 17.3 ms, and with umbrellas restored
+  19.1 ms. This identifies avoidable rendering work without disabling production
+  rain or changing light, geometry, quality or frame-pacing budgets.
+- Matching white/metal components are now combined with translation-only morphs;
+  ribs and seams share a coloured line buffer. A real WebGL regression fails on
+  the original eight draws and passes at four. A second red/green check covers
+  zero draws for umbrellas wholly behind the camera, using fold-aware bounds.
+  The first-person canopy, folding, artwork, caps, handle, hand attachment and
+  rain shelter remain. All material-group vertex sets match the original at six
+  opening/closing poses within 0.000001 metres. Whole-body matrix updates that
+  duplicated the hand's ancestor update were removed.
+- Final unchanged natural-weather workload, adaptive graphics, 32 residents,
+  Quadro M1200: desktop clear day/night/rain-night p95 **17.2/19.0/20.8 ms**;
+  rain draws **1051 versus 1095** originally. Phone-sized 390×844 viewport p95
+  **17.8/18.9/18.1 ms**, with no >100 ms frames. These are viewport tests on the
+  laptop GPU, not measurements of the reporter's physical phone. Both runs have
+  no WebGL loss, page errors or late weather shaders. Do not claim a universal
+  frame-rate improvement from unlike profiled/unprofiled samples.
+- An isolated 421 ms desktop gap remains in the retained sample. A further
+  diagnostic captured an 8.5-second gap even in clear weather, _between_ browser
+  animation callbacks; game callbacks were at most 26.1 ms. The rain diagnostic's
+  render window was incomplete and was rejected, not counted as a passing
+  benchmark. The scheduling gap's cause remains unresolved; this change does not
+  claim to cure every device/browser stall. An earlier suppression run with zero
+  render CPU and an incomplete window is also excluded. Reporter-device
+  verification remains useful after an authorized release.
+
+Evidence: `output/bug-reports-2026-11-23/`, including red/green logs, shader JSON,
+raw timing/CPU profiles, real screenshots, material-group geometry comparisons,
+final desktop/phone samples and rejected diagnostics. Do not stage this directory.
+Unit verification covers 31 distinct account, recovery, umbrella, lighting,
+alpine/sky-weather and renderer-preparation checks. Browser checks cover desktop
+and phone alt switching, local parish sign-out and saved progress, retained device
+keys, both startup-warmup journeys, alpine rain/snow, natural rain/dawn shaders,
+and umbrella draws/first-person visibility. TypeScript and production build pass;
+repository-wide formatting still reports the three unchanged `docs/NPC_STATUS*`
+files, which were preserved. Changed-file formatting is checked separately.
+The final built-client password/global-sign-out journey also passed after the final
+build (`auth-built.log`): ten distinct browser journeys passed in total. The affected
+reporter device, OS, browser, graphics mode and dynamic-shadow setting have been
+requested to investigate the remaining stutter without assuming the laptop result
+represents that device. Henry authorized separate logical commits, push and deployment on 2026-11-23.
+The release candidate is 0.149.5; deploy only after complete exact-SHA CI passes.
+Production remains 0.149.3 until verified deployment. No new announcement is authorized.

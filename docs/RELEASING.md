@@ -24,6 +24,17 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.5 — Reduce rain umbrella rendering work
+
+Refresh browsers after the normal deployment to load combined umbrella geometry.
+Weather, time of day, graphics quality and performance budgets are unchanged.
+The real WebGL regression retains folding, first-person canopy visibility and
+all details at four draws; fully offscreen umbrellas require zero draws. Natural
+rain/night/dawn transitions and startup retain zero late shader compilations.
+This reduces demonstrated rendering work; it does not claim to resolve every
+intermittent browser scheduling stall. No save migration is required. Deploy the
+exact SHA only after complete CI, then verify game/website version and assets.
+
 ## Upgrade 0.149.4 — Safe pilot recovery and alt switching
 
 Deploy client and server together, then refresh browsers. No save migration or

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Player } from '../shared/types';
 import { umbrellaPrint } from './umbrella-print';
 
@@ -86,12 +87,11 @@ export function createRainUmbrella(human: T.Group) {
   group.add(fabric);
   const white = new T.MeshStandardMaterial({ color: '#f7f7f4', roughness: 0.35 });
   const metal = new T.MeshStandardMaterial({ color: '#626b73', metalness: 0.8, roughness: 0.28 });
-  const shaft = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 1.06, 8), metal);
-  shaft.position.y = 0.47;
-  group.add(shaft);
-  const tip = new T.Mesh(new T.CapsuleGeometry(0.018, 0.095, 3, 8), white);
-  tip.position.y = 1.035;
-  group.add(tip);
+  // Batch pieces with the same finish. Translation-only morphs keep the runner
+  // and eight rib caps animated without separate draws or per-frame uploads.
+  const shaft = new T.CylinderGeometry(0.009, 0.009, 1.06, 8).translate(0, 0.47, 0);
+  const runner = new T.CylinderGeometry(0.018, 0.018, 0.05, 8);
+  const tip = new T.CapsuleGeometry(0.018, 0.095, 3, 8).translate(0, 1.035, 0);
   const hook = new T.CatmullRomCurve3([
     new T.Vector3(0, 0.07, 0),
     new T.Vector3(0, -0.1, 0),
@@ -100,27 +100,54 @@ export function createRainUmbrella(human: T.Group) {
     new T.Vector3(0.155, -0.14, 0),
     new T.Vector3(0.15, -0.055, 0),
   ]);
-  const handle = new T.Mesh(new T.TubeGeometry(hook, 20, 0.018, 8, false), white);
-  group.add(handle);
-  const runner = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.05, 8), metal);
-  group.add(runner);
+  const handle = new T.TubeGeometry(hook, 20, 0.018, 8, false);
+  function foldingPieces(
+    open: T.BufferGeometry[],
+    closed: T.BufferGeometry[],
+    material: T.Material,
+  ) {
+    const geometry = mergeGeometries(open)!,
+      folded = mergeGeometries(closed)!;
+    geometry.morphAttributes.position = [folded.attributes.position];
+    geometry.computeBoundingSphere();
+    const mesh = new T.Mesh(geometry, material);
+    group.add(mesh);
+    for (const part of new Set([...open, ...closed, folded])) part.dispose();
+    return mesh;
+  }
+  const metalwork = foldingPieces(
+    [shaft, runner.clone().translate(0, 0.7, 0)],
+    [shaft, runner.translate(0, 0.12, 0)],
+    metal,
+  );
+  const openWhite: T.BufferGeometry[] = [tip, handle],
+    closedWhite: T.BufferGeometry[] = [tip, handle];
+  for (let rib = 0; rib < ribs; rib++) {
+    const angle = (rib / ribs) * Math.PI * 2;
+    const cap = new T.SphereGeometry(0.014, 6, 4);
+    const open = surface(1, angle, true),
+      closed = surface(1, angle, false);
+    openWhite.push(cap.clone().translate(open.x, open.y, open.z));
+    closedWhite.push(cap.translate(closed.x, closed.y, closed.z));
+  }
+  const whitework = foldingPieces(openWhite, closedWhite, white);
   const ribsGeometry = new T.BufferGeometry();
-  const ribPositions = new Float32Array(ribs * rings * 2 * 3);
-  ribsGeometry.setAttribute('position', new T.BufferAttribute(ribPositions, 3));
-  const skeleton = new T.LineSegments(ribsGeometry, new T.LineBasicMaterial({ color: '#b4bac1' }));
-  skeleton.frustumCulled = false;
+  const segmentFloats = ribs * rings * 2 * 3;
+  const positions = new Float32Array(segmentFloats * 2);
+  const ribPositions = positions.subarray(0, segmentFloats),
+    seamPositions = positions.subarray(segmentFloats);
+  ribsGeometry.setAttribute('position', new T.BufferAttribute(positions, 3));
+  const colours = new Float32Array(positions.length);
+  const ribColour = new T.Color('#b4bac1');
+  for (let i = 0; i < segmentFloats; i += 3) ribColour.toArray(colours, i);
+  colours.fill(1, segmentFloats);
+  ribsGeometry.setAttribute('color', new T.BufferAttribute(colours, 3));
+  const skeleton = new T.LineSegments(
+    ribsGeometry,
+    new T.LineBasicMaterial({ vertexColors: true }),
+  );
   group.add(skeleton);
-  const seamGeometry = new T.BufferGeometry();
-  const seamPositions = new Float32Array(ribPositions.length);
-  seamGeometry.setAttribute('position', new T.BufferAttribute(seamPositions, 3));
-  const seams = new T.LineSegments(seamGeometry, new T.LineBasicMaterial({ color: '#ffffff' }));
-  seams.frustumCulled = false;
-  group.add(seams);
-  const tips = new T.InstancedMesh(new T.SphereGeometry(0.014, 6, 4), white, ribs);
-  tips.frustumCulled = false;
-  group.add(tips);
-  const matrix = new T.Matrix4(),
-    point = new T.Vector3(),
+  const point = new T.Vector3(),
     roof = new T.Vector3();
   const heldUpper = new T.Quaternion().setFromEuler(new T.Euler(-0.32, 0, 0.1));
   const liftingUpper = new T.Quaternion().setFromEuler(new T.Euler(-1.05, 0, 0.1));
@@ -152,14 +179,14 @@ export function createRainUmbrella(human: T.Group) {
       upperPose.copy(liftingUpper).slerp(heldUpper, T.MathUtils.smoothstep(open, 0.55, 1));
       upper.quaternion.slerp(upperPose, hold);
       lower.quaternion.slerp(heldLower, hold);
-      human.updateWorldMatrix(true, true);
       hand.getWorldPosition(point);
       if (group.parent) group.parent.worldToLocal(point);
       group.position.copy(point);
       if (open === previous) return;
       previous = open;
       fabric.morphTargetInfluences![0] = 1 - open;
-      runner.position.y = 0.12 + open * 0.58;
+      metalwork.morphTargetInfluences![0] = 1 - open;
+      whitework.morphTargetInfluences![0] = 1 - open;
       let index = 0;
       for (let rib = 0; rib < ribs; rib++) {
         const angle = (rib / ribs) * Math.PI * 2;
@@ -173,12 +200,9 @@ export function createRainUmbrella(human: T.Group) {
             seamPositions.set([v.x, v.y + 0.002, v.z], index);
             index += 3;
           }
-        const v = surface(1, angle, false).lerp(surface(1, angle, true), open);
-        tips.setMatrixAt(rib, matrix.makeTranslation(v.x, v.y, v.z));
       }
       ribsGeometry.attributes.position.needsUpdate = true;
-      seamGeometry.attributes.position.needsUpdate = true;
-      tips.instanceMatrix.needsUpdate = true;
+      ribsGeometry.computeBoundingSphere();
     },
   };
 }
