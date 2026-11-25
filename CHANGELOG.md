@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.9] - 2026-11-25
+
+### Changed
+
+- Retain screenshots, raw frame timings and host context for all four closed/open interior benchmark cases before assertions, so CI failures preserve their diagnostic evidence. Rendering, sampling, visibility checks and performance budgets are unchanged.
+
 ## [0.149.8] - 2026-11-25
 
 ### Fixed

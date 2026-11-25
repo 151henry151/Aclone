@@ -24,6 +24,16 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.9 — Retain interior benchmark evidence
+
+Test-only evidence retention. Each closed/open, low/normal case attaches the
+existing run log, summary, raw frame/CPU timings, boundary host context and real
+scene image before assertions (twenty files). No profiler workload, measurement
+window, visibility check, deadline or performance budget changes. Validate the
+files and sample counts, inspect screenshots, and retain failed-run comparisons.
+The isolated normal pair narrowly passes; this is not evidence that the prior
+CI failure is fixed. Complete exact-SHA CI remains required for deployment.
+
 ## Upgrade 0.149.8 — Synchronize recreated-survey checks
 
 Test-only change. Wait for the replacement survey identity in the owner's visible

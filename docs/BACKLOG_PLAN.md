@@ -14265,3 +14265,46 @@ All eight earthworks contract unit checks, TypeScript, production build and
 changed-file formatting pass. Interior evidence retention is separate
 work; interior/fleet performance causality remains unresolved. No deployment or
 announcement has occurred; production remains 0.149.5.
+
+### Interior evidence retention and isolated comparison — 0.149.9 (2026-11-25)
+
+The unchanged four-case interior journey now retains each existing log, summary,
+raw frame/CPU timing file, boundary host JSON and scene image **before assertions**.
+No production rendering, scene, sampling, quality, deadline or budget changes.
+This closes the missing-evidence gap in root-2, separately from the confirmed
+survey fixture fix. The evidence is in
+`output/performance-2026-11-24/interior-retention/`, including `summary.json` and
+all twenty copied profiler files and Playwright attachments. Raw sample counts,
+eight CPU records per boundary and matching main-thread identities were checked;
+both normal scene screenshots were inspected. All six furnished interiors open
+in open mode and none in closed mode. Zero >100 ms frames and no browser errors.
+
+One isolated unchanged benchmark validates this retention: low closed/open p95
+**37.5/37.799999952316284 ms**; normal
+**19.299999952316284/21.200000047683716 ms** against the exact normal cap
+**21.229999947547913 ms**. The narrow pass does not explain or resolve the CI
+failure. Normal closed/open render CPU p95 is **13.799999952316284/17.09999990463257
+ms**, mean **10.7825842675/11.8021689471 ms** and draws **1005/1049**. Renderer
+boundary runtime is **12133.362894/12697.708311 ms**, runqueue wait
+**38.582964/152.848863 ms**; GPU-process main-thread runtime
+**4773.612529/5113.384773 ms**, CPU runqueue wait **44.914237/150.065037 ms**.
+Normal closed/open package thermal increments are **2 events/36 ms** and
+**210 events/3796 ms** (mostly physical core0); both low cases record zero.
+Collections take **2.00–5.13 ms** outside sampling. These aggregated boundary
+associations do not establish causality or per-frame residency/throughput. Do
+not sum duplicated package records or equate GPU-process CPU wait with GPU time.
+
+The prior CI interior artifact lacks this context, so a causal comparison to its
+failed sample remains unavailable. No speculative renderer, affinity, power or
+fan change is justified. This checkpoint's full workflow is warranted by the
+confirmed survey regression fix and newly retained interior evidence, not a
+retry of the failed SHA to obtain a greener sample. If relative failures recur,
+analyze retained failed/passing distributions and host context before choosing
+a controlled experiment or fix. Both earlier failures remain recorded; do not
+claim performance recurrence fixed. Production remains 0.149.5.
+
+Final 0.149.9 TypeScript/production build and changed-file formatting pass;
+`interior-retention/build-final.log` records exit 0. All owned local browser
+checks are finished. The GPU runner was restarted and verified online/idle;
+no host-policy settings changed. The separate commits are ready for the required
+new full main workflow, with all performance caveats above retained.

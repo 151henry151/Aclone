@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const run = promisify(execFile);
 
-test('all-open town interiors stay within the matched island frame-time budget', async () => {
+test('all-open town interiors stay within the matched island frame-time budget', async ({}, testInfo) => {
   test.setTimeout(900000);
   // Run alone: other GPU/browser jobs invalidate a matched comparison.
   for (const quality of ['low', 'normal']) {
@@ -31,6 +31,18 @@ test('all-open town interiors stay within the matched island frame-time budget',
         },
       );
       writeFileSync(out + '/run.log', stdout + stderr);
+      // Copy ignored profiler outputs into CI evidence before any assertion.
+      for (const [file, contentType] of [
+        ['run.log', 'text/plain'],
+        ['results.json', 'application/json'],
+        ['expanded-town-frames.json', 'application/json'],
+        ['expanded-town-host.json', 'application/json'],
+        [`town-${mode}.png`, 'image/png'],
+      ])
+        await testInfo.attach(`${quality}-${mode}-${file}`, {
+          path: `${out}/${file}`,
+          contentType,
+        });
       const result = JSON.parse(readFileSync(out + '/results.json', 'utf8'));
       expect(result.errors).toEqual([]);
       expect(result.results).toHaveLength(1);

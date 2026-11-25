@@ -98,3 +98,9 @@ thread counters. Counter deltas also include the original garbage collection
 and boundary gaps; they are not exactly the 15-second sample. These are boundary
 observations, not per-frame core/frequency attribution. Package thermal counters may repeat across CPUs; never sum them.
 The runner sandbox remains unchanged; inaccessible evidence stays unavailable.
+
+The closed/open building-interior benchmark also attaches twenty existing profiler
+outputs before assertions: logs, summaries, raw samples, boundary host snapshots
+and real scene screenshots for both quality settings. The same boundary-counter
+limitations apply; neither additional retention nor an isolated passing sample
+establishes a cause or a fix for intermittent relative-budget failures.
