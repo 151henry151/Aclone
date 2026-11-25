@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.6] - 2026-11-24
+
+### Fixed
+
+- Prevent a slower GPU from accumulating seconds of outdated views by limiting outstanding gameplay frames to two. Keep input and live updates responsive, resume with the latest position, and preserve scenery detail, graphics settings and startup shader preparation.
+
 ## [0.149.5] - 2026-11-23
 
 ### Fixed

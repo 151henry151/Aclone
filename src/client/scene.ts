@@ -84,6 +84,7 @@ import { fadeSceneryIntoFog } from './scenery-fog';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
+import { GpuFrameQueue } from './gpu-frame-queue';
 import {
   label,
   pilotLabel,
@@ -199,6 +200,7 @@ export class GameScene {
   readonly drunkVision = new DrunkVision();
   private audioFacing = new T.Vector3();
   readonly renderer: T.WebGLRenderer;
+  private readonly gpuFrames?: GpuFrameQueue;
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 80000);
   readonly constructionGhost = new ConstructionGhost(this.scene, this.camera);
@@ -339,6 +341,8 @@ export class GameScene {
     });
     const gl = this.renderer.getContext(),
       debug = gl.getExtension('WEBGL_debug_renderer_info');
+    if ('fenceSync' in gl) this.gpuFrames = new GpuFrameQueue(gl);
+    this.renderer.domElement.addEventListener('webglcontextlost', () => this.gpuFrames?.reset());
     this.software =
       !!debug &&
       /swiftshader|llvmpipe|softpipe|software/i.test(
@@ -1630,6 +1634,7 @@ export class GameScene {
       ? now
       : pacedRenderTime(now, this.renderTime, interval, displayTime);
     if (renderTime === undefined) return;
+    if (!preparing && this.gpuFrames && !this.gpuFrames.canSubmit()) return;
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
     this.renderTime = renderTime;
     if (
@@ -2607,6 +2612,7 @@ export class GameScene {
         : 0,
       dt,
     );
+    if (!preparing) this.gpuFrames?.submitted();
 
     this.renderer.domElement.dataset.graphicsQuality = this.qualityLabel;
     this.renderer.domElement.dataset.pixelRatio = String(this.renderer.getPixelRatio());

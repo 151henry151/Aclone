@@ -13803,3 +13803,87 @@ were made and no unrelated backlog work was started. The temporary pilot/rain
 release follow-up is disabled after verification; both older completed follow-ups
 remain paused. Post-release README/release/backlog records stay local so the
 CI-verified and deployed code SHA remains the head of main.
+
+### Bounded GPU frame submission — 0.149.6, 2026-11-24
+
+Henry requested further performance work after the verified 0.149.5 release.
+Henry then explicitly authorized commit, push and deployment of this performance
+fix on 2026-11-24. The candidate is 0.149.6; production remains 0.149.5 until
+complete exact-SHA CI and deployment verification pass. Prior release records
+are committed separately; excluded NPC status files remain untouched.
+
+The remaining multi-second stalls were reproduced with the unchanged expanded
+world, 32 residents, natural weather and normal/adaptive graphics on the laptop's
+Quadro M1200. CPU profiling located the gaps between animation callbacks rather
+than in one long game callback. Browser traces then located long GPU-process
+command flushes and shared-image retirement. GPU timer queries established that
+roughly 25 ms of GPU work was being submitted near a 60 Hz callback rate, building
+up a queue. This is evidence of submission outrunning completion on this setup,
+not evidence that every browser or the unknown reporter device has the same cause.
+
+The new `GpuFrameQueue` allows at most two outstanding gameplay frames, checks
+completion with zero-timeout fences, and flushes submitted work so completion can
+advance while rendering is held. It yields to the browser instead of waiting on
+the main thread. World snapshots and input handling continue; resumed rendering
+uses current state. Forced preparation frames keep their existing explicit GPU
+completion waits. Completed syncs are deleted, context loss clears the queue,
+and invalidated syncs cannot leave rendering permanently held. Weather, geometry,
+lighting, resolution, quality settings and 30/60 FPS caps are unchanged.
+
+Deterministic regression: holding completion for thirty real animation callbacks
+made old code submit fifteen rendered frames; the fix submits at most two. A new
+server position still reaches the client while held, then the rendered tractor
+converges to that latest position after release. JSON and a real screenshot are
+attached before assertions. Unit checks cover bounded work, zero-timeout polling,
+fast-GPU progress and sync cleanup/recovery.
+
+Same-instrumentation clear-night/rain-night comparisons requested 20-second
+windows. The old rainy window extended to 24.75 seconds during the stall; the
+other windows were 20.01–20.13 seconds. These compare stalls and completion
+latency, not equal-duration throughput:
+
+- Old code: largest rendered-frame gaps **4987 / 9717 ms**, with **3 / 1** gaps
+  above 100 ms. GPU completion observation latency reached **9687 / 16262.8 ms**.
+- Bounded submission: largest gaps **41.2 / 62 ms**, **zero** above 100 ms;
+  completion observations reached **78.1 / 96.9 ms**. Frame p95 was
+  **36.5 / 37.4 ms**, versus the old uneven **21.4 / 18.6 ms** submissions.
+  This improves pacing and avoids stale queued work; it does not accelerate the
+  GPU or claim a higher frame rate from the lower old submission percentiles.
+- Draws remain **1007 / 1051**, triangles **2869285 / 2894445**, pixel ratio **1.25**,
+  shader count **548**. No disjoint timer indication, WebGL loss or page errors.
+  Completion observation latency includes polling cadence; it is not a physical
+  input-to-screen measurement. The matching rainy-night screenshot was inspected.
+
+Twenty-eight relevant unit checks, TypeScript and production build pass. Eight
+GPU browser journeys pass: queue/live updates, both ordinary/long-gap actor
+warmups, both startup/missing-texture/quality-switch flows, intoxication effects,
+natural rain/night/dawn shaders and the unchanged four-case fleet benchmark.
+Fleet low active/parked p95 is **37.700000048 / 36.799999952 ms**; normal is
+**18.5 / 20.299999952 ms**, under the unchanged **20.35 ms** relative cap. All
+21 parked vehicles are drawn, no >100 ms frames, errors or relaxed assertions.
+The earlier fleet variance is not claimed explained by this queue diagnosis.
+
+Evidence is retained under `output/performance-2026-11-24/`, including red/green
+browser logs, original CPU profiles, GPU traces, raw frame/query timings,
+comparison JSON and screenshots. The broad initial trace's summary includes trace
+download time and is diagnostic only; its timing summary is not an acceptance
+result. The command-level trace is also diagnostic because tracing adds overhead.
+The original incomplete rain sampling window remains rejected. Do not stage any
+of this output or claim physical-phone performance from a laptop viewport.
+
+Final checks: the queue regression also passes with software WebGL. Its first
+software run observed zero owned-fence deletions immediately after a previously
+untracked fence freed a slot; this was a test-observation race, not a relaxed
+queue criterion. The fixture now waits for both instrumented slots to fill and
+for actual deletion after release. The updated test passes on both renderers.
+
+Final ordinary rendering samples (no CPU profiler, browser trace or GPU timer
+queries), two natural-weather cases each at the same normal/adaptive settings:
+desktop clear-night/rain-night p95 **37.2 / 37.5 ms**, maxima **39.4 / 56.1 ms**;
+390×844 laptop viewport p95 **17.6 / 17.5 ms**, maxima **23.5 / 23.9 ms**.
+All four have zero >100 ms gaps, no page errors or lost contexts, pixel ratio
+1.25 and shader count 548. Desktop draws/triangles match the instrumented runs.
+The phone-sized cases render 821/860 draws and 2359950/2382726 triangles. These
+are isolated laptop samples, not a guarantee for the reporter's unknown device.
+Raw timing, screenshots and logs are in `final-desktop/` and `final-phone/` under
+the evidence directory. No test deadlines or performance budgets changed.

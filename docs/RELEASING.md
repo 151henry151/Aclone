@@ -24,6 +24,18 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.6 — Bounded GPU frame submission
+
+Client-only rendering change; no migration, graphics-setting reset or world changes.
+For this release, retain the busy-GPU/live-snapshot regression, startup
+and delayed-preparation journeys, natural weather shader checks, visual-effects
+journey and unchanged active/parked fleet budgets. Keep unit checks for nonblocking
+fence polling, bounded outstanding frames, cleanup and context loss. Require the
+complete exact-SHA CI gate and normal production verification. Local evidence is
+under `output/performance-2026-11-24/`; physical reporter-device performance remains
+unverified. Henry authorized commit, push and deployment on 2026-11-24.
+Production remains 0.149.5 until the complete CI gate and deployment verification pass.
+
 ## Upgrade 0.149.5 — Reduce rain umbrella rendering work
 
 Released on 2026-11-23 from main `6c0100d9009b14c6a8136a889b0f243a736a36b9`,

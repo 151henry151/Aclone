@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Checkpoint **0.149.6** bounds outstanding GPU frames to keep slower GPUs from
+accumulating seconds of stale views. Graphics detail and frame caps are unchanged.
+Complete CI and deployment are pending; production remains **0.149.5**.
+
 Release **0.149.5** includes safer pilot recovery and browser-only alt switching,
 and reduces each rain umbrella from eight draw calls to four while preserving its
 artwork, folding and first-person shelter. Offscreen umbrellas are culled.
@@ -595,6 +599,8 @@ npm run test:e2e
 Version 0.108.0 adds an inflatable emergency raft with automatic flare lighting and a remote, fenced Puddlewick spaceport with a one-kilometre building exclusion area and redesigned launch/landing exhaust. See [spaceport design and references](docs/SPACEPORT.md), including the 0.110.0 entrance and industrial-complex expansion, connected concrete service yards, marked visitor parking, container stacks and ground-support equipment. It also addresses storm-water stutter in long-running worlds, improves the water surface beneath small boats, and spreads moving-ocean depth surveys across frames. These fixes do not change wave strength or boating rules.
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
+
+Version 0.149.6 bounds outstanding GPU frames to prevent rendering from falling seconds behind live input and world updates. It preserves graphics detail and the existing frame caps. Regression coverage holds GPU completion while receiving a new position, then verifies rendering resumes at that position. See the [performance investigation](docs/BACKLOG_PLAN.md#bounded-gpu-frame-submission--01496-2026-11-24) for measurements and device limits; production remains 0.149.5.
 
 Version 0.99.0 adds moon-linked tides, weather-driven ocean swells and boat motion, wave-impact spray and resistance, shoreline surf, and depth-faded underwater visibility. World owners can tune tides and waves. Reload after deployment; Puddlewick enables a modest 0.6-metre tidal range. See [boating](docs/BOATING.md#ocean-weather-and-tides).
 
