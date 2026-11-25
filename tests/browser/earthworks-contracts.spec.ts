@@ -176,100 +176,147 @@ test('a client posts and a mobile operator accepts, refunds, resumes and earns a
   }
 });
 
-test('a property owner can decline a survey, sees a protected-site refusal, and confirms a clear request', async ({
-  page,
-  browser,
-}) => {
-  test.setTimeout(120000);
-  page.setDefaultTimeout(10000);
-  const dir = mkdtempSync(join(tmpdir(), 'aclone-earth-permission-')),
-    app = await createApp({ dataDir: dir, port: 0, dev: true }),
-    context = await browser.newContext({ viewport: { width: 430, height: 900 } }),
-    ownerPage = await context.newPage();
-  ownerPage.setDefaultTimeout(10000);
-  try {
-    const client = app.universe.register('Survey client'),
-      owner = app.universe.register('Property neighbour');
-    let w = createWorld('permission-browser', 'Earthworks permissions', 'world-owner');
-    Object.assign(w, { buildings: [], towns: [], roads: [], zones: [], terrain: [], script: '' });
-    Object.assign(w.settings, {
-      mapSize: 500,
-      seaLevel: -40,
-      dayLength: 0,
-      time: 43200,
-      arrivalAnimation: 'off',
-      hungerRate: 0,
-      thirstRate: 0,
-      constructionMinimumSpacing: 40,
-    });
-    w.creator = creatorSchema.parse({ roads: false, scenery: false, weather: 'clear' });
-    w.landscape = {
-      paths: [],
-      surfaces: [],
-      scatter: [],
-      barriers: [],
-      heightmap: Array(1089).fill(10),
+for (const delayedOwner of [false, true]) {
+  test(`a property owner can decline a survey, sees a protected-site refusal, and confirms a clear request${delayedOwner ? ' with delayed owner snapshots' : ''}`, async ({
+    page,
+    browser,
+  }) => {
+    test.setTimeout(120000);
+    page.setDefaultTimeout(10000);
+    const dir = mkdtempSync(join(tmpdir(), 'aclone-earth-permission-')),
+      app = await createApp({ dataDir: dir, port: 0, dev: true }),
+      context = await browser.newContext({ viewport: { width: 430, height: 900 } }),
+      ownerPage = await context.newPage();
+    ownerPage.setDefaultTimeout(10000);
+    let holdOwner = false;
+    const queued: (string | Buffer)[] = [];
+    let deliver: (data: string | Buffer) => void;
+    let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+    const releaseOwner = () => {
+      holdOwner = false;
+      for (const data of queued.splice(0)) deliver!(data);
     };
-    const { makeBuilding } = await import('../../src/shared/simulation');
-    const home = makeBuilding('neighbour-home', 'home', 120, 80);
-    home.owner = owner.account.id;
-    w.buildings.push(home);
-    for (const a of [client, owner]) {
-      const p = addPlayer(w, a.account.id, a.account.name);
-      Object.assign(p, { x: a === client ? 80 : 140, z: 80, y: 10, vehicle: 5, online: true });
-    }
-    app.worlds.set(w.id, w);
-    const port = await app.listen();
-    for (const [p, a] of [
-      [page, client],
-      [ownerPage, owner],
-    ] as const) {
-      await p.addInitScript(
-        ({ token, id }) => {
-          localStorage.setItem('aclone.pilot', token);
-          localStorage.setItem('aclone.world', id);
-          localStorage.setItem('aclone.quality', 'low');
-          localStorage.setItem('aclone.sound', 'off');
-        },
-        { token: a.token, id: w.id },
-      );
-      await p.goto(`http://127.0.0.1:${port}`);
-      await waitForWorld(p);
-      await p.keyboard.press('F9');
-      await p.getByRole('button', { name: 'Directory', exact: true }).click();
-      await p.getByRole('button', { name: 'Earthworks contracts', exact: true }).click();
-    }
-    const root = page.locator('[data-earthworks-panel]'),
-      remote = ownerPage.locator('[data-earthwork-site]');
-    for (const [name, value] of Object.entries({ width: '8', depth: '8', target: '9' }))
-      await root.locator(`[name="${name}"]`).fill(value);
-    await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
-    await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
-    await expect(remote).toContainText('target 9 m');
-    await remote.getByText('Site details and contracts', { exact: true }).click();
-    await remote.getByRole('button', { name: 'Decline survey', exact: true }).click();
-    await expect.poll(() => w.earthworks?.length).toBe(0);
-    await root.getByText('Survey a new pad', { exact: true }).click();
-    await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
-    await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
-    await remote.getByText('Site details and contracts', { exact: true }).click();
-    w.zones.push({ id: 'protected', kind: 'noBuild', x: 80, z: 80, radius: 20 } as any);
-    await remote.getByRole('button', { name: 'Confirm property permission', exact: true }).click();
-    await expect(ownerPage.locator('#toast')).toContainText('no-build');
-    w = app.worlds.get(w.id)!;
-    expect(w.earthworks![0].work!.pendingApproval).toBe(true);
-    expect(w.earthworks![0].progress).toBe(0);
-    w.zones = [];
-    await remote.getByRole('button', { name: 'Confirm property permission', exact: true }).click();
-    await expect.poll(() => w.earthworks![0].work!.pendingApproval).toBe(false);
-    await expect(root.locator('[data-earthwork-site]')).toContainText('Reserved');
-    // Confirmation collapses the new-survey form automatically.
+    if (delayedOwner)
+      await ownerPage.routeWebSocket('**/*', (socket) => {
+        const server = socket.connectToServer();
+        deliver = (data) => socket.send(data);
+        server.onMessage((data) => {
+          if (holdOwner) queued.push(data);
+          else socket.send(data);
+        });
+        socket.onMessage((data) => server.send(data));
+      });
+    try {
+      const client = app.universe.register('Survey client'),
+        owner = app.universe.register('Property neighbour');
+      let w = createWorld('permission-browser', 'Earthworks permissions', 'world-owner');
+      Object.assign(w, { buildings: [], towns: [], roads: [], zones: [], terrain: [], script: '' });
+      Object.assign(w.settings, {
+        mapSize: 500,
+        seaLevel: -40,
+        dayLength: 0,
+        time: 43200,
+        arrivalAnimation: 'off',
+        hungerRate: 0,
+        thirstRate: 0,
+        constructionMinimumSpacing: 40,
+      });
+      w.creator = creatorSchema.parse({ roads: false, scenery: false, weather: 'clear' });
+      w.landscape = {
+        paths: [],
+        surfaces: [],
+        scatter: [],
+        barriers: [],
+        heightmap: Array(1089).fill(10),
+      };
+      const { makeBuilding } = await import('../../src/shared/simulation');
+      const home = makeBuilding('neighbour-home', 'home', 120, 80);
+      home.owner = owner.account.id;
+      w.buildings.push(home);
+      for (const a of [client, owner]) {
+        const p = addPlayer(w, a.account.id, a.account.name);
+        Object.assign(p, { x: a === client ? 80 : 140, z: 80, y: 10, vehicle: 5, online: true });
+      }
+      app.worlds.set(w.id, w);
+      const port = await app.listen();
+      for (const [p, a] of [
+        [page, client],
+        [ownerPage, owner],
+      ] as const) {
+        await p.addInitScript(
+          ({ token, id }) => {
+            localStorage.setItem('aclone.pilot', token);
+            localStorage.setItem('aclone.world', id);
+            localStorage.setItem('aclone.quality', 'low');
+            localStorage.setItem('aclone.sound', 'off');
+          },
+          { token: a.token, id: w.id },
+        );
+        await p.goto(`http://127.0.0.1:${port}`);
+        await waitForWorld(p);
+        await p.keyboard.press('F9');
+        await p.getByRole('button', { name: 'Directory', exact: true }).click();
+        await p.getByRole('button', { name: 'Earthworks contracts', exact: true }).click();
+      }
+      const root = page.locator('[data-earthworks-panel]'),
+        remote = ownerPage.locator('[data-earthwork-site]');
+      for (const [name, value] of Object.entries({ width: '8', depth: '8', target: '9' }))
+        await root.locator(`[name="${name}"]`).fill(value);
+      await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
+      await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
+      await expect(remote).toContainText('target 9 m');
+      await remote.getByText('Site details and contracts', { exact: true }).click();
+      const declinedId = w.earthworks![0].id;
+      // Keep the owner on the old, open survey while the server replaces it.
+      holdOwner = delayedOwner;
+      await remote.getByRole('button', { name: 'Decline survey', exact: true }).click();
+      await expect.poll(() => w.earthworks?.length).toBe(0);
+      await root.getByText('Survey a new pad', { exact: true }).click();
+      await root.getByRole('button', { name: 'Confirm pad', exact: true }).click();
+      await expect.poll(() => w.earthworks?.[0]?.work?.pendingApproval).toBe(true);
+      const replacementId = w.earthworks![0].id;
+      expect(replacementId).not.toBe(declinedId);
+      if (delayedOwner) {
+        await expect(remote).toHaveAttribute('data-id', declinedId);
+        await expect(remote.locator('details').first()).toHaveAttribute('open', '');
+        await expect.poll(() => queued.length).toBeGreaterThan(0);
+        // Preserve server message order, then deliver within the original deadline.
+        releaseTimer = setTimeout(releaseOwner, 800);
+      }
+      // Server state can lead the owner UI: target the newly rendered survey.
+      await expect(remote).toHaveAttribute('data-id', replacementId, { timeout: 10000 });
+      await remote.getByText('Site details and contracts', { exact: true }).click();
+      w.zones.push({ id: 'protected', kind: 'noBuild', x: 80, z: 80, radius: 20 } as any);
+      await remote
+        .getByRole('button', { name: 'Confirm property permission', exact: true })
+        .click();
+      await expect(ownerPage.locator('#toast')).toContainText('no-build');
+      w = app.worlds.get(w.id)!;
+      expect(w.earthworks![0].work!.pendingApproval).toBe(true);
+      expect(w.earthworks![0].progress).toBe(0);
+      w.zones = [];
+      await remote
+        .getByRole('button', { name: 'Confirm property permission', exact: true })
+        .click();
+      await expect.poll(() => w.earthworks![0].work!.pendingApproval).toBe(false);
+      await expect(root.locator('[data-earthwork-site]')).toContainText('Reserved');
+      // Confirmation collapses the new-survey form automatically.
 
-    await page.screenshot({ path: 'output/earthworks/contracts/property-approved.png' });
-  } finally {
-    await page.close();
-    await context.close();
-    await app.close();
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+      await page.screenshot({ path: 'output/earthworks/contracts/property-approved.png' });
+      await test.info().attach('owner-approved', {
+        body: await ownerPage.screenshot(),
+        contentType: 'image/png',
+      });
+      await test.info().attach('survey-identities', {
+        body: JSON.stringify({ declinedId, replacementId, delayedOwner }),
+        contentType: 'application/json',
+      });
+    } finally {
+      await page.close();
+      if (releaseTimer) clearTimeout(releaseTimer);
+      await context.close();
+      await app.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}

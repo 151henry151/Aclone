@@ -2,10 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.7** retains host and browser-thread context around fleet
-benchmarks to investigate the unresolved relative-performance CI failure. It
-includes 0.149.6 bounded GPU submission; graphics detail, sampling and frame
-budgets are unchanged. Deployment remains blocked; production is **0.149.5**.
+Checkpoint **0.149.8** fixes the recreated-survey browser check's stale-view race,
+including delayed owner messages. It includes bounded GPU submission and retained
+fleet diagnostics; the interior/fleet relative-performance failures remain under
+investigation. Graphics detail and test budgets are unchanged. Deployment remains
+blocked; production is **0.149.5**.
 
 Release **0.149.5** includes safer pilot recovery and browser-only alt switching,
 and reduces each rain umbrella from eight draw calls to four while preserving its

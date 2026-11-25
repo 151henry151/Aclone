@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.8] - 2026-11-25
+
+### Fixed
+
+- Wait for the replacement survey to reach the property owner’s screen before opening its permission controls in browser checks. Cover delayed server messages while preserving decline, protected-site refusal and successful approval assertions.
+
 ## [0.149.7] - 2026-11-24
 
 ### Changed

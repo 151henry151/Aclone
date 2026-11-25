@@ -24,6 +24,16 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.8 — Synchronize recreated-survey checks
+
+Test-only change. Wait for the replacement survey identity in the owner's visible
+panel before opening permission details. Verify both ordinary and deliberately
+delayed owner messages, including decline, protected-site refusal, zero progress
+before approval and successful reservation. Keep original action deadlines and
+production permission rules. The preceding full workflow completed with 16/19 jobs
+passing; interior and fleet relative budgets remain unresolved. Production stays
+0.149.5 until a complete exact-SHA workflow and deployment verification pass.
+
 ## Upgrade 0.149.7 — Retain fleet host context
 
 Diagnostic retention only; no application or runner policy changes. Each fleet

@@ -14122,3 +14122,146 @@ The separate final build exited 0 (`host-retention/build-final.log`). Only this
 diagnostic retention, its tests/version/docs and the prior related investigation
 record are included in the checkpoint. Complete hosted checks remain required;
 no deployment or announcement has occurred.
+
+Pushed diagnostic checkpoint **cd634842ad4247f5609946975928125e291c4999** to main,
+version **0.149.7**. Full [Check Aclone run 45544357822](https://github.com/151henry151/Aclone/actions/runs/45544357822)
+is queued/in progress; no result is claimed yet. The release follow-up now tracks
+this exact SHA/run and retains the unresolved original failure and evidence
+limitations. Leave the laptop GPU free while CI runs. Production remains 0.149.5;
+no deployment or announcement occurred. Only this post-push status is uncommitted.
+
+### New CI blocker — building interiors, root-2 (2026-11-25 04:27 UTC)
+
+Current diagnostic SHA **cd634842ad4247f5609946975928125e291c4999 must not deploy**.
+Job **138970256410** in run **45544357822** failed
+`building-interior-performance.spec.ts:56`; the other 18 shard tests passed.
+Normal closed/open town p95 is **17.200000047683716/19.200000047683716 ms**,
+exceeding the unchanged 10% cap **18.92000005245209 ms**. Low closed/open p95
+**37.40000009536743/37.60000014305115 ms** passes. All preceding error,
+visibility/furnished-interior, frame-count, absolute-time and zero >100ms
+assertions passed. Normal closed/open draws are 1005/1049; maxima 22/37.5 ms.
+
+Full job log and uploaded root-2 artifact are retained under
+`output/performance-2026-11-24/ci-cd634842/`; `interior-summary.json` records exact
+values and `root-2/interior-test.trace` extracts the original test trace. The
+interior test does not attach its ignored profiler outputs, so this artifact
+contains no measured-scene images, raw timing arrays or boundary host JSON for
+these four cases. The retained trace confirms the summaries and failed relative
+assertion; do not claim the missing context was retained. The new fleet-specific
+attachments do not cover this separate test. Do not access an active runner's
+checkout or interfere with subsequent jobs to recover overwritten outputs.
+
+Cause is unestablished. This is a new relative-budget failure, not proof of the
+same cause as fleet variance, thermal throttling or the GPU queue. Henry was
+notified once. Keep the GPU free until the entire run finishes; retain any further
+failures. Then reproduce the unchanged closed/open journey in isolation with full
+existing profiler outputs and real screenshots, compare CPU/GPU/queue and host
+context, and repair only confirmed causes with red regression coverage. Add
+before-assertion evidence retention to this test as appropriate; preserve all
+workloads, windows, deadlines and budgets. Never dismiss this failure on a passing
+rerun or retry merely to green. Production remains 0.149.5.
+
+### New CI blocker — recreated survey permission, root-4 (2026-11-25 04:47 UTC)
+
+Job **138970256515** in current run **45544357822** failed
+`earthworks-contracts.spec.ts:257`; the other 18 shard tests passed. After the
+owner declines the first survey and the client recreates it, the owner-page
+`Confirm property permission` click times out at the unchanged **10,000 ms**.
+Current SHA remains blocked. Complete job log, uploaded artifact, actual failed
+phone screenshot (inspected), error context and original trace are retained in
+`output/performance-2026-11-24/ci-cd634842/root-4/` (job log one level above).
+
+Offline trace analysis identifies a specific stale-UI sequence, recorded in
+`permission-snapshot-summary.json`: the second details click at
+309586.541–309630.918 ms targets the **old** survey ID ending
+`earthwork-10.984256589000003-…-0`, whose `<details>` was already open. The click
+closes it. The confirmation lookup begins at 309633.955 ms; the final owner DOM
+has the replacement survey ID `earthwork-11.744901985000011-…-0`, with the correct
+approval button present inside **closed details**. The screenshot also shows the
+collapsed site. The fixture waits for server-side pendingApproval but does not
+wait for the owner browser to display the replacement identity before toggling
+its summary. This supports a fixture synchronization race; confirm it with a
+controlled delayed owner snapshot before changing code, rather than assuming a
+production permission failure or simply adding timeout/retry.
+
+Henry was notified once; do not repeatedly notify this blocker. While remaining
+CI runs, keep the GPU free. After the entire run finishes, reproduce the retained
+stale-identity sequence deterministically, strengthen the journey to target the
+new visible survey before interaction if confirmed, and retain decline,
+protected-site no-build refusal, pending/progress invariants and successful
+approval checks. Keep the original deadlines and real controls. Make a separate
+logical fix with red coverage and normal version/docs/verification protocol;
+do not mix it with an unsupported performance fix. No source changes were made
+in this follow-up; only backlog evidence was updated.
+
+### Recurring CI blocker — parked fleet, root-10 (2026-11-25 05:47 UTC)
+
+Job **138970256495** in current run **45544357822** failed
+`parked-performance.spec.ts:61`; its other 18 tests passed. Normal active/parked
+p95 is **17.5/20.09999990463257 ms**, exceeding the unchanged **19.25 ms** cap.
+Low active/parked **37.89999985694885/37 ms** passes. All 21 parked vehicles are
+drawn, with zero >100 ms frames, long tasks or errors. Current SHA **cd634842**
+remains prohibited from deployment; root-2 and root-4 also failed. Root-12 is
+still running and later shards are queued; leave the GPU free.
+
+Complete job log is `output/performance-2026-11-24/ci-cd634842/root-10.log`.
+The uploaded `root-10/` artifact retains the original trace and all **twenty**
+profiler attachments, including the four new host snapshots. Raw frame/CPU sample
+counts match the summaries. `root-10/fleet-summary.json` records the comparisons;
+normal active/parked screenshots were both inspected and show the matching town
+and fleet without missing scenery.
+
+Normal active/parked render CPU p95 is **12.799999952316284/15 ms**, despite lower
+parked mean render CPU (**10.3541620320/9.39230769374 ms**) and fewer draws
+(**1005/774**). Matching PID/start-tick identities permit boundary thread deltas:
+renderer runtime **11739.133152/10548.226293 ms**, renderer runqueue wait
+**59.791193/69.106702 ms**, GPU-process main-thread runtime
+**4666.195386/4363.762196 ms**, and its runqueue wait
+**23.339329/142.597833 ms**. That last metric is CPU scheduler waiting for the GPU
+process's main thread, not GPU hardware time. All allowed CPU masks remain 0–7.
+
+Both low cases and normal active record zero thermal-counter increments. Normal
+parked records **35 package events / 372 ms**, also on physical core 0 (siblings
+0/4); other core deltas are zero. The repeated package records describe the same
+counter and must not be summed. Host collection takes **1.97–5.36 ms** outside
+sampling. These boundary totals include GC and boundary gaps, do not identify
+individual slow frames or core residency, and do not establish heat or scheduler
+waiting as the cause. Instantaneous frequencies do not measure mean throughput.
+Prior controlled results also rule out treating heat alone as an established
+explanation. Lower average parked work does not erase the failed tail budget.
+
+Henry was notified once of this new recurrence. No source or host-policy changes
+were made, and no acceptance run was retried. After the entire CI run finishes,
+use this retained failed-run context alongside earlier controlled evidence to
+design a narrowly targeted comparison; do not adopt speculative affinity, fan,
+power or application changes. Preserve the original workloads, windows and
+budgets, and keep the separate interior and survey investigations intact.
+Production remains 0.149.5; no deployment or announcement occurred.
+
+### Completed workflow and survey race repair (2026-11-25)
+
+Run **45544357822** completed with **16/19 jobs passing**. Only the recorded
+root-2 interior, root-4 survey and root-10 fleet failures remain; neither this
+SHA nor the earlier failed SHA may deploy. The runner was verified online/idle
+and stopped before local GPU work.
+
+The survey race was reproduced deterministically by holding real ordered owner
+WebSocket messages across decline/recreation, asserting that the owner still
+shows the old open survey, then releasing messages after 800 ms. The unchanged
+second details click closes that stale survey and the original 10-second
+permission click fails, matching CI (`survey-race/red.log`, original trace and
+red fixture under `output/performance-2026-11-24/`). The fix waits, within 10
+seconds, for the replacement ID in the owner panel before opening its details.
+Production permission logic and original decline/no-build/zero-progress/approval
+assertions are unchanged. Both ordinary and delayed journeys now pass. One
+intermediate ordinary attempt was invalidated by our package-version edit
+triggering a Vite reload; its trace fails on the missing initial width field,
+not permission. The stable final ordinary run passes, while the delayed run
+passed separately after the reload. These logs are retained without hiding the
+invalid attempt. The approved-site real screenshot was inspected and retained.
+
+Checkpoint **0.149.8** contains this separate fixture repair and regression.
+All eight earthworks contract unit checks, TypeScript, production build and
+changed-file formatting pass. Interior evidence retention is separate
+work; interior/fleet performance causality remains unresolved. No deployment or
+announcement has occurred; production remains 0.149.5.
