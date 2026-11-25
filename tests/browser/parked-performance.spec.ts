@@ -35,6 +35,7 @@ test('parked fleet stays within the matched active-fleet town frame budget', asy
         ['run.log', 'text/plain'],
         ['results.json', 'application/json'],
         ['expanded-town-frames.json', 'application/json'],
+        ['expanded-town-host.json', 'application/json'],
         ['fleet.png', 'image/png'],
       ])
         await testInfo.attach(`${quality}-${mode}-${file}`, {

@@ -2,9 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.6** bounds outstanding GPU frames to keep slower GPUs from
-accumulating seconds of stale views. Graphics detail and frame caps are unchanged.
-Complete CI and deployment are pending; production remains **0.149.5**.
+Checkpoint **0.149.7** retains host and browser-thread context around fleet
+benchmarks to investigate the unresolved relative-performance CI failure. It
+includes 0.149.6 bounded GPU submission; graphics detail, sampling and frame
+budgets are unchanged. Deployment remains blocked; production is **0.149.5**.
 
 Release **0.149.5** includes safer pilot recovery and browser-only alt switching,
 and reduces each rain umbrella from eight draw calls to four while preserving its
@@ -19,7 +20,8 @@ World builders control spare room and the menu-only opt-out. Relevant local test
 browser journeys and build checks pass; all 19 CI jobs and production deployment are verified.
 The startup follow-up ensures long loading gaps cannot skip fog and shader preparation.
 Legacy automatic-storage coverage explicitly selects the supported menu-only policy.
-Fleet CI evidence now includes individual frame/render timings and browser counters;
+Fleet CI evidence includes individual frame/render timings, browser counters and
+boundary host snapshots (thermal counters, CPU context and main-thread scheduling);
 the performance recurrence remains under investigation with the original budgets.
 The garage bay release was verified in **0.149.3**.
 

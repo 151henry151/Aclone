@@ -81,9 +81,20 @@ TEST_GPU=1 node --import tsx scripts/verify-ci-gpu.ts
 
 The full main run retains all individual test deadlines and graphics thresholds.
 The parked-fleet test attaches each active/parked, low/normal profiler JSON, log,
-raw frame/render timing JSON with CDP counters, and fleet screenshot before
-assertions. The raw samples are already collected by the benchmark and saved only
+raw frame/render timing JSON with CDP counters, boundary host JSON, and fleet
+screenshot before assertions (twenty attachments across four cases). The raw samples are already collected by the benchmark and saved only
 after measurement; no sampling or acceptance threshold changes. These copies live with Playwright results
 and are included in failed-job artifacts; ignored local `output/` is not uploaded.
 Keep the exact-SHA CI gate in [RELEASING](RELEASING.md), including its post-deploy
 check. Diagnose failures before continuing to the next backlog item.
+
+Fleet host snapshots are collected outside the measurement window: before the
+original garbage collection/reset and after the original samples are copied.
+There is no periodic collector. Linux counters include per-logical-CPU topology,
+frequency/governor, thermal events/time, and cumulative runtime/runqueue wait for
+only the owned browser renderer/GPU main threads. Unavailable fields are null;
+CDP discovery availability is explicit. Match PID and start ticks before comparing
+thread counters. Counter deltas also include the original garbage collection
+and boundary gaps; they are not exactly the 15-second sample. These are boundary
+observations, not per-frame core/frequency attribution. Package thermal counters may repeat across CPUs; never sum them.
+The runner sandbox remains unchanged; inaccessible evidence stays unavailable.

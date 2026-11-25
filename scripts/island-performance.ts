@@ -6,6 +6,7 @@ import { createServer } from 'vite';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createWorld, makeBuilding } from '../src/shared/simulation';
 import { expandPuddlewickIsland } from '../src/server/puddlewick-island';
+import { captureHostPerformance } from './host-performance';
 const out = process.env.PROFILE_OUT ?? 'output/island-performance';
 mkdirSync(out, { recursive: true });
 const original = createWorld('puddlewick', 'Puddlewick', 'server');
@@ -71,6 +72,7 @@ const browser = await chromium.launch({
 });
 const results: any[] = [];
 try {
+  const browserCdp = await browser.newBrowserCDPSession();
   for (const [name, world] of [
     ['original', original],
     ['expanded', expanded],
@@ -177,6 +179,8 @@ try {
             }
           });
       });
+      // Boundary context only; complete host reads before the original GC/reset.
+      const hostBefore = await captureHostPerformance(browserCdp);
       await cdp.send('HeapProfiler.collectGarbage');
       await page.evaluate(() => {
         const s = (window as any).fixture.stats;
@@ -258,6 +262,18 @@ try {
             .length,
         };
       });
+      // The original samples have been copied; host reads cannot extend them.
+      const hostAfter = await captureHostPerformance(browserCdp);
+      writeFileSync(
+        `${out}/${name}-${location.name}-host.json`,
+        JSON.stringify({
+          schemaVersion: 1,
+          scope:
+            'Boundary snapshots outside sampling; cumulative main-thread counters and instantaneous CPU context, not per-frame attribution.',
+          before: hostBefore,
+          after: hostAfter,
+        }),
+      );
       const spans = data.renders
           .slice(1)
           .map((t: number, i: number) => t - data.renders[i])

@@ -13887,3 +13887,238 @@ The phone-sized cases render 821/860 draws and 2359950/2382726 triangles. These
 are isolated laptop samples, not a guarantee for the reporter's unknown device.
 Raw timing, screenshots and logs are in `final-desktop/` and `final-phone/` under
 the evidence directory. No test deadlines or performance budgets changed.
+
+Post-push checkpoint (2026-11-24): **0.149.6** is pushed on main at
+`8c626ff79db81a6278aad97cc0c4f876a4989c85`. The separate commits are
+`6ec55cf2` (verified prior release records) and `8c626ff7` (bounded GPU frame
+submission). Final release-version TypeScript/build and changed-file formatting
+pass. Complete [workflow 45518056614](https://github.com/151henry151/Aclone/actions/runs/45518056614)
+is pending; deploy only after every required job passes for this exact SHA.
+Independent pre-push checks confirmed a clean production checkout at `6c0100d9`,
+active service and public health `ok: true`, version **0.149.5**, five worlds.
+The temporary `finish-aclone-gpu-queue-release` follow-up will finish the already
+authorized exact-SHA deployment, verify game/website service, health, version,
+SHA and assets, and recheck CI. It stays quiet while pending and leaves the laptop
+GPU free. All three completed older release follow-ups remain paused. No Discord
+announcement is authorized. Keep this post-push status local until verification.
+
+CI blocker (2026-11-24 local / 2026-11-25 UTC): GPU root-10 job
+`138882524563` failed the unchanged parked-fleet relative budget; its other
+18 tests passed. Normal active/parked p95 **17.300000190734863 /
+20.200000047683716 ms** exceeds the exact 10% cap **19.03000020980835 ms**.
+Low active/parked **37.90000009536743 / 36.799999952316284 ms** passes; absolute
+budgets pass. All 21 parked vehicles are drawn; every case has zero >100 ms gaps,
+long tasks and page errors. This SHA must not deploy.
+
+The complete job log and artifact (including trace, all sixteen profiler
+attachments, raw timing arrays, CDP metrics and screenshots) are retained in
+`output/performance-2026-11-24/ci-8c626ff7/`; `fleet-summary.json` summarizes the
+four cases. Both normal screenshots were inspected and show matching scenery.
+Normal active/parked render CPU p95 is **13 / 15.700000047683716 ms**, while total
+script time is **11.536828 / 10.184637 s** over comparable 15.03-second samples.
+Thus the worse parked tail coexists with less total script work and fewer draws;
+these aggregate numbers do not establish the cause or justify dismissing it.
+
+The workflow has now completed with **18/19 jobs passing**; root-10 is the only
+failed job. Reproduce/profile the unchanged benchmark in isolation, compare
+this retained raw timing evidence with prior failed/passing samples, and distinguish
+CPU scheduling, GPU queue/pacing and application work before changing code.
+Retain the strict 10% cap without rounding, all visibility/absolute budgets and
+queue/input/shader regression coverage. Do not retry merely to green or infer
+that a passing isolated sample resolves the recurrence. Fix a confirmed cause
+with red regression coverage and a separate logical patch release. Henry has
+been notified once; subsequent heartbeats should not repeat this known failure.
+
+Fleet investigation follow-up (2026-11-25 UTC): retained diagnostic scripts and
+results are under `output/performance-2026-11-24/fleet-investigation/`. The
+unchanged four-case browser benchmark passes in isolation (low active/parked
+37.5/37.2 ms, normal 19.1/18.9 ms), but this does **not** resolve the repeated CI
+failure or authorize deployment. No acceptance assertion or source code changed.
+
+CPU profiles, GPU timer queries, queue decisions, selected GL-call timings and
+host scheduling samples have not established a single cause. Parked rendering
+uses less average CPU/GPU work; the timer-query sample has active/parked GPU p95
+18.13/16.45 ms. A 60-second queue sample has 18/16 queue holds, below 0.5% of calls,
+so no evidence yet connects those rare holds to the p95 regression. GPU clocks
+remain steady under sampled load; sustained GPU throttling was not demonstrated.
+Slow frames sometimes coincide with host run-queue waits, but many do not. CPU
+profiler stop adds roughly 300 ms before its final snapshot; these profiled
+maxima are diagnostic overhead, not acceptance measurements. The initial host
+scheduler collector also consumes appreciable CPU (roughly 22% of one core), so
+those runs must not be substituted for uninstrumented acceptance results.
+
+A hidden-driver transform hypothesis was tested and rejected as a useful fix:
+21 real parked tractors retain only 42 hidden driver nodes. Alternating the
+original and skipped traversal in the same browser scene, 24 paired batches of
+500 traversals show only about **0.0074 ms** saved per frame (means 0.1388/0.1314
+ms for the parked group). Its separate runtime trial also contained a 101.2 ms
+gap. No hidden-driver optimization was applied to production. Keep driver
+hierarchies intact for mounting/dismounting. Current next diagnostic is a browser
+task trace separating slow-frame CPU execution from browser/driver waits.
+
+The idle laptop runner was stopped using the documented user service before
+continued isolated graphics diagnostics; restart it when experiments finish and
+before any new CI push. Never stop it while a job is running. The release remains
+blocked at the same failed SHA and production remains 0.149.5.
+
+The subsequent 30-second browser task trace retains per-thread CPU timestamps
+(`task-trace-parked/trace.json`, `thread-time-summary.json`). Of 1,792 render
+spans, 96 exceed 13 ms: their mean elapsed/thread CPU times are about 16.98/16.57
+ms. The four largest spans (28.9–31.2 ms) each show only about 0.16–0.17 ms outside
+thread CPU execution. This argues against descheduling alone for this diagnostic
+sample, without proving the original CI cause. Trace overhead is present; its
+19.3 ms frame p95 is not an acceptance result. Next measure matrix updates,
+draw submission and remaining renderer work separately, keeping the scene and
+budgets unchanged and retaining both active/parked cases.
+
+New host finding: kernel CPU thermal counters are actively increasing, even
+though sampled GPU clocks were steady. `cpu-thermal-sample.json` records **170
+package thermal-throttling events over about 19 seconds**, including core-0 and
+core-2 events. The fan reports enabled/automatic mode; no cooling, power, CPU
+or GPU settings have been changed. An airflow clarification was requested.
+The next unchanged four-case benchmark is paired with a lightweight 10 Hz reader
+of per-core/package throttle event and total-time counters, plus temperatures,
+under `thermal-benchmark/`. Correlate its raw frame timestamps before attributing
+the CI regression to heat; the original failed CI did not record these counters.
+No CI rerun or deployment is justified just by a passing local sample.
+
+Renderer phase diagnostics (`phases-active/`, `phases-parked/`) retain fixed
+submission counts throughout each sample (1,030/799 renderBufferDirect calls,
+including calls that produce no draw). Parked mean matrix/draw/remaining renderer
+times are about 0.85/6.35/2.63 ms; slow parked frames increase all three phases to
+about 1.86/11.57/5.00 ms rather than adding draw calls. This is consistent with
+variable processing throughput, but is not alone proof of a thermal cause.
+
+Thermal-correlated unchanged benchmark completed: low active/parked frame p95
+37.6/38.5 ms and normal 18.2/17.7 ms pass all original assertions, with no >100 ms
+frames. This is another diagnostic reproduction attempt, **not a reason to rerun
+CI or accept the failed SHA**. The reader consumed 1.53 CPU-seconds over 188.91
+seconds (0.81% of one core). All sixteen original attachments remain alongside
+`thermal.jsonl`, `collector.json` and `thermal-summary.json`.
+
+Within the roughly 15-second measured windows, package thermal events/time were
+low active **19 / 140 ms**, low parked **81 / 1,144 ms**, normal active **64 /
+232 ms**, normal parked **71 / 664 ms**. Normal parked render CPU p95 is 14.7 ms
+in 10 Hz windows with recorded throttling versus 13.0 ms outside them; mean
+10.10 versus 9.02 ms. That association is coarse and does not identify the exact
+executing core or explain all tails; low-quality cases do not show the same
+association. Original CI did not record thermal counters, so its cause remains
+unproven. Do not call the recurrence fixed. No application, benchmark, fan or
+power-policy changes were made. Current host policy is intel_pstate powersave /
+balance_performance with automatic fan control; sampled CPU frequency alone did
+not reveal the thermal events.
+
+Next: incorporate Henry's airflow clarification; inspect CPU throughput,
+frequency and core placement against retained slow frames before proposing a
+specific application or runner fix. Avoid another acceptance rerun without a
+new hypothesis or demonstrated environmental remediation. The local diagnostics
+are finished and the runner service has been restarted for ordinary CI use.
+Only backlog records remain modified; the original CI failure still blocks
+release and production remains 0.149.5.
+
+Offline core-placement analysis (2026-11-25 03:43 UTC follow-up) is retained in
+`scheduler-host/core-placement-summary.json`. In the intrusive prior scheduler
+sample, stable observed separate/shared physical-core windows have parked render
+CPU p95 **11.1/17.0 ms** (1,033/170 frames), active **12.6/14.4 ms** (1,011/111
+frames). The observer sampled last executed core at 10 ms intervals and used
+about 22% of a core; it does not prove simultaneous sibling execution or original
+CI causality. This supplies a specific next hypothesis, not release acceptance.
+
+A controlled diagnostic now alternates shared/separate/separate/shared CPU
+placement within each unchanged active/parked browser scene. It pins only the
+owned diagnostic browser's renderer main thread to logical CPU 5 or 3 and its
+GPU main thread to CPU 1 (verified siblings 1/5 and 3/7), saving/restoring their
+original masks. Each window retains raw frame/CPU arrays and thermal counters;
+no scene, sampling assertion, application, fan or power-policy setting changes.
+These placement windows are diagnostic, not replacements for the original test.
+The idle runner was checked online/not busy and stopped before this experiment;
+restart it after all owned diagnostic browsers finish.
+
+Controlled placement experiment completed, including a physical-core crossover:
+GPU/main-renderer logical CPUs 1/(5 shared or 3 separate), then 3/(7 shared or 1
+separate). Both active/parked scenes use shared/separate/separate/shared 15-second
+windows, with unchanged draws, triangles and pixel ratio. Dedicated raw windows,
+original masks and thermal deltas are in `placement*/placement-windows.json`;
+`placement-summary.json` consolidates them. Use those dedicated windows only:
+the harness's final `results.json` includes the last diagnostic window plus a
+one-second tail and is not an acceptance measurement.
+
+Shared-core active frame p95 is 17.1–17.3 ms, parked 17.4–17.5 ms. Separate-core
+active p95 is 17.5–18.4 ms, parked 17.8–19.1 ms. Sharing raises mean render CPU
+(about 12.9–13.0 ms active, 10.8–11.2 ms parked versus 10.5–10.9/8.6–9.3 ms when
+separate) but does not produce the worse frame p95 predicted by the original
+coarse association. Thus **do not apply affinity as a proven fix**, choose the
+placement with the greenest result, or infer original CI causality. These
+controlled windows do not reproduce the original matched-case relative failure.
+
+The 19.1 ms parked window has **zero recorded core/package throttle time**; in
+the reversed experiment, another parked window has about 3.6 s of package
+throttling yet frame p95 17.4 ms. Most recorded throttling is on physical cores
+0/2 rather than the pinned main threads on 1/3. Heat cannot explain all observed
+variation, and package counters alone cannot identify the affected thread.
+The airflow question remains useful host context, not a demonstrated release fix.
+Offline prior 1 Hz frequency samples mostly report 3.1–3.6 GHz across all logical
+cores; their resolution cannot establish individual-frame frequency effects.
+
+A retained headless-browser task trace has presentation-event p95 18.126 ms versus
+renderer-start p95 19.298 ms (`task-trace-parked/presentation-summary.json`). These
+are different clocks/events, not physical-display evidence; retain the original
+renderer-start budget without substituting this metric or asserting smoother
+physical-phone output. The original CI sample lacks enough host/thread context
+to retrospectively establish its cause. Any future instrumentation must retain
+that context without changing assertions, workload or measurement windows, and
+must have a diagnostic purpose beyond another chance at a passing run.
+
+All owned experimental browsers have exited; original process affinity masks
+were restored, and the ordinary GPU runner service has been restarted. No
+application, test, CI policy, power or fan changes were made. Only this backlog
+record is modified. The failed exact-SHA CI gate remains closed; do not deploy,
+rerun CI merely to green, or repeatedly notify Henry about the known blocker.
+
+## Fleet host diagnostic retention — 0.149.7 (2026-11-24)
+
+The missing CI host context now has a narrowly scoped collection path in
+`scripts/host-performance.ts`. Each fleet case captures Linux topology,
+instantaneous frequency/governor/preference, core/package thermal event/time
+counters, and only the owned browser renderer/GPU main-thread identity, allowed
+CPUs, last CPU and cumulative runtime/runqueue wait/timeslices. Counters are exact
+strings; inaccessible files or exited/reused processes stay unavailable rather
+than becoming zero. No command lines, environment or unrelated processes are
+retained. No application, host affinity, fan, power or CI-policy change is made.
+
+Host reads finish before the original garbage collection/sample reset and begin
+again only after the original raw samples are copied. There is no collector
+running during sampling. The scene, workload, 15-second sample, warm-up, frame
+statistics, relative 10% budget and all original assertions remain unchanged.
+`expanded-town-host.json` is attached before assertions in each of four cases,
+bringing the retained file count to twenty. Boundary snapshots describe aggregate
+context, not per-frame attribution; instantaneous frequency is not mean CPU
+throughput, and duplicated package counters must not be summed.
+
+Validation evidence is in `output/performance-2026-11-24/host-retention/`.
+Four focused unit checks pass (proc names with parentheses, missing/malformed and
+large counters, allowlisted owned thread data, process exit/PID reuse). The one
+original four-case GPU benchmark used to validate this instrumentation passes:
+low active/parked p95 **37.60000014305115/37.200000047683716 ms**, normal
+**18.5/17.5 ms**, all 21 parked vehicles drawn, zero >100 ms frames. All twenty
+Playwright attachments were counted; raw frame/CPU sample counts match summaries.
+All eight CPU records and both available browser main threads appear in each
+boundary snapshot; collection takes **2.38–4.60 ms outside sampling**. The normal
+parked screenshot was inspected. Runner was verified idle, stopped for this
+local benchmark, and restarted/verified online and idle afterward.
+
+This is evidence retention, not a demonstrated fix for the original failure.
+The passing local sample does not resolve recurrence or authorize rerunning the
+failed SHA. A new diagnostic checkpoint can capture the previously missing
+context under the full CI sequence; inspect that evidence if it fails rather
+than selecting greener samples. Production remains 0.149.5 and deployment is
+still gated. Final build/format and the new exact-SHA CI status are recorded below
+when complete.
+
+Final 0.149.7 TypeScript/production build exited successfully; changed-file
+Prettier and git diff checks pass. An earlier combined formatting/build command
+returned SIGTERM despite a completed build log; it is not counted as passing.
+The separate final build exited 0 (`host-retention/build-final.log`). Only this
+diagnostic retention, its tests/version/docs and the prior related investigation
+record are included in the checkpoint. Complete hosted checks remain required;
+no deployment or announcement has occurred.

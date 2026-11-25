@@ -24,6 +24,24 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.7 — Retain fleet host context
+
+Diagnostic retention only; no application or runner policy changes. Each fleet
+case adds `expanded-town-host.json` before budget assertions. Host reads finish
+before the original GC/sample reset and start again only after samples are copied.
+They do not poll during measurement. Linux CPU topology, frequency/policy and
+thermal counters accompany only the owned browser renderer/GPU main-thread
+identity, allowed CPUs, last CPU and cumulative scheduler counters. Missing data
+is explicit; counters remain exact strings. No command lines or environment are
+retained. Boundary snapshots cannot attribute individual slow frames, instantaneous
+frequency is not average throughput, and shared package counters must not be summed.
+
+The previous 0.149.6 workflow failed the unchanged fleet relative budget. Its
+cause remains unestablished; this checkpoint adds evidence and makes no performance
+fix claim. Do not treat a greener sample as proof that the recurrence is resolved.
+Retain all twenty attachments, investigate failures, and require complete exact-SHA
+CI and production verification. Production remains 0.149.5.
+
 ## Upgrade 0.149.6 — Bounded GPU frame submission
 
 Client-only rendering change; no migration, graphics-setting reset or world changes.

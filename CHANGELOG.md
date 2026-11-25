@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.7] - 2026-11-24
+
+### Changed
+
+- Retain CPU thermal counters, frequency and placement context, and browser main-thread scheduling totals around fleet benchmarks to help investigate intermittent performance failures. Collect outside the measured window and attach the evidence before assertions; rendering, sampling and acceptance budgets are unchanged.
+
 ## [0.149.6] - 2026-11-24
 
 ### Fixed
