@@ -24,6 +24,18 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.149.10 — Seed imported-world browser navigation
+
+Test-only fix for a reproduced fixture race. An incoming original-world snapshot
+can overwrite a destination stored by the test before its separate reload call.
+Seed that destination in the replacement document before its socket connects.
+Verify ordinary and deliberately interleaved snapshot journeys through the real
+import form and native script worker, retaining the original welcome-message
+deadline, no-script-error checks and scene screenshots. Production world-selection
+and worker logic are unchanged. The prior full workflow passed 18/19 jobs, failing
+only this journey; its passing interior/fleet samples do not resolve prior variance.
+Require the new complete exact-SHA workflow before deploying the pending batch.
+
 ## Upgrade 0.149.9 — Retain interior benchmark evidence
 
 Test-only evidence retention. Each closed/open, low/normal case attaches the

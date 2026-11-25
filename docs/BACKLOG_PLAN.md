@@ -14308,3 +14308,79 @@ Final 0.149.9 TypeScript/production build and changed-file formatting pass;
 checks are finished. The GPU runner was restarted and verified online/idle;
 no host-policy settings changed. The separate commits are ready for the required
 new full main workflow, with all performance caveats above retained.
+
+Pushed separate checkpoints **eb44562c** (survey fixture, 0.149.8) and
+**82ca5af3de0313e9ad4214d97f25f8d3e5a85987** (interior retention, 0.149.9) to
+main. New complete [workflow 45564414495](https://github.com/151henry151/Aclone/actions/runs/45564414495)
+is queued/in progress on the exact latter SHA. The release follow-up now tracks
+this run, all three prior failures and the unresolved performance caveats. Keep
+the GPU free during CI. Production remains 0.149.5; no deployment or announcement
+occurred. Only this post-push backlog status is uncommitted.
+
+### Current workflow script-import failure (2026-11-25 08:59 UTC)
+
+Current main **82ca5af3** / 0.149.9 has a new blocking failure in
+[workflow 45564414495](https://github.com/151henry151/Aclone/actions/runs/45564414495):
+root-12 job **139035612561**, `script-import.spec.ts:55`, failed the unchanged
+30-second chat welcome assertion; its other **18 tests passed**. The current
+SHA must not deploy. Root-2, root-4 and root-10 passed this run, which does not
+establish that the previously recorded performance variance is fixed. Root-14
+is still running and later shards are queued; keep the GPU free.
+
+The full job log and uploaded artifact, including original trace, error context
+and inspected failure screenshot, are retained under
+`output/performance-2026-11-24/ci-82ca5af3/` (root-12 subdirectory, job log one
+level above). `root-12/script-import-summary.json` records the offline timeline.
+Import succeeded and the fixture wrote replacement world ID
+`204d437d-4845-4c19-b28b-1c58230f425c` to localStorage at trace time
+505558.421 ms, then separately started reload at 505613.131 ms. After reload,
+the snapshot at 515402.45 ms and failed assertion snapshot at 545428.881 ms
+still show **Script studio**, the original world, rather than Scripted welcome.
+The screenshot shows disconnected, but Vite connection loss occurs only at
+545479.236 ms, after the assertion times out and the test closes its app in
+finally; this does not establish an earlier disconnect as the cause. Raw trace
+snapshots use shared node references, so absent text in an individual fragment
+is not proof that text was absent from the rendered DOM.
+
+The fixture mutates storage while the original client is live, then reloads in
+a separate call. `src/client/main.ts` writes the current world ID from the
+state presentation callback and reads stored world on socket hello. This
+supports a storage-overwrite fixture race hypothesis; it is not yet reproduced
+and does not establish a native script-worker failure. After all CI finishes,
+deterministically exercise a state presentation between storage write and reload,
+retain red evidence, then repair only the confirmed cause while preserving real
+import, native worker, welcome/no-script-error and original deadline checks.
+Do not retry merely to green or change production selection logic speculatively.
+No source changes or local GPU work occurred. Henry is notified once of this
+new blocker; production remains 0.149.5 and no deployment/announcement occurred.
+
+### Script-import race reproduced and repaired — 0.149.10 (2026-11-25)
+
+Full workflow **45564414495** completed **18/19 jobs passing**; root-12's
+recorded script-import failure is the sole failure. The runner was verified
+online/idle, with no other active CI, and stopped before local GPU work. Root-2
+and root-10 complete logs and workflow JSON are retained in `ci-82ca5af3/`.
+Normal closed/open interior p95 **18.299999952316284/18.799999952316284 ms**;
+normal active/parked fleet **18.399999856948853/19.600000143051147 ms** pass the
+unchanged limits. These samples do not establish a fix for earlier variance;
+successful jobs do not upload their profiler attachments, so only their logs
+are retained here. All earlier failed evidence and caveats remain applicable.
+
+The local forced-race journey writes the imported ID while the original world
+is connected, then waits for a real state presentation to restore the original
+ID before reload. The original welcome assertion fails at its unchanged 30000 ms
+limit, matching CI. `output/performance-2026-11-24/script-import-race/` retains
+`red-fixture.ts`, red log, trace and screenshot. This confirms the fixture's
+selection race; it does not establish a native worker or production selection bug.
+
+The repair sets the destination through a new-document init script before the
+replacement socket sends hello. Both ordinary and forced-race journeys pass
+(33.9/30.7 seconds), preserving real import controls, native worker, welcome,
+no-script-error and no-browser-error assertions; the selected imported ID is
+also checked. Each case retains its real successful scene image, and the
+forced-race image was inspected. All eight script runtime unit checks pass.
+No production code, workload, deadline, performance budget or host policy changed.
+Final 0.149.10 TypeScript/production build exited 0 (`script-import-race/build.log`);
+changed-file formatting and diff checks pass. All owned browser work is complete.
+Restart and verify the idle GPU runner before pushing this separate fixture repair;
+production stays 0.149.5 pending the complete new exact-SHA workflow.

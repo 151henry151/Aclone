@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.149.10] - 2026-11-25
+
+### Fixed
+
+- Set the imported-world destination before the reloaded browser connects in the native-script journey, so an intervening update from the original world cannot overwrite the fixture's selection. Cover the reproduced race while preserving the welcome-message deadline and script-error checks.
+
 ## [0.149.9] - 2026-11-25
 
 ### Changed
