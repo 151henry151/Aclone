@@ -2,11 +2,12 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.5** includes safer pilot recovery and browser-only alt switching,
+Release **0.149.5** includes safer pilot recovery and browser-only alt switching,
 and reduces each rain umbrella from eight draw calls to four while preserving its
 artwork, folding and first-person shelter. Offscreen umbrellas are culled.
 Intermittent browser-frame stalls remain under investigation.
-Complete CI and deployment are pending; production remains **0.149.3**.
+All 19 CI jobs passed. Production **0.149.5**, its exact commit, game/website
+assets and the public restore form are verified.
 
 Release **0.149.3** includes **marked tractor garage storage bays**: stop the whole rig
 inside the yellow dashes and choose **Store vehicle** directly on desktop or phone.
@@ -16,7 +17,7 @@ The startup follow-up ensures long loading gaps cannot skip fog and shader prepa
 Legacy automatic-storage coverage explicitly selects the supported menu-only policy.
 Fleet CI evidence now includes individual frame/render timings and browser counters;
 the performance recurrence remains under investigation with the original budgets.
-Production is **0.149.3**, with verified game and website assets.
+The garage bay release was verified in **0.149.3**.
 
 Version 0.148.0 gives hovercraft momentum through turns: the nose leads the slide,
 and holding a heading straightens it. World builders can tune the response or

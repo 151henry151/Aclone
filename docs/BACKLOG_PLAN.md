@@ -13759,3 +13759,47 @@ requested to investigate the remaining stutter without assuming the laptop resul
 represents that device. Henry authorized separate logical commits, push and deployment on 2026-11-23.
 The release candidate is 0.149.5; deploy only after complete exact-SHA CI passes.
 Production remains 0.149.3 until verified deployment. No new announcement is authorized.
+
+Post-push checkpoint (2026-11-23): **0.149.5** is pushed on main at
+`6c0100d9009b14c6a8136a889b0f243a736a36b9`. The separate commits are
+`ce554161` (verified prior garage-release records), `5b5e5948` (0.149.4 pilot
+recovery), and `6c0100d9` (0.149.5 umbrella rendering). Final release-version
+TypeScript/build and changed-file formatting pass. Complete
+[workflow 45248614028](https://github.com/151henry151/Aclone/actions/runs/45248614028)
+is pending; the exact-SHA CI gate must pass before deployment. Public health was
+independently checked and still reports **0.149.3**, `ok: true`, five worlds.
+The temporary `finish-aclone-pilot-and-rain-release` follow-up will finish the
+already-authorized deployment, verify game/website health, version, SHA and assets,
+and recheck CI. It stays quiet while pending and leaves the laptop GPU free.
+Both completed older follow-ups remain paused. No new Discord announcement is
+authorized. Keep this post-push status local until the release result is known.
+
+### Pilot recovery and rain rendering — released and verified, 2026-11-23
+
+**0.149.5 is live**, including the separate 0.149.4 account fixes, from exact main
+SHA `6c0100d9009b14c6a8136a889b0f243a736a36b9`. Complete
+[workflow 45248614028](https://github.com/151henry151/Aclone/actions/runs/45248614028)
+passed **19/19 jobs** before deployment and on the post-deploy recheck. Remote main
+still matched the verified SHA and the production checkout was clean at 0.149.3
+before the upgrade. No other agent changes were included.
+
+The documented exact-ref game deployment backed up SQLite to
+`/var/lib/aclone/backups/pre-deploy-20261123-170546.sqlite`, built and restarted
+successfully. Independent verification confirmed active service, clean server
+checkout at the exact verified SHA, health `ok: true`, version **0.149.5**, five
+worlds, and HTTP 200 JavaScript/CSS with correct content types:
+`index-CvRGkMyL.js` and `index-5ZCY6oEP.css`. The documented website deployment
+saved `/var/backups/aclone-website/site-20261123-170711.tar.gz`; the public home
+page reports 0.149.5 and eight page/style/script files match the built artifacts
+byte-for-byte. A real production browser verified the phone restore form/help and
+0.149.5 with no page errors, without signing in or modifying any player account.
+Evidence, screenshots, public asset hashes and pre/post CI receipts are retained
+in `output/bug-reports-2026-11-23/release/`; never stage this directory.
+
+The release is complete. The remaining intermittent browser-frame scheduling gap
+is not claimed fixed; physical reporter-device details remain unknown. Already
+revoked pilot keys still need normal recovery. No announcement was sent, no grants
+were made and no unrelated backlog work was started. The temporary pilot/rain
+release follow-up is disabled after verification; both older completed follow-ups
+remain paused. Post-release README/release/backlog records stay local so the
+CI-verified and deployed code SHA remains the head of main.

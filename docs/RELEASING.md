@@ -26,6 +26,14 @@ run passed. Keep diagnostic downloads out of commits.
 
 ## Upgrade 0.149.5 — Reduce rain umbrella rendering work
 
+Released on 2026-11-23 from main `6c0100d9009b14c6a8136a889b0f243a736a36b9`,
+including the 0.149.4 pilot fixes. All 19 jobs in
+[workflow 45248614028](https://github.com/151henry151/Aclone/actions/runs/45248614028)
+passed before deployment and on the post-deploy recheck. Production service,
+exact clean checkout, health/version, JavaScript/CSS, website assets and the public
+phone restore form are verified. Deployment logs and receipts remain in
+`output/bug-reports-2026-11-23/release/`. No announcement was sent.
+
 Refresh browsers after the normal deployment to load combined umbrella geometry.
 Weather, time of day, graphics quality and performance budgets are unchanged.
 The real WebGL regression retains folding, first-person canopy visibility and
@@ -44,7 +52,7 @@ accepts raw keys or complete exported recovery files and validates before saving
 Already-revoked keys still require the pilot's normal recovery method.
 Verify desktop/phone alt switching, progress retained after local sign-out,
 retained device keys and password-backed global revocation. Require complete CI
-on the exact pushed SHA before deploying; production remains 0.149.3 meanwhile.
+on the exact pushed SHA before deploying. Released and verified with 0.149.5.
 
 ## Upgrade 0.149.3 — Retain detailed fleet timing evidence
 
