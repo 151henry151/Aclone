@@ -14384,3 +14384,52 @@ Final 0.149.10 TypeScript/production build exited 0 (`script-import-race/build.l
 changed-file formatting and diff checks pass. All owned browser work is complete.
 Restart and verify the idle GPU runner before pushing this separate fixture repair;
 production stays 0.149.5 pending the complete new exact-SHA workflow.
+
+Pushed **e5f316f3fe7e63aeaa07ed99f898f52e7d346c0a** (0.149.10) to main after
+verifying the GPU runner online/idle. New complete
+[workflow 45588308012](https://github.com/151henry151/Aclone/actions/runs/45588308012)
+is queued on that exact SHA. The temporary follow-up tracks this new run and
+retains all earlier failed-SHA restrictions and unresolved performance caveats.
+Only this post-push status is uncommitted. Production remains 0.149.5; no deployment
+or announcement occurred. Keep the GPU free while CI runs.
+
+### GPU queue release verified — 0.149.10 (2026-11-25)
+
+Released the authorized batch from main **e5f316f3fe7e63aeaa07ed99f898f52e7d346c0a**.
+[Full workflow 45588308012](https://github.com/151henry151/Aclone/actions/runs/45588308012)
+completed **19/19 jobs successfully**, checked before deployment and again after
+public verification. GitHub main matched this SHA; the pre-deploy server was clean
+at 6c0100d9 with its service active. No unrelated agents' changes were included.
+
+Ran `DEPLOY_REF=e5f316f3fe7e63aeaa07ed99f898f52e7d346c0a bash scripts/deploy-nogits.sh`
+and the documented website deployment; both exited 0. The SQLite rollback copy
+is `/var/lib/aclone/backups/pre-deploy-20261125-073014.sqlite`; website backup is
+`/var/backups/aclone-website/site-20261125-073052.tar.gz` (server-local timestamps).
+An attempted separate uploaded-assets archive failed because `/var/lib/aclone/assets`
+does not exist; read-only directory inspection confirmed there are no uploaded-asset
+directories there. That attempt did not run deployment or produce a valid asset
+backup. No migration, player grant or environment/policy change was made.
+
+Post-deploy service is active; server Git status is empty and HEAD exactly matches
+the verified SHA. Public health reports `ok: true`, version **0.149.10**, five worlds.
+Both public game JavaScript/CSS assets have the correct MIME types and SHA-256
+hashes matching the server build. Twelve public website pages/assets match the
+local website build byte-for-byte, including landing/gallery/guide pages, their
+styles/scripts, viewer entry point and representative images. Deployment logs,
+pre/post CI JSON, server receipt and game/website verification JSON are retained in
+`output/performance-2026-11-24/release/`.
+
+Successful root-2/root-10 logs are retained there. Interior low closed/open p95
+37.60000014305115/37.60000014305115 ms and normal
+18.40000009536743/17.700000047683716 ms pass; fleet low active/parked
+37.799999952316284/36.59999990463257 ms and normal
+18.59999990463257/18.5 ms pass unchanged budgets. Successful shards do not upload
+their profiler attachments, so these are log summaries, not retained raw samples.
+The prior relative-performance failures remain unexplained, with all failed-run
+evidence preserved. This release bounds stale GPU submissions; it does not prove
+universal FPS, physical-phone performance, or resolution of every scheduling stall.
+
+Release/deployment verification is complete. No Discord announcement was sent.
+These post-deploy documentation receipts remain local and uncommitted; the deployed
+and pushed code remains the exact verified SHA. Disable the temporary follow-up;
+all three older completed release follow-ups remain paused.

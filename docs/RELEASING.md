@@ -26,6 +26,17 @@ run passed. Keep diagnostic downloads out of commits.
 
 ## Upgrade 0.149.10 — Seed imported-world browser navigation
 
+Released on 2026-11-25 from clean main
+`e5f316f3fe7e63aeaa07ed99f898f52e7d346c0a`, including 0.149.6–0.149.9.
+[Workflow 45588308012](https://github.com/151henry151/Aclone/actions/runs/45588308012)
+passed all 19 jobs before deployment and on the post-deploy recheck. The active
+service, exact clean server SHA, public health/version, JavaScript/CSS and matching
+website pages/assets are verified. Receipts remain in
+`output/performance-2026-11-24/release/`. Earlier performance variance remains
+unexplained; passing this workflow does not establish its cause or a universal
+frame-rate improvement. No announcement was sent. The pending-production wording
+in earlier upgrade entries below records their status when prepared.
+
 Test-only fix for a reproduced fixture race. An incoming original-world snapshot
 can overwrite a destination stored by the test before its separate reload call.
 Seed that destination in the replacement document before its socket connects.
