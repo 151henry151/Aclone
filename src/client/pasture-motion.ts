@@ -40,7 +40,7 @@ export function grazingPose(site: GrazingRoute, time: number) {
     z: a.z + (b.z - a.z) * u,
     heading: before + turn * smooth(Math.min(1, phase / 0.12)),
     walk,
-    stride: time * (site.kind === 'chickens' ? 10 : 5) + site.seed,
+    stride: time * (site.kind === 'chickens' ? 10 : site.kind === 'turkeys' ? 8 : 5) + site.seed,
     graze:
       phase < 0.12
         ? 1 - smooth(Math.min(1, phase / 0.1))

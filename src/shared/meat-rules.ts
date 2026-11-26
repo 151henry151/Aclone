@@ -25,6 +25,7 @@ export const meatRuleFields = {
   beefYield: { label: 'Raw beef per cow', min: 1, max: 1000, step: 1 },
   porkYield: { label: 'Raw pork per pig', min: 1, max: 1000, step: 1 },
   muttonYield: { label: 'Raw mutton per sheep', min: 1, max: 1000, step: 1 },
+  turkeyYield: { label: 'Raw turkey per adult turkey', min: 1, max: 1000, step: 1 },
   poultryYield: { label: 'Raw poultry per chicken', min: 1, max: 1000, step: 1 },
   slaughterCompostYield: {
     label: 'Compost by-product per slaughtered animal',

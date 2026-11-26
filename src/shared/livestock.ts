@@ -41,6 +41,15 @@ const species = {
     prefix: 'chicken',
     maturity: 'chickMaturityDays',
   },
+  turkeyFarm: {
+    animal: 'turkeys',
+    singular: 'turkey',
+    young: 'poult',
+    youngItem: 'poults',
+    output: 'eggs',
+    prefix: 'turkey',
+    maturity: 'poultMaturityDays',
+  },
 } as const;
 export type AnimalKind = (typeof species)[keyof typeof species]['animal'];
 export interface YoungCohort {

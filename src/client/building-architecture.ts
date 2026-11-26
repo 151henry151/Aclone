@@ -236,7 +236,7 @@ export function architecturalDetails(
     cylinder(0.3, h, '#7c7770', x, h / 2, z);
     (root.userData.chimneys ??= []).push(new T.Vector3(x, h + 0.2, z));
   }
-  if (b.kind === 'henhouse') {
+  if (['henhouse', 'turkeyFarm'].includes(b.kind)) {
     box(0.5, 0.5, 0.06, '#322d24', entry.x + 1.35, 0.25, entry.z + 0.05);
     const ramp = box(0.6, 0.06, 0.9, '#997944', entry.x + 1.35, 0.12, entry.z + 0.45);
     ramp.rotation.x = -0.2;

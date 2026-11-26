@@ -137,6 +137,7 @@ export function buildingPlan(b: {
       wall = '#b8a489';
       trim = '#695b4c';
       break;
+    case 'turkeyFarm':
     case 'henhouse':
       volumes = [volume(5, 4, 2.2, 1.2)];
       wall = '#ae7852';
@@ -333,6 +334,7 @@ export function buildingPlan(b: {
       'sheepfold',
       'piggery',
       'henhouse',
+      'turkeyFarm',
       'haybarn',
     ].includes(b.kind)
   )

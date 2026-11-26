@@ -1,4 +1,5 @@
 import { changeResourceRecovery } from '../shared/resources';
+import { integrateTurkeys } from '../shared/turkey-migration';
 import { integrateMeat } from '../shared/meat-migration';
 import { alignLegacyCargoMoorings } from '../shared/boathouse';
 import { normalizeTradingOffers } from '../shared/trading.ts';
@@ -104,6 +105,7 @@ export class Store {
         normalizeTowns(world);
         migrateEconomy(world);
         integrateMeat(world);
+        integrateTurkeys(world);
         alignLegacyCargoMoorings(world);
         migrateEmploymentPolicy(world);
         migrateEstates(world);

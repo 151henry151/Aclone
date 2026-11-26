@@ -6,7 +6,13 @@ import { stockWeight } from './fishing-expedition';
 import { youngAnimals } from './livestock';
 import { livestockRules } from './livestock-rules';
 import { rawMeats } from './meat-recipes';
-const animals: Record<string, number> = { cows: 1, sheep: 0.25, pigs: 0.35, chickens: 0.05 };
+const animals: Record<string, number> = {
+  cows: 1,
+  sheep: 0.25,
+  pigs: 0.35,
+  chickens: 0.05,
+  turkeys: 0.1,
+};
 const seafood = ['fish', 'largeFish', 'cod', 'halibut', 'tuna'];
 export function cargoAccepts(
   w: World,

@@ -53,6 +53,8 @@ export const buildingMapIcons: Readonly<Record<string, string>> = {
   dairyKitchen: 'M2 21h20M4 12h12v5q-6 6-12 0zM16 12h3q4 3-3 5M6 8h9M7 8V4l6-2 2 6',
   sheepfold: 'M5 15C0 13 2 7 6 7c-1-6 8-6 9-2 6-2 9 5 5 8v5h-5v-5M5 15h10M6 15v7M12 15v7M19 8h0',
   piggery: 'M5 9q5-5 12-2l4-3v7q4 3 0 6h-3v4h-3v-4H8v4H5v-5C1 15 1 9 5 9zM2 11Q0 6 3 6M17 11h0',
+  turkeyFarm:
+    'M10 16Q0 15 2 6l4 3V2l5 6 3-6 2 7 5-3q2 9-8 11M13 16v-5q0-5 4-4l2 2-3 1M10 17v5M14 17v5',
   henhouse: 'M4 10q0 8 9 8t7-10l3 2-3 2M17 6l-1-3 3 1 2-1v4M4 10 1 6v9l5 2M10 18v4M15 18v4M18 8h0',
   haybarn: 'M2 10 12 2 22 10M4 9v13h16V9M7 14h10v8H7zM10 14v8M14 14v8',
   boathouse: 'M2 10 12 2 22 10M4 9v10M20 9v10M7 14h10l-2 5H9zM2 23l5-2 5 2 5-2 5 2',

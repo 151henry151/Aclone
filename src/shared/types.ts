@@ -631,6 +631,7 @@ export interface World {
   northernIsland?: import('./northern-island').NorthernIsland;
   seafoodVersion?: number;
   meatVersion?: 1;
+  turkeyVersion?: 1;
   trailers?: Record<string, import('./trailers').Trailer>;
   trailerSeq?: number;
   towJobs?: Record<string, import('./towing').TowJob>;

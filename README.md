@@ -2,18 +2,24 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-Checkpoint **0.149.10** fixes a reproduced world-selection race in the native-script
-browser journey. It includes bounded GPU submission, recreated-survey test
-synchronization and complete interior/fleet benchmark evidence retention. Prior
-performance variance remains unexplained; graphics detail and budgets are unchanged.
-Deployment awaits complete exact-commit CI; production remains **0.149.5**.
+Release candidate **0.150.0** adds a complete domestic turkey food chain: five
+Turkey farm designs, animated adults and poults, breeding and growth, livestock
+transport, butchery, chilled storage, and turkey dinners, pies and soup at
+restaurants or home. Existing saves keep custom prices and gain missing listings
+plus a finite public starter flock where capacity permits. Deployment awaits
+complete exact-commit CI; verified production remains **0.149.10**.
+
+Release **0.149.10** includes bounded GPU submission, reproduced browser-fixture
+race fixes and complete interior/fleet benchmark evidence retention. All 19 CI
+jobs and production deployment passed. Earlier performance variance remains
+unexplained; graphics detail and budgets are unchanged.
 
 Release **0.149.5** includes safer pilot recovery and browser-only alt switching,
 and reduces each rain umbrella from eight draw calls to four while preserving its
 artwork, folding and first-person shelter. Offscreen umbrellas are culled.
 Intermittent browser-frame stalls remain under investigation.
-All 19 CI jobs passed. Production **0.149.5**, its exact commit, game/website
-assets and the public restore form are verified.
+All 19 CI jobs passed; its exact commit, game/website assets and the public restore
+form were verified before the subsequent 0.149.10 deployment.
 
 Release **0.149.3** includes **marked tractor garage storage bays**: stop the whole rig
 inside the yellow dashes and choose **Store vehicle** directly on desktop or phone.
@@ -446,7 +452,7 @@ Version 0.111.0 adds evening windows and overnight security, yard and parking li
 
 ## What you can do
 
-- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs and chickens in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Version 0.115.0 F10 construction rules configure spacing, shoreline reach, spawn/town clearances, the refund share, expansion cost multipliers, the farm plot limit and new pasture parcel dimensions. Puddlewick reserves its respawn point and town centres against new construction. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
+- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs, chickens and turkeys in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Version 0.115.0 F10 construction rules configure spacing, shoreline reach, spawn/town clearances, the refund share, expansion cost multipliers, the farm plot limit and new pasture parcel dimensions. Puddlewick reserves its respawn point and town centres against new construction. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Find natural timber, stone, gravel and topsoil grounds across the island, with light wear near towns or recent workings. World builders can adjust wear thresholds, keep sites entirely natural or restore legacy worked-site scenery.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Oceans have depth-faded underwater visibility, weather-driven swells and breaking surf. Boats rise and tilt with waves, and fast wave encounters produce spray and slow the hull. World owners can configure wave strength and moon-linked tidal ranges; Puddlewick uses a modest 0.6-metre spring range.
@@ -501,6 +507,8 @@ NPCs share explicit financial facts between chat and planning and can carry out 
 Design buildings before breaking ground: five trade-specific architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
 
 Roads and the starter town’s circular gravel square offer faster tractor travel than fields, with a modest advantage in dry weather and a stronger one on wet or snow-covered ground. Large worlds have rolling uplands around the settled town; tractors climb more slowly and descend faster, with a controlled speed bonus. Players and NPCs follow the same driving rules.
+
+Version 0.150.0 adds a turkey food chain: build a Turkey farm, care for a breeding flock and poults, transport surplus adults to the butcher, and supply roast turkey dinners, turkey pies and turkey soup to restaurants or cook them at home. Existing saves keep operator prices and receive missing listings plus a finite public starter flock. See [turkey farming and meals](docs/PLAYING.md#turkeys-from-pasture-to-plate).
 
 Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Harvest crops before winter kills them; stored produce survives. Cattle and sheep eat hay or feed from their stockrooms; see [farming](docs/PLAYING.md#farming) and [livestock](docs/PLAYING.md#livestock-and-nutrition).
 

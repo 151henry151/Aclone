@@ -5,6 +5,7 @@ import * as T from 'three';
 import { trailerDefs, type TrailerKind } from '../shared/trailers';
 import { detailTexture } from './detail-textures';
 import { batch } from './tractor';
+import { livestockRules } from '../shared/livestock-rules';
 import { animalModel } from './animal-model';
 import type { Stock, World } from '../shared/types';
 export function createTrailer(kind: TrailerKind, cargo: Stock = {}, world?: World) {
@@ -312,21 +313,24 @@ export function createTrailer(kind: TrailerKind, cargo: Stock = {}, world?: Worl
   }
   if (kind === 'livestock') {
     let at = 0;
-    for (const animal of ['cows', 'sheep', 'pigs', 'chickens'] as const)
+    for (const animal of ['cows', 'sheep', 'pigs', 'chickens', 'turkeys', 'poults'] as const)
       for (
         let i = 0;
         i < Math.min(cargo[animal] ?? 0, animal === 'cows' ? 6 : 8) && at < 8;
         i++, at++
       ) {
         const a = new T.Group();
-        for (const part of animalModel(animal)) {
+        for (const part of animalModel(animal === 'poults' ? 'turkeys' : animal)) {
           const m = new T.Mesh(
             part.geometry,
             new T.MeshStandardMaterial({ vertexColors: true, roughness: 1 }),
           );
           m.position.copy(part.pivot);
+          if (animal === 'poults' && part.motion === 'tail') m.scale.setScalar(0.25);
           a.add(m);
         }
+        if (animal === 'poults')
+          a.scale.setScalar(livestockRules(world?.settings).livestockYoungVisualScale);
         a.position.set(((at % 2) - 0.5) * 1.05, 1.17, -l * 0.33 + Math.floor(at / 2) * l * 0.32);
         load.add(a);
       }

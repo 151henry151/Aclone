@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.150.0] - 2026-11-26
+
+### Added
+
+- Turkey farms with five building designs, animated bronze turkeys and smaller poults, feed and water care, breeding, healthy growth, pasture expansion, livestock transport and configurable world rules.
+- Raw turkey from adult birds at the butcher, with the existing chilled-storage and spoilage rules. Kitchens, cafés, pubs and inns can prepare roast turkey dinners, turkey pies and turkey soup; players can cook the same dishes at home.
+- Turkey trading across the farm-to-restaurant economy. Existing saves receive missing turkey listings without replacing custom or paused prices, and public ports receive a finite starter flock once where capacity permits.
+
 ## [0.149.10] - 2026-11-25
 
 ### Fixed

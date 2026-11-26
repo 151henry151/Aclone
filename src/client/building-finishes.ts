@@ -60,6 +60,7 @@ export function buildingFinish(kind: string, plan: BuildingPlan): BuildingFinish
       'sawmill',
       'carpenter',
       'henhouse',
+      'turkeyFarm',
       'dairy',
       'sheepfold',
       'piggery',

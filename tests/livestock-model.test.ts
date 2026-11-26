@@ -13,7 +13,7 @@ import {
 import { createWorld, makeBuilding, addPlayer } from '../src/shared/simulation.ts';
 import { livestock } from '../src/shared/livestock.ts';
 test('animal rigs have natural metre scales, finite geometry and a bounded draw/triangle budget', () => {
-  for (const kind of ['cows', 'sheep', 'pigs', 'chickens'] as const) {
+  for (const kind of ['cows', 'sheep', 'pigs', 'chickens', 'turkeys'] as const) {
     const parts = animalModel(kind),
       box = new T.Box3();
     let triangles = 0;
@@ -75,7 +75,10 @@ test('visible herds follow stock, removal and world changes without rebuilding g
   view.update(w, p);
   view.animate(1);
   const sites = livestockSites(w, p);
-  assert.equal(sites.length, 10);
+  assert.equal(
+    sites.length,
+    Object.values(livestock).reduce((sum, spec) => sum + spec.minimum, 0),
+  );
   assert.deepEqual(sites, livestockSites(w, p));
   assert.ok(sites.length <= MAX_VISIBLE_LIVESTOCK);
   w.buildings[0].stock.cows = 0;

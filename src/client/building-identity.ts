@@ -98,7 +98,7 @@ export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPl
       for (const dz of [-0.35, 0, 0.35])
         box(1.5, 0.035, 0.06, '#394e53', main.x + dx, y + 0.72, main.z + dz);
     }
-  if (b.kind === 'henhouse') {
+  if (['henhouse', 'turkeyFarm'].includes(b.kind)) {
     const coop = plan.volumes.reduce(
       (a, v) => (v.x + v.width / 2 > a.x + a.width / 2 ? v : a),
       main,

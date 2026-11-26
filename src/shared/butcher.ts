@@ -113,7 +113,7 @@ export function butcherAction(
       `Young animals cannot be slaughtered: ${Math.max(0, spec.maturityDays - grown).toFixed(1)} days to maturity with healthy farm care.`,
     );
   }
-  need(Object.hasOwn(meatAnimals, item), 'Choose an adult cow, pig, sheep or chicken');
+  need(Object.hasOwn(meatAnimals, item), 'Choose an adult cow, pig, sheep, chicken or turkey');
   need(
     trailer ||
       (p.vehicle === 5 && n === 1 && worldItems(w)[item].weight <= rules.slaughterWalkingWeight),

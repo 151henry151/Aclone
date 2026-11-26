@@ -72,7 +72,13 @@
       "calves": 10300,
       "lambs": 7210,
       "piglets": 8240,
-      "chicks": 1545
+      "chicks": 1545,
+      "turkeys": 9270,
+      "poults": 4635,
+      "turkeyMeat": 6695,
+      "turkeyDinner": 10300,
+      "turkeyPie": 10300,
+      "turkeySoup": 9270
     },
     "sell": {
       "wheat": 1575,
@@ -143,7 +149,13 @@
       "calves": 15500,
       "lambs": 10850,
       "piglets": 12400,
-      "chicks": 2325
+      "chicks": 2325,
+      "turkeys": 13950,
+      "poults": 6975,
+      "turkeyMeat": 10075,
+      "turkeyDinner": 15500,
+      "turkeyPie": 15500,
+      "turkeySoup": 13950
     },
     "stock": {
       "wheat": 60,
@@ -196,7 +208,8 @@
       "pigs": 20,
       "chickens": 20,
       "wool": 0,
-      "eggs": 0
+      "eggs": 0,
+      "turkeys": 12
     },
     "recipe": null,
     "wage": 2200,
@@ -284,7 +297,11 @@
       "roastChicken": 11200,
       "meatBreakfast": 10640,
       "pubMeatPie": 10640,
-      "steak": 4032
+      "steak": 4032,
+      "turkeyMeat": 7280,
+      "turkeyDinner": 11200,
+      "turkeyPie": 11200,
+      "turkeySoup": 10080
     },
     "sell": {
       "beer": 7875,
@@ -303,7 +320,10 @@
       "roastChicken": 13900,
       "meatBreakfast": 13205,
       "pubMeatPie": 13205,
-      "steak": 5000
+      "steak": 5000,
+      "turkeyDinner": 13900,
+      "turkeyPie": 13900,
+      "turkeySoup": 12510
     },
     "stock": {
       "beer": 60,
@@ -424,7 +444,13 @@
       "calves": 10100,
       "lambs": 7210,
       "piglets": 8240,
-      "chicks": 1545
+      "chicks": 1545,
+      "turkeys": 9270,
+      "poults": 4635,
+      "turkeyMeat": 6565,
+      "turkeyDinner": 10100,
+      "turkeyPie": 10100,
+      "turkeySoup": 9090
     },
     "sell": {
       "wheat": 1575,
@@ -495,7 +521,13 @@
       "calves": 16500,
       "lambs": 11550,
       "piglets": 13200,
-      "chicks": 2475
+      "chicks": 2475,
+      "turkeys": 14850,
+      "poults": 7425,
+      "turkeyMeat": 10725,
+      "turkeyDinner": 16500,
+      "turkeyPie": 16500,
+      "turkeySoup": 14850
     },
     "stock": {
       "wheat": 60,
@@ -548,7 +580,8 @@
       "pigs": 20,
       "chickens": 20,
       "wool": 0,
-      "eggs": 0
+      "eggs": 0,
+      "turkeys": 12
     },
     "recipe": null,
     "wage": 2200,
@@ -1114,7 +1147,7 @@
     "idealEmployees": 2
   },
   "winery": {
-    "name": "Vintner\u2019s press",
+    "name": "Vintner’s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
@@ -1151,7 +1184,8 @@
       "pork": 4704,
       "mutton": 5600,
       "poultry": 7280,
-      "eggs": 2324
+      "eggs": 2324,
+      "turkeyMeat": 7280
     },
     "sell": {
       "meals": 5325,
@@ -1164,7 +1198,10 @@
       "roastChicken": 10000,
       "meatBreakfast": 9500,
       "pubMeatPie": 9500,
-      "steak": 3600
+      "steak": 3600,
+      "turkeyDinner": 10000,
+      "turkeyPie": 10000,
+      "turkeySoup": 9000
     },
     "stock": {},
     "recipe": "kitchen",
@@ -1249,7 +1286,11 @@
       "roastChicken": 11200,
       "meatBreakfast": 10640,
       "pubMeatPie": 10640,
-      "steak": 4032
+      "steak": 4032,
+      "turkeyMeat": 7280,
+      "turkeyDinner": 11200,
+      "turkeyPie": 11200,
+      "turkeySoup": 10080
     },
     "sell": {
       "meals": 7400,
@@ -1265,7 +1306,10 @@
       "roastChicken": 13900,
       "meatBreakfast": 13205,
       "pubMeatPie": 13205,
-      "steak": 5000
+      "steak": 5000,
+      "turkeyDinner": 13900,
+      "turkeyPie": 13900,
+      "turkeySoup": 12510
     },
     "stock": {
       "meals": 0,
@@ -1309,7 +1353,11 @@
       "roastChicken": 11200,
       "meatBreakfast": 10640,
       "pubMeatPie": 10640,
-      "steak": 4032
+      "steak": 4032,
+      "turkeyMeat": 7280,
+      "turkeyDinner": 11200,
+      "turkeyPie": 11200,
+      "turkeySoup": 10080
     },
     "sell": {
       "meals": 7400,
@@ -1325,7 +1373,10 @@
       "roastChicken": 13900,
       "meatBreakfast": 13205,
       "pubMeatPie": 13205,
-      "steak": 5000
+      "steak": 5000,
+      "turkeyDinner": 13900,
+      "turkeyPie": 13900,
+      "turkeySoup": 12510
     },
     "stock": {
       "meals": 0,
@@ -1445,7 +1496,7 @@
     "idealEmployees": 2
   },
   "dairyKitchen": {
-    "name": "Country caf\u00e9",
+    "name": "Country café",
     "price": 120000,
     "capacity": 500,
     "buy": {
@@ -1460,7 +1511,8 @@
       "mutton": 5600,
       "poultry": 7280,
       "flour": 5181,
-      "eggs": 2324
+      "eggs": 2324,
+      "turkeyMeat": 7280
     },
     "sell": {
       "dairyMeals": 9000,
@@ -1474,7 +1526,10 @@
       "roastChicken": 10000,
       "meatBreakfast": 9500,
       "pubMeatPie": 9500,
-      "steak": 3600
+      "steak": 3600,
+      "turkeyDinner": 10000,
+      "turkeyPie": 10000,
+      "turkeySoup": 9000
     },
     "stock": {},
     "recipe": "dairyKitchen",
@@ -1712,13 +1767,15 @@
       "cows": 29120,
       "pigs": 23296,
       "sheep": 20384,
-      "chickens": 4368
+      "chickens": 4368,
+      "turkeys": 13104
     },
     "sell": {
       "beef": 3500,
       "pork": 4200,
       "mutton": 5000,
-      "poultry": 6500
+      "poultry": 6500,
+      "turkeyMeat": 6500
     },
     "stock": {},
     "recipe": "butcher_cows",
@@ -1749,5 +1806,33 @@
     },
     "tier": 0,
     "color": "#93a5a0"
+  },
+  "turkeyFarm": {
+    "name": "Turkey farm",
+    "price": 100000,
+    "capacity": 500,
+    "buy": {
+      "feed": 2017,
+      "water": 1485,
+      "turkeys": 10080,
+      "poults": 5040
+    },
+    "sell": {
+      "eggs": 2075,
+      "turkeys": 11700,
+      "poults": 5850
+    },
+    "stock": {},
+    "recipe": "turkeyFarm",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#917250",
+    "idealEmployees": 1
   }
 }

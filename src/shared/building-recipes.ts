@@ -430,6 +430,13 @@ export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
     p('Low pig shelter', hall(12, 5, 2.5, 'barrel', 1.2, 0, 0, 'x')),
     p('Breeding barn', hall(8, 8, 2.8, 'hip', 1.6)),
   ],
+  turkeyFarm: [
+    p('Turkey roost', hall(7, 5, 2.8, 'gable', 1.4)),
+    p('Long turkey house', hall(10, 4, 2.6, 'shed', 0.9)),
+    p('Turkey hatchery and brooder', hall(6, 5, 2.8), hall(3, 4, 2.4, 'shed', 0.6, 4.5, -1)),
+    p('Turkey breeding barn', hall(7, 7, 2.8, 'hip', 1.6)),
+    p('Arched turkey shelter', hall(6, 8, 2.6, 'barrel', 1.6)),
+  ],
   henhouse: [
     p('Gabled henhouse', hall(5, 4, 2.4, 'gable', 1.2)),
     p('Long laying house', hall(8, 3.5, 2.4, 'shed', 0.7)),

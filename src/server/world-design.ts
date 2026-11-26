@@ -72,7 +72,7 @@ const freightLifeSchema = z.object({
   young: z
     .array(
       z.object({
-        item: z.enum(['calves', 'lambs', 'piglets', 'chicks']),
+        item: z.enum(['calves', 'lambs', 'piglets', 'chicks', 'poults']),
         count: z.number().int().min(1).max(1000000),
         born: z.number().finite().min(-1e12).max(0),
         grownDays: z.number().finite().min(0).max(1e9),
@@ -83,7 +83,7 @@ const freightLifeSchema = z.object({
   meat: z
     .array(
       z.object({
-        item: z.enum(['beef', 'pork', 'mutton', 'poultry']),
+        item: z.enum(['beef', 'pork', 'mutton', 'poultry', 'turkeyMeat']),
         count: z.number().int().min(1).max(1000000),
         agedDays: z.number().finite().min(0).max(1e9),
       }),
@@ -288,7 +288,7 @@ const designSchema = z.object({
         young: z
           .array(
             z.object({
-              item: z.enum(['calves', 'lambs', 'piglets', 'chicks']),
+              item: z.enum(['calves', 'lambs', 'piglets', 'chicks', 'poults']),
               count: z.number().int().min(1).max(100000000),
               born: z.number().finite().min(-1e12).max(0),
               grownDays: z.number().finite().min(0).max(1e9),
@@ -299,7 +299,7 @@ const designSchema = z.object({
         continuousBreeding: z.boolean().optional(),
         slaughterFees: z
           .partialRecord(
-            z.enum(['cows', 'pigs', 'sheep', 'chickens']),
+            z.enum(['cows', 'pigs', 'sheep', 'chickens', 'turkeys']),
             z.number().int().min(0).max(100000000),
           )
           .optional(),

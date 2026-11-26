@@ -399,5 +399,44 @@
     "food": 30000,
     "drink": 6000,
     "health": 1000
+  },
+  "turkeys": {
+    "name": "Turkeys",
+    "weight": 4,
+    "price": 9000
+  },
+  "poults": {
+    "name": "Turkey poults",
+    "weight": 1,
+    "price": 4500
+  },
+  "turkeyMeat": {
+    "name": "Raw turkey",
+    "weight": 1,
+    "price": 6300
+  },
+  "turkeyDinner": {
+    "name": "Roast turkey dinner",
+    "weight": 2,
+    "price": 10000,
+    "food": 32000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "turkeyPie": {
+    "name": "Turkey pie",
+    "weight": 2,
+    "price": 10000,
+    "food": 28000,
+    "drink": 2000,
+    "health": 1000
+  },
+  "turkeySoup": {
+    "name": "Turkey soup",
+    "weight": 2,
+    "price": 9000,
+    "food": 26000,
+    "drink": 20000,
+    "health": 1000
   }
 }

@@ -25,6 +25,7 @@ export const livestockRuleFields = {
     max: 3650,
     step: 0.1,
   },
+  poultMaturityDays: { label: 'Poult maturity (game days)', min: 0.1, max: 3650, step: 0.1 },
   chickMaturityDays: {
     label: 'Chick maturity (game days)',
     min: 0.1,
@@ -234,6 +235,36 @@ export const livestockRuleFields = {
   },
   chickenBreedingFee: {
     label: 'Chicken: Breeding fee (internal currency units)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  turkeyBreedingMinimum: {
+    label: 'Turkey: Minimum adult breeding stock',
+    min: 1,
+    max: 100,
+    step: 1,
+  },
+  turkeyFeedRation: {
+    label: 'Turkey: Feed per adult care cycle',
+    min: 0,
+    max: 100,
+    step: 0.1,
+  },
+  turkeyWaterRation: {
+    label: 'Turkey: Water per adult care cycle',
+    min: 0,
+    max: 100,
+    step: 0.1,
+  },
+  turkeyBreedingSeconds: {
+    label: 'Turkey: Breeding duration (seconds)',
+    min: 1,
+    max: 604800,
+    step: 1,
+  },
+  turkeyBreedingFee: {
+    label: 'Turkey: Breeding fee (internal currency units)',
     min: 0,
     max: 1000000,
     step: 1,

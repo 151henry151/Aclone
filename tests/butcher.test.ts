@@ -13,6 +13,7 @@ const species = [
   ['pigs', 'pork', 8, 'piggery'],
   ['sheep', 'mutton', 6, 'sheepfold'],
   ['chickens', 'poultry', 1, 'henhouse'],
+  ['turkeys', 'turkeyMeat', 3, 'turkeyFarm'],
 ] as const;
 function shop() {
   const w = createWorld('butcher-service', 'Butcher', 'owner');
@@ -39,7 +40,7 @@ function shop() {
   w.buildings = [b];
   return { w, b, owner, farmer, worker };
 }
-test('butcher bids and all four slaughter batches pay suppliers and qualified staff after tax', () => {
+test('butcher bids and all species’ slaughter batches pay suppliers and qualified staff after tax', () => {
   assert.ok(buildings.butcher, 'the butcher is a buildable tier-zero business');
   assert.equal(buildings.butcher.tier, 0);
   assert.ok(skills.includes('butcher'));
@@ -366,9 +367,19 @@ test('NPC chain knowledge includes all meat menus and world yields drive pricing
   const { productionDiagnostics } = await import('../src/shared/world-catalogue');
   const { w, b } = shop();
   const graph = recipeGraph(w);
-  for (const raw of ['beef', 'pork', 'mutton', 'poultry'])
+  for (const raw of ['beef', 'pork', 'mutton', 'poultry', 'turkeyMeat'])
     assert.ok(graph[raw].producerKinds.includes('butcher'), raw);
-  for (const meal of ['beefStew', 'porkSupper', 'muttonPie', 'roastChicken', 'steak', 'pubMeatPie'])
+  for (const meal of [
+    'beefStew',
+    'porkSupper',
+    'muttonPie',
+    'roastChicken',
+    'steak',
+    'pubMeatPie',
+    'turkeyDinner',
+    'turkeyPie',
+    'turkeySoup',
+  ])
     assert.ok(graph[meal].producerKinds.includes('kitchen'), meal);
   const baseline = sustainableAsk(w, b, 'beef')!;
   w.settings.beefYield = 24;

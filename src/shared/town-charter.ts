@@ -177,7 +177,16 @@ const kinds: Record<string, Category> = {};
 for (const [category, list] of Object.entries({
   residential: ['home', 'vehicleStorage', 'warehouse', 'bnb', 'hotel'],
   commercial: ['market', 'pub', 'bank', 'garage', 'starport', 'kitchen', 'teaHouse', 'notice'],
-  agricultural: ['farm', 'sheepfold', 'piggery', 'henhouse', 'dairy', 'feedmill', 'composter'],
+  agricultural: [
+    'farm',
+    'sheepfold',
+    'piggery',
+    'henhouse',
+    'turkeyFarm',
+    'dairy',
+    'feedmill',
+    'composter',
+  ],
   civic: ['school', 'workhouse', 'town', 'turret', 'portal', 'scripted', 'pickup'],
 }))
   for (const kind of list) kinds[kind] = category as Category;

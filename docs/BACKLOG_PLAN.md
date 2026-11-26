@@ -14433,3 +14433,46 @@ Release/deployment verification is complete. No Discord announcement was sent.
 These post-deploy documentation receipts remain local and uncommitted; the deployed
 and pushed code remains the exact verified SHA. Disable the temporary follow-up;
 all three older completed release follow-ups remain paused.
+
+### Turkey ecosystem release candidate — 0.150.0 (2026-11-26)
+
+Henry explicitly authorized commit, push, deploy and an announcement in Discord's
+announcements channel. Domestic turkeys/poults now span five farm architectures,
+care and breeding, growth, pasture, wagon transport, butchery, chilled/raw-meat
+freshness, three restaurant/home meals, trading, NPC chain knowledge and editable
+world rules. The one-time save migration preserves custom/paused prices and
+private/empty stock, skips templates, and seeds at most 12 adults into eligible
+public ports within remaining weight capacity. No wild turkey/hunting claim.
+
+Local validation: TypeScript/production build passed, 92 focused/isolated unit
+tests passed and two hardware GPU browser journeys passed (30.7s ecosystem, 8.6s
+model preview). Real controls verify breeding, young slaughter refusal, wagon
+loading, adult butchery, four visible restaurant dinners, home cooking and eating.
+All existing geometry, assertion, nutrition and time budgets remain enforced.
+The missing public Turkey farm gallery sheet was generated from actual geometry
+and visually inspected during release preparation. Evidence and the complete
+validation report remain in ignored `output/turkey-ecosystem/`.
+
+The initial broad unit run was 2600/2604 passing, with three failures and one
+cancellation. The obsolete 56-building count was corrected to 57 and verified.
+Checkpoint responsiveness, NPC conversation count and slow-network timing checks
+passed separately with unchanged deadlines; their causes/recurrences remain
+unproven. Earlier model-budget/nutrition and browser-fixture attempts are retained
+in the validation report. Do not claim the broad suite passed locally or discard
+those attempts. No failed SHA may be deployed or rerun merely to obtain green.
+
+The separate preceding commit records the already verified 0.149.10 GPU release.
+Production remains 0.149.10 until the complete exact-SHA turkey workflow succeeds
+and normal game/website deployment and verification complete. Publish the turkey
+announcement only after verification, in channel 1565527790785404968 of guild 1562183434254680175. Use deduplication and independently verify the posted message.
+All four completed older release follow-ups remain paused.
+
+Final 0.150.0 TypeScript/game build, website build and website browser checks
+all exited 0; the website check covers four widths, all 57 gallery cards, images,
+interactive previews, keyboard/touch controls and WebGL/no-JavaScript fallbacks.
+Changed-file formatting and diff checks pass. The release review added only the
+missing Turkey farm contact sheet (real model render, software GL, visually
+inspected); all local browser processes finished before push. GPU runner verified
+online/idle. Production preflight found active service and a clean e5f316f3 checkout.
+The deduplicating announcement draft/script and two reviewed images are prepared
+in `output/turkey-ecosystem/release/`; nothing has been posted or deployed yet.

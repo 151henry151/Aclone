@@ -13,8 +13,9 @@ export const pastureAnimal = {
   sheepfold: 'sheep',
   piggery: 'pigs',
   henhouse: 'chickens',
+  turkeyFarm: 'turkeys',
 };
-export const pastureSpecies = { dairy: 4, sheepfold: 6, piggery: 6, henhouse: 12 };
+export const pastureSpecies = { dairy: 4, sheepfold: 6, piggery: 6, henhouse: 12, turkeyFarm: 8 };
 export const isLivestockFarm = (b: Pick<Building, 'kind'>) => Object.hasOwn(pastureSpecies, b.kind);
 export const MAX_PASTURE_PARCELS = 4;
 export function pastureParcelSize(p: Pasture) {

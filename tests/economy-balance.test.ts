@@ -78,6 +78,7 @@ test('the complete livestock-to-meal chain pays actual young care, farm wages, b
       pigs: 'porkSupper',
       sheep: 'muttonPie',
       chickens: 'roastChicken',
+      turkeys: 'turkeyDinner',
     }[animal]!;
     const cooking = recipes[`meat_${meal}`],
       kitchen = buildings.kitchen,

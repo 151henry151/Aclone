@@ -746,5 +746,12 @@
   "toolImportScarcity": 2,
   "toolImportPremium": 50,
   "toolImportCostShare": 0.8,
-  "toolImportBidMargin": 100
+  "toolImportBidMargin": 100,
+  "poultMaturityDays": 8,
+  "turkeyBreedingMinimum": 2,
+  "turkeyFeedRation": 1,
+  "turkeyWaterRation": 1,
+  "turkeyBreedingSeconds": 2400,
+  "turkeyBreedingFee": 1200,
+  "turkeyYield": 3
 }

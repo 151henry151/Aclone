@@ -34,6 +34,7 @@ test('breeding gives a saved young cohort for every species while existing adult
     ['piggery', 'pigs', 'piglets', 2],
     ['sheepfold', 'sheep', 'lambs', 2],
     ['henhouse', 'chickens', 'chicks', 4],
+    ['turkeyFarm', 'turkeys', 'poults', 2],
   ] as const) {
     const { w, b, owner } = farm(kind, animal, adults);
     act(w, owner.id, { type: 'livestock', building: b.id, operation: 'breed' });
@@ -46,23 +47,28 @@ test('breeding gives a saved young cohort for every species while existing adult
     assert.equal(b.young?.[0].born, due);
   }
 });
-test('young grow only with adequate care and mature at their saved game-day boundary', () => {
-  const { w, b, owner } = farm();
-  Object.assign(w.settings, { calfMaturityDays: 2 });
-  act(w, owner.id, { type: 'livestock', building: b.id, operation: 'breed' });
-  advance(w, b.breedingEnd! - w.time);
-  advance(w, 600);
-  assert.equal(b.stock.calves, 1);
-  b.stock.feed = b.stock.water = 0;
-  advance(w, 600);
-  assert.equal(b.stock.calves, 1, 'a hungry day must not mature the calf');
-  b.stock.feed = b.stock.water = 10000;
-  advance(w, 599);
-  assert.equal(b.stock.calves, 1);
-  advance(w, 1);
-  assert.equal(b.stock.calves ?? 0, 0);
-  assert.equal(b.stock.cows, 3);
-  assert.equal(b.young?.length ?? 0, 0);
+test('calves and poults grow only with adequate care and mature at their saved game-day boundary', () => {
+  for (const [kind, adult, young, maturity] of [
+    ['dairy', 'cows', 'calves', 'calfMaturityDays'],
+    ['turkeyFarm', 'turkeys', 'poults', 'poultMaturityDays'],
+  ] as const) {
+    const { w, b, owner } = farm(kind, adult);
+    w.settings[maturity] = 2;
+    act(w, owner.id, { type: 'livestock', building: b.id, operation: 'breed' });
+    advance(w, b.breedingEnd! - w.time);
+    advance(w, 600);
+    assert.equal(b.stock[young], 1);
+    b.stock.feed = b.stock.water = 0;
+    advance(w, 600);
+    assert.equal(b.stock[young], 1, 'a hungry day must not mature the young animal');
+    b.stock.feed = b.stock.water = 10000;
+    advance(w, 599);
+    assert.equal(b.stock[young], 1);
+    advance(w, 1);
+    assert.equal(b.stock[young] ?? 0, 0);
+    assert.equal(b.stock[adult], 3);
+    assert.equal(b.young?.length ?? 0, 0);
+  }
 });
 test('young use half pasture and rations, produce nothing, and die before adults', () => {
   const { w, b } = farm();

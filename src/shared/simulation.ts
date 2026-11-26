@@ -480,6 +480,7 @@ export function createWorld(
     tradePricing: 4,
     livestockPricing: 1,
     meatVersion: 1,
+    turkeyVersion: 1,
     animalPricing: 1,
     vehicleServicesPricing: 1,
     gatherToolsPricing: 1,

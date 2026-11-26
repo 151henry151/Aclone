@@ -379,5 +379,17 @@
     "skill": "cook",
     "seconds": 600,
     "tier": 0
+  },
+  "turkeyFarm": {
+    "inputs": {
+      "feed": 2,
+      "water": 2
+    },
+    "outputs": {
+      "eggs": 6
+    },
+    "skill": "livestock farmer",
+    "seconds": 600,
+    "tier": 0
   }
 }

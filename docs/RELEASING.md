@@ -24,6 +24,26 @@ do not start the next backlog feature or announce verification as complete while
 required checks remain red. Check again after deployment even if the pre-deploy
 run passed. Keep diagnostic downloads out of commits.
 
+## Upgrade 0.150.0 — Domestic turkey ecosystem
+
+Back up the database and uploaded assets, then deploy client and server together
+and publish the website. Refresh browsers for the new animals, farms and menus.
+A one-time `turkeyVersion` migration adds missing catalogue turkey buy/sell quotes
+without replacing operator prices or paused quotes. It skips custom templates and
+the parish necessities store. Treasury-owned public markets/ports receive at most
+12 adult turkeys only when the stock field was absent, constrained by free weight
+capacity. Empty or private flocks are never replenished. No existing animals,
+player property or money are reset. Retain the matching backup for rollback.
+
+Verify adult/poult care, breeding and growth, wagon transport, adult butchery and
+poult refusal, freshness/chilling, all three meals, restaurant production and home
+cooking. World designs preserve cohorts and the configurable rules. The public
+building gallery includes all five Turkey farm models. Local evidence is retained
+under `output/turkey-ecosystem/`; the broad unit run's three unrelated timing/count
+failures passed separately but their recurrence is not established as fixed.
+Require complete exact-SHA CI before deployment, recheck after public verification,
+then send the explicitly authorized turkey announcement to `#announcements`.
+
 ## Upgrade 0.149.10 — Seed imported-world browser navigation
 
 Released on 2026-11-25 from clean main

@@ -600,7 +600,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       new T.Vector3(main.width * 0.35, height + 0.2, -main.depth * 0.3),
     );
   }
-  if (['dairy', 'sheepfold', 'piggery', 'henhouse'].includes(b.kind)) {
+  if (['dairy', 'sheepfold', 'piggery', 'henhouse', 'turkeyFarm'].includes(b.kind)) {
     // Trough and hay stores sit against the building, within its standing yard.
     const x = main.width / 2 + 0.5;
     box(0.8, 0.4, 2.4, '#737a73', x, 0.2, -1);
@@ -609,7 +609,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       const bale = cylinder(0.46, 0.8, '#ba9f5e', -main.width / 2 - 0.5, 0.46, -1 + i * 0.9);
       bale.rotation.z = Math.PI / 2;
     }
-    if (b.kind === 'henhouse') {
+    if (['henhouse', 'turkeyFarm'].includes(b.kind)) {
       box(0.5, 0.65, 0.04, '#352c24', 1, 0.33, front + 0.09);
       const ramp = box(0.7, 0.08, 1.2, '#826c4a', 1, 0.13, front + 0.6);
       ramp.rotation.x = -0.2;

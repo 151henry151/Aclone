@@ -7,7 +7,7 @@ import { pasturePoint, pastureFences, pastureParcelSize } from '../shared/pastur
 import { grazingPose, type GrazingPoint } from './pasture-motion';
 import { terrainHeight } from '../shared/simulation';
 import type { World, Player } from '../shared/types';
-const species: AnimalKind[] = ['cows', 'sheep', 'pigs', 'chickens'];
+const species: AnimalKind[] = ['cows', 'sheep', 'pigs', 'chickens', 'turkeys'];
 export const MAX_VISIBLE_LIVESTOCK = 48,
   MAX_PER_HERD = 8;
 export interface AnimalSite {
@@ -80,7 +80,7 @@ export function livestockSites(w: World, p: Pick<Player, 'x' | 'z'>): AnimalSite
   }
   return sites;
 }
-/** Instanced articulated parts: at most 26 draws for all four species, no per-frame allocation. */
+/** Instanced articulated parts: five additional shared parts for turkeys, no per-frame allocation. */
 export class LivestockScene {
   readonly group = new T.Group();
   private rigs = new Map<
@@ -212,7 +212,7 @@ export class LivestockScene {
   animate(time: number) {
     this.material.userData.herdClock.value = time;
     for (const [kind, rig] of this.rigs) {
-      const bird = kind === 'chickens';
+      const bird = kind === 'chickens' || kind === 'turkeys';
       rig.sites.forEach((site, i) => {
         const t = time + site.seed,
           pose = grazingPose(site, time),
@@ -226,6 +226,8 @@ export class LivestockScene {
           this.joint.position.copy(part.pivot);
           this.joint.rotation.set(0, 0, 0);
           this.joint.scale.set(1, 1, 1);
+          if (site.young && kind === 'turkeys' && part.motion === 'tail')
+            this.joint.scale.setScalar(0.25);
           if (site.young && part.motion === 'head') this.joint.scale.setScalar(1.18);
           if (part.motion === 'body') this.joint.scale.x = 1 + Math.sin(t * 1.5) * 0.009;
           if (part.motion === 'head') {

@@ -120,6 +120,7 @@ const catalogue: Record<string, [Family, string[]]> = {
   dairyKitchen: ['shop', buildingRecipes.dairyKitchen.map((recipe) => recipe.name)],
   sheepfold: ['barn', buildingRecipes.sheepfold.map((recipe) => recipe.name)],
   piggery: ['barn', buildingRecipes.piggery.map((recipe) => recipe.name)],
+  turkeyFarm: ['barn', buildingRecipes.turkeyFarm.map((recipe) => recipe.name)],
   henhouse: ['barn', buildingRecipes.henhouse.map((recipe) => recipe.name)],
   haybarn: ['barn', buildingRecipes.haybarn.map((recipe) => recipe.name)],
 };

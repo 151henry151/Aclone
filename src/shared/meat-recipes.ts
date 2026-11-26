@@ -2,6 +2,7 @@
 import { meatRules, type MeatRules } from './meat-rules';
 import type { Recipe, Building } from './types';
 export const meatAnimals = {
+  turkeys: { raw: 'turkeyMeat', farm: 'turkeyFarm', yield: 'turkeyYield' },
   cows: { raw: 'beef', farm: 'dairy', yield: 'beefYield' },
   pigs: { raw: 'pork', farm: 'piggery', yield: 'porkYield' },
   sheep: { raw: 'mutton', farm: 'sheepfold', yield: 'muttonYield' },
@@ -12,6 +13,18 @@ export const meatMenus: Record<
   string,
   { inputs: Record<string, number>; kitchens: readonly string[] }
 > = {
+  turkeyDinner: {
+    inputs: { turkeyMeat: 1, potatoes: 2, water: 1 },
+    kitchens: ['kitchen', 'dairyKitchen', 'pub', 'hotel', 'bnb'],
+  },
+  turkeyPie: {
+    inputs: { turkeyMeat: 1, flour: 1 },
+    kitchens: ['kitchen', 'dairyKitchen', 'pub', 'hotel', 'bnb'],
+  },
+  turkeySoup: {
+    inputs: { turkeyMeat: 1, potatoes: 1, water: 2 },
+    kitchens: ['kitchen', 'dairyKitchen', 'pub', 'hotel', 'bnb'],
+  },
   beefStew: {
     inputs: { beef: 1, potatoes: 2, water: 1 },
     kitchens: ['kitchen', 'dairyKitchen', 'pub', 'hotel', 'bnb'],

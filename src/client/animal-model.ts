@@ -15,7 +15,7 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
   const cow = kind === 'cows',
     sheep = kind === 'sheep',
     pig = kind === 'pigs',
-    bird = kind === 'chickens';
+    bird = kind === 'chickens' || kind === 'turkeys';
   const coat = cow ? '#eee9d9' : sheep ? '#cfc8b1' : pig ? '#d9a89b' : '#95612e';
   const skin = sheep ? '#493f33' : pig ? '#ca948a' : cow ? '#e4c5b6' : '#d6a04d';
   const hoof = '#302c27',
@@ -82,8 +82,8 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
   ) {
     const g = new T.SphereGeometry(
       1,
-      Math.max(sx, sy, sz) > 0.24 ? (cow ? 18 : 20) : cow ? 8 : 10,
-      Math.max(sx, sy, sz) > 0.24 ? (cow ? 10 : 12) : cow ? 5 : 6,
+      Math.max(sx, sy, sz) > 0.24 ? (cow ? 18 : kind === 'turkeys' ? 14 : 20) : cow ? 8 : 10,
+      Math.max(sx, sy, sz) > 0.24 ? (cow ? 10 : kind === 'turkeys' ? 8 : 12) : cow ? 5 : 6,
     );
     g.scale(sx, sy, sz);
     g.rotateX(rx);
@@ -123,6 +123,81 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
     geometry.translate(-pivot[0], -pivot[1], -pivot[2]);
     geometry.computeBoundingSphere();
     parts.push({ geometry, pivot: new T.Vector3(...pivot), motion, phase });
+  }
+  if (kind === 'turkeys') {
+    // Bronze plumage, layered wings, bare blue head and red wattle distinguish the flock.
+    oval(0, 0.48, 0, 0.26, 0.29, 0.38, '#514032');
+    oval(0, 0.52, 0.22, 0.19, 0.25, 0.2, '#735331');
+    for (const side of [-1, 1]) {
+      oval(side * 0.23, 0.46, -0.02, 0.07, 0.19, 0.29, '#6c5138');
+      for (let i = 0; i < 5; i++)
+        oval(
+          side * 0.265,
+          0.39 + i * 0.025,
+          -0.1 - i * 0.025,
+          0.025,
+          0.035,
+          0.19,
+          i % 2 ? '#c5b296' : '#39332e',
+          false,
+          false,
+          -0.2,
+        );
+    }
+    finish('body', [0, 0.48, 0]);
+    oval(0, 0.76, 0.24, 0.065, 0.23, 0.07, '#8f3939');
+    oval(0, 0.95, 0.3, 0.065, 0.09, 0.085, '#8cabb3');
+    const beak = new T.ConeGeometry(0.03, 0.08, 8);
+    beak.rotateX(Math.PI / 2);
+    beak.translate(0, 0.95, 0.407);
+    add(beak, '#d8bd82');
+    oval(0, 0.86, 0.33, 0.035, 0.11, 0.035, '#c74c42');
+    curve(
+      [
+        [0, 1.01, 0.35],
+        [0, 0.99, 0.4],
+        [0, 0.92, 0.4],
+      ],
+      0.014,
+      '#c74c42',
+    );
+    for (const side of [-1, 1]) oval(side * 0.06, 0.97, 0.33, 0.012, 0.014, 0.014, black);
+    finish('head', [0, 0.68, 0.22]);
+    for (const side of [-1, 1]) {
+      bone([side * 0.11, 0.35, 0.03], [side * 0.11, 0.07, 0.05], 0.027, 0.018, '#b08b77');
+      for (let toe = -1; toe <= 1; toe++)
+        bone(
+          [side * 0.11, 0.055, 0.05],
+          [side * 0.11 + toe * 0.055, 0.025, 0.17],
+          0.012,
+          0.005,
+          '#b08b77',
+        );
+      finish('leg', [side * 0.11, 0.35, 0.03], side);
+    }
+    // A radial fan with pale tips and a dark band, articulated as one shared rig part.
+    for (let i = -4; i <= 4; i++) {
+      const angle = i * 0.23,
+        x = Math.sin(angle),
+        y = Math.cos(angle);
+      oval(x * 0.3, 0.53 + y * 0.3, -0.34, 0.055, 0.3, 0.025, '#805b37', false, false, 0, -angle);
+      oval(
+        x * 0.52,
+        0.53 + y * 0.52,
+        -0.34,
+        0.058,
+        0.065,
+        0.028,
+        '#d4c2a2',
+        false,
+        false,
+        0,
+        -angle,
+      );
+      oval(x * 0.45, 0.53 + y * 0.45, -0.31, 0.05, 0.03, 0.012, '#302c27', false, false, 0, -angle);
+    }
+    finish('tail', [0, 0.53, -0.34]);
+    return parts;
   }
   const h = cow ? 1.13 : sheep ? 0.73 : pig ? 0.56 : 0.34;
   const length = cow ? 1.04 : sheep ? 0.69 : pig ? 0.8 : 0.26;
